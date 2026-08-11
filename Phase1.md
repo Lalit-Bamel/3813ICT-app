@@ -16,7 +16,6 @@
 
 ---
 
-## 3. Functional Requirements and Assumptions
 
 ## 3. Functional Requirements and Assumptions
 
@@ -242,3 +241,18 @@ Any later client announcement will supersede the assumptions above where necessa
 ---
 
 ## 7. Design Documents
+
+The application storyboards were created before implementation and are stored in the `design` directory of this repository.
+
+The storyboards were developed from the elicited functional requirements and illustrate the proposed interface and navigation for regular users, group administrators and the super administrator.
+
+- [Login](design/01-login.png)
+- [Registration](design/02-register.png)
+- [Groups](design/03-groups.png)
+- [Group Rooms](design/04-group-rooms.png)
+- [Chat Room](design/05-chat-room.png)
+- [Profile](design/06-profile.png)
+- [Group Administrator Dashboard](design/07-group-admin.png)
+- [Super Administrator Dashboard](design/08-super-admin.png)
+
+The application will use a responsive design approach during implementation so that page content, navigation and interface elements can adapt to different display sizes.
