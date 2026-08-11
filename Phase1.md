@@ -222,9 +222,265 @@ Any later client announcement will supersede the assumptions above where necessa
 
 ## 4. Data Structures
 
----
+For Phase 1, application data will be persistently stored in a server-side JSON file. Unique IDs will be used to represent relationships between users, groups, rooms and requests.
+
+The main data collections will be:
+
+```json
+{
+  "users": [],
+  "groups": [],
+  "rooms": [],
+  "requests": [],
+  "auditLogs": [],
+  "messages": [],
+  "bannedUsers": []
+}
+4.1 User
+
+The User data structure stores account and profile information for each registered user.
+
+Field	Type	Description
+id	string	Unique identifier for the user
+firstName	string	User's first name
+lastName	string	User's last name
+username	string	User's display username
+email	string	Unique email address used to identify the account
+age	number	User's self-reported age
+passwordHash	string	Hashed version of the user's password
+profilePicture	string	Path or reference to the user's profile picture
+systemRole	string	System-level role of either user or superAdmin
+createdAt	string	Date and time the account was created
+
+The email address cannot be changed after registration. Password hashes will only be stored on the server and will not be stored in browser local storage.
+
+Group Administrator status is not stored as a global user role because a user may be an administrator of one group while being a normal member of another group.
+
+4.2 Group
+
+The Group data structure stores information about each group and its relationships with users and rooms.
+
+Field	Type	Description
+id	string	Unique identifier for the group
+title	string	Group title with a maximum length of 30 characters
+description	string	Group description with a maximum length of 250 characters
+minimumAge	number	Minimum age required for a user to join the group
+theme	string	Theme selected for the group and its rooms
+adminIds	string[]	IDs of users who are administrators of the group
+memberIds	string[]	IDs of users who are members of the group
+bannedUserIds	string[]	IDs of users permanently banned from the group
+roomIds	string[]	IDs of rooms belonging to the group
+createdAt	string	Date and time the group was created
+
+Every group must always contain at least one Group Administrator.
+
+4.3 Room
+
+The Room data structure represents a chat room belonging to a group.
+
+Field	Type	Description
+id	string	Unique identifier for the room
+groupId	string	ID of the group that owns the room
+name	string	Name of the chat room
+createdAt	string	Date and time the room was created
+
+A group may contain zero or more rooms. Rooms inherit the minimum age restriction and theme of their parent group.
+
+4.4 Request
+
+The Request data structure is used for requests made between users, Group Administrators and the Super Administrator.
+
+Field	Type	Description
+id	string	Unique identifier for the request
+type	string	Type of request being made
+requesterId	string	ID of the user who created the request
+targetGroupId	string/null	ID of the related group where applicable
+targetUserId	string/null	ID of the related user where applicable
+details	object	Additional information required for the request
+reason	string/null	Reason supplied with the request where required
+status	string	Current status: pending, approved or rejected
+rejectionReason	string/null	Reason an administrator rejected the request
+createdAt	string	Date and time the request was submitted
+
+Request types may include:
+
+Group creation request
+Group join request
+Room creation request
+Group user ban request
+System-wide user ban request
+Group deletion request
+
+Once submitted, a request cannot be cancelled by the requester.
+
+4.5 Audit Log
+
+The Audit Log data structure records important administrative and system actions for review by the Super Administrator.
+
+Field	Type	Description
+id	string	Unique identifier for the audit record
+type	string	Type of event or administrative action
+actorId	string	ID of the user who performed the action
+targetId	string/null	ID of the user, group or room affected by the action
+details	string	Description of the recorded action
+createdAt	string	Date and time the action occurred
+
+Audit records can later be filtered by event type and displayed in date order.
+
+4.6 Message
+
+The Message data structure represents messages sent within chat rooms.
+
+Field	Type	Description
+id	string	Unique identifier for the message
+roomId	string	ID of the room containing the message
+senderId	string	ID of the user who sent the message
+type	string	Message type: text, image or gif
+content	string	Text content or reference to the uploaded media
+createdAt	string	Date and time the message was sent
+deleted	boolean	Indicates whether the sender has deleted the message
+
+Messages cannot be edited after being sent. A user may only delete a message that they created.
+
+Full real-time messaging will be implemented in Phase 2. Mock message data may be used for the Phase 1 user interface prototype.
+
+4.7 Banned User
+
+The Banned User data structure retains information required after a user has been permanently removed from the system.
+
+Field	Type	Description
+id	string	Unique identifier for the banned-user record
+originalUserId	string	ID of the user account that was permanently banned
+firstName	string	First name of the banned user
+lastName	string	Last name of the banned user
+email	string	Email address that must not be allowed to register again
+reason	string	Reason for the system-wide ban
+bannedBy	string	ID of the Super Administrator who actioned the ban
+bannedAt	string	Date and time the permanent ban occurred
+
+The banned-user record allows the Super Administrator to view previously banned accounts and ensures that a permanently banned email address cannot be reused.
+
+
+### 4.1 User
+### 4.2 Group
+### 4.3 Room
+### 4.4 Request
+### 4.5 Audit Log
+### 4.6 Message
+### 4.7 Banned Email
 
 ## 5. Angular Architecture
+
+The Angular frontend will use a component-based architecture. Components represent the major application screens from the Phase 1 storyboards, while services handle shared application logic and communication with the Express server.
+
+### 5.1 Components
+
+| Component | Purpose |
+|---|---|
+| LoginComponent | Displays the login form and authenticates users |
+| RegisterComponent | Allows users to create their own account |
+| GroupsComponent | Displays joined groups, available groups, search and group requests |
+| GroupRoomsComponent | Displays information and rooms belonging to a selected group |
+| ChatRoomComponent | Displays the chat interface, recent messages and room participants |
+| ProfileComponent | Displays and updates the logged-in user's private profile |
+| GroupAdminComponent | Provides group administration functions for members, rooms, requests and settings |
+| SuperAdminComponent | Provides system administration functions including group requests, system bans and audit logs |
+| NavbarComponent | Provides shared navigation for authenticated users |
+
+### 5.2 Services
+
+| Service | Purpose |
+|---|---|
+| AuthService | Handles login, logout, current user state and local storage |
+| UserService | Handles registration and user profile operations |
+| GroupService | Handles groups, membership, administrators and rooms |
+| RequestService | Handles creation, viewing and actioning of requests |
+| AdminService | Handles super administrator operations such as audit logs and system bans |
+| ChatService | Provides chat-related functionality and will later support Socket.IO in Phase 2 |
+
+`ChatService` may use mock data during Phase 1 because full real-time chat functionality is intended for Phase 2.
+
+### 5.3 Models
+
+| Model | Purpose |
+|---|---|
+| User | Represents user account information |
+| Group | Represents a group and its members/administrators |
+| Room | Represents a chat room belonging to a group |
+| Request | Represents requests between users and administrators |
+| AuditLog | Represents administrative audit records |
+| Message | Represents chat messages |
+
+### 5.4 Angular Routes
+
+| Route | Component | Purpose |
+|---|---|---|
+| `/login` | LoginComponent | User login |
+| `/register` | RegisterComponent | User registration |
+| `/groups` | GroupsComponent | View/search groups |
+| `/groups/:groupId` | GroupRoomsComponent | View a selected group and its rooms |
+| `/groups/:groupId/rooms/:roomId` | ChatRoomComponent | Enter a selected chat room |
+| `/profile` | ProfileComponent | View/edit private profile |
+| `/groups/:groupId/admin` | GroupAdminComponent | Manage a group |
+| `/super-admin` | SuperAdminComponent | Super Administrator dashboard |
+
+Routes other than login and registration will require an authenticated user.
+
+Administrator routes will additionally check that the current user has the required permissions.
+
+### 5.5 Route Guards
+
+The frontend will use route guards to prevent users from navigating directly to interfaces for which they do not have permission.
+
+- `authGuard` will protect authenticated application pages.
+- `groupAdminGuard` will protect group administration pages.
+- `superAdminGuard` will protect the Super Administrator dashboard.
+
+Frontend permission checks improve the user interface but server-side endpoints must also validate permissions because browser data such as local storage can be modified by a user.
+
+### 5.6 Local Storage
+
+Browser local storage will contain only the information required to maintain the current user's login state and interface permissions.
+
+Passwords and password hashes will never be stored in local storage.
+
+### 5.7 Proposed Angular Structure
+
+```text
+client/
+└── src/
+    └── app/
+        ├── components/
+        │   ├── login/
+        │   ├── register/
+        │   ├── groups/
+        │   ├── group-rooms/
+        │   ├── chat-room/
+        │   ├── profile/
+        │   ├── group-admin/
+        │   ├── super-admin/
+        │   └── navbar/
+        │
+        ├── services/
+        │   ├── auth.service.ts
+        │   ├── user.service.ts
+        │   ├── group.service.ts
+        │   ├── request.service.ts
+        │   ├── admin.service.ts
+        │   └── chat.service.ts
+        │
+        ├── models/
+        │   ├── user.ts
+        │   ├── group.ts
+        │   ├── room.ts
+        │   ├── request.ts
+        │   ├── audit-log.ts
+        │   └── message.ts
+        │
+        └── guards/
+            ├── auth.guard.ts
+            ├── group-admin.guard.ts
+            └── super-admin.guard.ts
 
 ### Components
 
@@ -233,12 +489,92 @@ Any later client announcement will supersede the assumptions above where necessa
 ### Models
 
 ### Routes
+Angular Components
+        |
+        v
+Angular Services
+        |
+        | HTTP
+        v
+Express REST API
+        |
+        v
+Server-side JSON File
+
 
 ---
 
 ## 6. Server REST API
 
----
+The Express server will expose REST endpoints used by the Angular frontend. Some endpoints are proposed for the completed application and may use prototype/mock behaviour during Phase 1.
+
+### 6.1 Authentication
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/register` | Register a new user |
+| POST | `/api/login` | Validate username/password and return logged-in user information |
+
+### 6.2 Users
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/users/:userId` | Retrieve a user's own profile information |
+| PUT | `/api/users/:userId` | Update permitted profile fields |
+| DELETE | `/api/users/:userId` | Permanently ban/delete a user after an approved Super Administrator action |
+
+### 6.3 Groups
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/groups` | Retrieve available groups |
+| GET | `/api/groups/:groupId` | Retrieve details for one group |
+| POST | `/api/groups` | Create a group when the Super Administrator actions an approved group request |
+| PUT | `/api/groups/:groupId` | Update group title, description, age limit or theme |
+| DELETE | `/api/groups/:groupId` | Delete a group after an approved deletion request |
+| POST | `/api/groups/:groupId/members/:userId` | Add an approved user to a group |
+| DELETE | `/api/groups/:groupId/members/:userId` | Remove a user from a group |
+| POST | `/api/groups/:groupId/admins/:userId` | Promote a group member to Group Administrator |
+| DELETE | `/api/groups/:groupId/admins/:userId` | Demote a Group Administrator where another administrator remains |
+| POST | `/api/groups/:groupId/bans/:userId` | Ban a user from an individual group after an approved report |
+
+### 6.4 Rooms
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/groups/:groupId/rooms` | Retrieve rooms belonging to a group |
+| POST | `/api/groups/:groupId/rooms` | Create an approved room |
+| PUT | `/api/rooms/:roomId` | Update room details/name |
+| DELETE | `/api/rooms/:roomId` | Delete a room |
+
+### 6.5 Requests
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/requests` | Submit a new request |
+| GET | `/api/requests` | Retrieve requests available to the current user/admin |
+| PUT | `/api/requests/:requestId` | Approve or reject a request |
+
+The request type determines whether the request represents group creation, joining a group, creating a room, banning a user or deleting a group.
+
+### 6.6 Super Administrator
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/admin/audit` | Retrieve audit records |
+| GET | `/api/admin/banned-users` | Retrieve permanently banned user records |
+
+### 6.7 Chat
+
+The completed application will require server functionality for retrieving and sending messages. During Phase 1 these features may use mock data because real-time communication using Socket.IO forms part of the later implementation.
+
+Proposed HTTP endpoint:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/rooms/:roomId/messages?limit=5` | Retrieve the five most recent messages when entering a room |
+
+Real-time sending, room joining and room leaving will later use Socket.IO rather than REST.
 
 ## 7. Design Documents
 
