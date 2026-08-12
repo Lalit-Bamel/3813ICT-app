@@ -2,15 +2,18 @@ const express = require("express");
 const cors = require("cors");
 const { readData } = require("./utils/fileStore");
 const { bootstrapSuperAdmin } = require("./bootstrap");
+const  authRoutes = require("./routes/auth.routes");
 const app = express();
 const PORT =3000;
+
+
 
 app.use(cors({
     origin: "http://localhost:4200"
 }));
 
 app.use(express.json());
-
+app.use("/api",authRoutes);
 app.get("/api/health", function(req, res) {
     const data = readData();
 

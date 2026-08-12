@@ -2,16 +2,28 @@
   "bootstrapCompleted": true,
   "users": [
     {
-      "id": "324a99e6-0801-45a4-8893-061805781240",
+      "id": "3aa65894-5d98-497c-b362-0efe32de02e9",
       "firstName": "Initial",
       "lastName": "Administrator",
       "username": "superadmin",
       "email": "superadmin@3813ict.local",
       "age": 30,
-      "passwordHash": "$2b$10$tAH/i37g40VuIpjpHUYVZuTWj37lJ2kS0b9PeQkBrUQ8P0g1ISf/2",
+      "passwordHash": "$2b$10$sOIt6BgAL2NOHkulBkQb6ucUiXE8rTTXyS6WQX3exvfYmnOTxE1ei",
       "profilePicture": "",
       "systemRole": "superAdmin",
-      "createdAt": "2026-08-12T01:20:12.512Z"
+      "createdAt": "2026-08-12T03:23:13.085Z"
+    },
+    {
+      "id": "df071e77-b327-4a89-ba76-6638d37ec1e5",
+      "firstName": "Test",
+      "lastName": "User",
+      "username": "testuser",
+      "email": "testuser@email.com",
+      "age": 21,
+      "passwordHash": "$2b$10$ERvDF3bWT3KJEYM16JSV6eMUn2FAYvbsOqGplLMjU26m4uDXDO1uW",
+      "profilePicture": "",
+      "systemRole": "user",
+      "createdAt": "2026-08-12T03:28:39.875Z"
     }
   ],
   "groups": [],
