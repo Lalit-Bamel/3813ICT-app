@@ -1,5 +1,19 @@
 {
-  "users": [],
+  "bootstrapCompleted": true,
+  "users": [
+    {
+      "id": "324a99e6-0801-45a4-8893-061805781240",
+      "firstName": "Initial",
+      "lastName": "Administrator",
+      "username": "superadmin",
+      "email": "superadmin@3813ict.local",
+      "age": 30,
+      "passwordHash": "$2b$10$tAH/i37g40VuIpjpHUYVZuTWj37lJ2kS0b9PeQkBrUQ8P0g1ISf/2",
+      "profilePicture": "",
+      "systemRole": "superAdmin",
+      "createdAt": "2026-08-12T01:20:12.512Z"
+    }
+  ],
   "groups": [],
   "rooms": [],
   "requests": [],

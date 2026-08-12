@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { readData } = require("./utils/fileStore");
-
+const { bootstrapSuperAdmin } = require("./bootstrap");
 const app = express();
 const PORT =3000;
 
@@ -23,6 +23,15 @@ app.get("/api/health", function(req, res) {
     });
 });
 
-app.listen(PORT,function(){
-    console.log(`Server running on http://localhost:${PORT}`)
-})
+async function startServer() {
+    try {
+        await bootstrapSuperAdmin();
+        app.listen(PORT, function(){
+            console.log(`Server running on http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.log("Unable to start server:", error.message);
+    }
+}
+
+startServer();
