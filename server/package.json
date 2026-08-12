@@ -1,10 +1,19 @@
 {
-  "bootstrapCompleted": false,
-  "users": [],
-  "groups": [],
-  "rooms": [],
-  "requests": [],
-  "auditLogs": [],
-  "messages": [],
-  "bannedUsers": []
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Backend server for 3813ICT chat application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon --ignore data/data.json server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
