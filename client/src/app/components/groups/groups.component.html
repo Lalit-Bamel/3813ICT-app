@@ -1,0 +1,10 @@
+<h1>Groups</h1>
+
+<p *ngIf="currentUser">
+    Logged in as:
+    {{ currentUser.username }}
+</p>
+
+<button (click)="logout()">
+    Logout
+</button>

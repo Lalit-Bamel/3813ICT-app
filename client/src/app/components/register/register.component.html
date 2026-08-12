@@ -1,0 +1,107 @@
+<div class="auth-page">
+
+    <h1>3813ICT Chat</h1>
+
+    <div class="auth-card">
+
+        <h2>Create Account</h2>
+
+        <form (ngSubmit)="onSubmit()">
+
+            <label for="firstName">
+                First Name
+            </label>
+
+            <input
+                id="firstName"
+                name="firstName"
+                [(ngModel)]="firstName"
+                required
+            >
+
+            <label for="lastName">
+                Last Name
+            </label>
+
+            <input
+                id="lastName"
+                name="lastName"
+                [(ngModel)]="lastName"
+                required
+            >
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                id="username"
+                name="username"
+                [(ngModel)]="username"
+                required
+            >
+
+            <label for="email">
+                Email
+            </label>
+
+            <input
+                id="email"
+                name="email"
+                type="email"
+                [(ngModel)]="email"
+                required
+            >
+
+            <label for="age">
+                Age
+            </label>
+
+            <input
+                id="age"
+                name="age"
+                type="number"
+                [(ngModel)]="age"
+                required
+            >
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                [(ngModel)]="password"
+                required
+            >
+
+            <small>
+                Minimum 8 characters and at least
+                one uppercase letter.
+            </small>
+
+            <p
+                class="error"
+                *ngIf="errorMessage"
+            >
+                {{ errorMessage }}
+            </p>
+
+            <button type="submit">
+                Create Account
+            </button>
+
+        </form>
+
+        <p>
+            Already have an account?
+            <a routerLink="/login">
+                Login
+            </a>
+        </p>
+
+    </div>
+
+</div>

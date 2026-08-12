@@ -1,0 +1,57 @@
+<div class="auth-page">
+
+    <h1>3813ICT Chat</h1>
+
+    <div class="auth-card">
+
+        <h2>Login</h2>
+
+        <form (ngSubmit)="onSubmit()">
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                id="username"
+                name="username"
+                type="text"
+                [(ngModel)]="username"
+                required
+            >
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                id="password"
+                name="password"
+                type="password"
+                [(ngModel)]="password"
+                required
+            >
+
+            <p
+                class="error"
+                *ngIf="errorMessage"
+            >
+                {{ errorMessage }}
+            </p>
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+        <p>
+            Don't have an account?
+            <a routerLink="/register">
+                Register
+            </a>
+        </p>
+
+    </div>
+
+</div>
