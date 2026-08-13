@@ -1,0 +1,16 @@
+.admin-page {
+    max-width: 1000px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.admin-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.admin-options button {
+    padding: 15px;
+    cursor: pointer;
+}

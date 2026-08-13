@@ -1,10 +1,11 @@
-<h1>Groups</h1>
+<app-navbar></app-navbar>
 
-<p *ngIf="currentUser">
-    Logged in as:
-    {{ currentUser.username }}
-</p>
+<main>
 
-<button (click)="logout()">
-    Logout
-</button>
+    <h1>Groups</h1>
+
+    <p *ngIf="currentUser">
+        Welcome, {{ currentUser.username }}
+    </p>
+
+</main>

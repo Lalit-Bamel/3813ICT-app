@@ -1,0 +1,33 @@
+<nav class="navbar">
+
+    <div class="brand">
+        3813ICT Chat
+    </div>
+
+    <div class="nav-links">
+
+        <a
+            *ngIf="!isSuperAdmin"
+            routerLink="/groups"
+        >
+            Groups
+        </a>
+
+        <a
+            *ngIf="isSuperAdmin"
+            routerLink="/super-admin"
+        >
+            Super Admin
+        </a>
+
+        <span *ngIf="currentUser">
+            {{ currentUser.username }}
+        </span>
+
+        <button (click)="logout()">
+            Logout
+        </button>
+
+    </div>
+
+</nav>

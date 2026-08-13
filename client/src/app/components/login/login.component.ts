@@ -30,9 +30,14 @@ export class LoginComponent {
         this.authService
             .login(this.username, this.password)
             .subscribe({
-                next: () => {
-                    this.router.navigate(['/groups']);
-                },
+        next: response => {
+
+            if (response.user.systemRole === 'superAdmin') {
+                this.router.navigate(['/super-admin']);
+            } else {
+                this.router.navigate(['/groups']);
+            }
+},
 
                 error: error => {
                     this.errorMessage =

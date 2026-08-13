@@ -70,4 +70,9 @@ export class AuthService {
     isLoggedIn(): boolean {
         return this.getCurrentUser() !== null;
     }
+    isSuperAdmin(): boolean {
+    const user = this.getCurrentUser();
+
+    return user?.systemRole === 'superAdmin';
+}
 }
