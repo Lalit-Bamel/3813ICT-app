@@ -3,6 +3,7 @@ const cors = require("cors");
 const { readData } = require("./utils/fileStore");
 const { bootstrapSuperAdmin } = require("./bootstrap");
 const  authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/users.routes")
 const app = express();
 const PORT =3000;
 
@@ -14,6 +15,8 @@ app.use(cors({
 
 app.use(express.json());
 app.use("/api",authRoutes);
+app.use("/api/users",userRoutes);
+
 app.get("/api/health", function(req, res) {
     const data = readData();
 
