@@ -1,0 +1,19 @@
+.admin-page {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.request-card {
+    border: 1px solid #cccccc;
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.request-card button {
+    margin-right: 10px;
+}
+
+.error {
+    color: red;
+}

@@ -1,38 +1,92 @@
 <app-navbar></app-navbar>
 
+
 <main class="admin-page">
 
     <h1>Super Administrator</h1>
 
-    <p>
-        System administration dashboard
+
+    <h2>Pending Group Requests</h2>
+
+
+    <p *ngIf="groupRequests.length === 0">
+        No pending group requests.
     </p>
+
+
+    <div
+        *ngFor="let request of groupRequests"
+        class="request-card"
+    >
+
+        <p>
+            <strong>Requested by:</strong>
+            {{ request.requesterUsername }}
+        </p>
+
+
+        <p>
+            <strong>Title:</strong>
+            {{ request.details.title }}
+        </p>
+
+
+        <p>
+            <strong>Description:</strong>
+            {{ request.details.description }}
+        </p>
+
+
+        <p>
+            <strong>Minimum Age:</strong>
+            {{ request.details.minimumAge }}+
+        </p>
+
+
+        <p>
+            <strong>Theme:</strong>
+            {{ request.details.theme }}
+        </p>
+
+
+        <button
+            (click)="approveRequest(request)"
+        >
+            Approve
+        </button>
+
+
+        <button
+            (click)="rejectRequest(request)"
+        >
+            Reject
+        </button>
+
+    </div>
+
+
+    <p
+        class="error"
+        *ngIf="errorMessage"
+    >
+        {{ errorMessage }}
+    </p>
+
+
+    <hr>
+
 
     <div class="admin-options">
 
-        <button>
-            Group Requests
-        </button>
+        <button>Ban Requests</button>
 
-        <button>
-            Ban Requests
-        </button>
+        <button>Delete Group Requests</button>
 
-        <button>
-            Delete Group Requests
-        </button>
+        <button>Users</button>
 
-        <button>
-            Users
-        </button>
+        <button>Banned Users</button>
 
-        <button>
-            Banned Users
-        </button>
-
-        <button>
-            Audit Logs
-        </button>
+        <button>Audit Logs</button>
 
     </div>
 

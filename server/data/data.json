@@ -1,9 +1,94 @@
 {
-  "bootstrapCompleted": false,
-  "users": [],
-  "groups": [],
+  "bootstrapCompleted": true,
+  "users": [
+    {
+      "id": "58b6a9b7-1528-462f-b130-1d007533f04b",
+      "firstName": "Initial",
+      "lastName": "Administrator",
+      "username": "superadmin",
+      "email": "superadmin@3813ict.local",
+      "age": 30,
+      "passwordHash": "$2b$10$XhytoqIhRNU27SIj8xgc9.Gw.uP2CelnKZIpA7larVKNutMWfY/0C",
+      "profilePicture": "",
+      "systemRole": "superAdmin",
+      "createdAt": "2026-08-14T02:04:07.835Z"
+    },
+    {
+      "id": "87855745-9345-449e-88af-24aefee5087f",
+      "firstName": "lalit",
+      "lastName": "test",
+      "username": "lalit",
+      "email": "lalit@gmail.com",
+      "age": 22,
+      "passwordHash": "$2b$10$7rKjcaK261Fif.BoVhOh5eX5sfgtkYDt.u5ikN8RWXYoxupQOz6/S",
+      "profilePicture": "",
+      "systemRole": "user",
+      "createdAt": "2026-08-14T02:04:35.567Z"
+    },
+    {
+      "id": "45210022-19d8-43cc-8808-69c6671d83dc",
+      "firstName": "krishan",
+      "lastName": "test",
+      "username": "krishan",
+      "email": "krishan@gmail.com",
+      "age": 23,
+      "passwordHash": "$2b$10$ddlkIjMeVxHD4P57Vwpv3ee.S9fWJXblHM9vc2ZpfH7H0zYb51ryS",
+      "profilePicture": "",
+      "systemRole": "user",
+      "createdAt": "2026-08-14T02:07:03.505Z"
+    }
+  ],
+  "groups": [
+    {
+      "id": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "title": "Technology Club",
+      "description": "tech discussion",
+      "minimumAge": 18,
+      "theme": "blue",
+      "adminIds": [
+        "87855745-9345-449e-88af-24aefee5087f"
+      ],
+      "memberIds": [
+        "87855745-9345-449e-88af-24aefee5087f",
+        "45210022-19d8-43cc-8808-69c6671d83dc"
+      ],
+      "bannedUserIds": [],
+      "roomIds": [],
+      "createdAt": "2026-08-14T02:05:57.156Z"
+    }
+  ],
   "rooms": [],
-  "requests": [],
+  "requests": [
+    {
+      "id": "9b2a6f3a-a46e-42e2-b715-d31b19ea3f92",
+      "type": "groupCreation",
+      "requesterId": "87855745-9345-449e-88af-24aefee5087f",
+      "targetGroupId": null,
+      "targetUserId": null,
+      "details": {
+        "title": "Technology Club",
+        "description": "tech discussion",
+        "minimumAge": 18,
+        "theme": "blue"
+      },
+      "reason": null,
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-14T02:05:36.150Z"
+    },
+    {
+      "id": "46add9c7-1715-47b6-809c-5b186ea7b518",
+      "type": "joinGroup",
+      "requesterId": "45210022-19d8-43cc-8808-69c6671d83dc",
+      "targetGroupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "targetUserId": null,
+      "details": {},
+      "reason": null,
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-14T02:07:14.072Z"
+    }
+  ],
   "auditLogs": [],
   "messages": [],
   "bannedUsers": []

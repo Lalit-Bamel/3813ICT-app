@@ -9,44 +9,64 @@ import {
     CommonModule
 } from '@angular/common';
 
-
 import {
-    NavbarComponent
-} from '../navbar/navbar.component';
+    ActivatedRoute,
+    RouterLink
+} from '@angular/router';
+
 
 import {
     AuthService
 } from '../../services/auth.service';
 
 import {
+    GroupService
+} from '../../services/group.service';
+
+import {
     RequestService
 } from '../../services/request.service';
+
+import {
+    Group
+} from '../../models/group';
 
 import {
     Request
 } from '../../models/request';
 
+import {
+    NavbarComponent
+} from '../navbar/navbar.component';
+
 
 @Component({
-    selector: 'app-super-admin',
+    selector: 'app-group-admin',
 
     imports: [
         CommonModule,
+        RouterLink,
         NavbarComponent
     ],
 
     templateUrl:
-        './super-admin.component.html',
+        './group-admin.component.html',
 
     styleUrl:
-        './super-admin.component.css'
+        './group-admin.component.css'
 })
-export class SuperAdminComponent
+export class GroupAdminComponent
     implements OnInit {
 
 
+    private route =
+        inject(ActivatedRoute);
+
     private authService =
         inject(AuthService);
+
+    private groupService =
+        inject(GroupService);
 
     private requestService =
         inject(RequestService);
@@ -59,19 +79,63 @@ export class SuperAdminComponent
         this.authService.currentUser;
 
 
-    groupRequests: Request[] = [];
+    group: Group | null = null;
+
+    joinRequests: Request[] = [];
 
     errorMessage = '';
 
 
     ngOnInit() {
-        this.loadGroupRequests();
+
+        const groupId =
+            this.route.snapshot
+                .paramMap
+                .get('groupId');
+
+
+        if (!groupId) {
+            return;
+        }
+
+
+        this.loadGroup(groupId);
+
+        this.loadRequests(groupId);
     }
 
 
-    loadGroupRequests() {
+    loadGroup(groupId: string) {
 
-        const user = this.currentUser();
+        this.groupService
+            .getGroup(groupId)
+            .subscribe({
+
+                next: group => {
+
+                    this.group = group;
+
+                    this.cdr
+                        .markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load group.';
+
+                    this.cdr
+                        .markForCheck();
+                }
+            });
+    }
+
+
+    loadRequests(groupId: string) {
+
+        const user =
+            this.currentUser();
 
         if (!user) {
             return;
@@ -79,14 +143,15 @@ export class SuperAdminComponent
 
 
         this.requestService
-            .getSuperAdminRequests(
-                user.id
+            .getGroupJoinRequests(
+                user.id,
+                groupId
             )
             .subscribe({
 
                 next: requests => {
 
-                    this.groupRequests =
+                    this.joinRequests =
                         requests;
 
                     this.cdr
@@ -106,11 +171,12 @@ export class SuperAdminComponent
     }
 
 
-    approveRequest(request: Request) {
+    approve(request: Request) {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
 
-        if (!user) {
+        if (!user || !this.group) {
             return;
         }
 
@@ -124,7 +190,14 @@ export class SuperAdminComponent
             .subscribe({
 
                 next: () => {
-                    this.loadGroupRequests();
+
+                    this.loadRequests(
+                        this.group!.id
+                    );
+
+                    this.loadGroup(
+                        this.group!.id
+                    );
                 },
 
                 error: error => {
@@ -140,7 +213,7 @@ export class SuperAdminComponent
     }
 
 
-    rejectRequest(request: Request) {
+    reject(request: Request) {
 
         const reason = window.prompt(
             'Enter rejection reason:'
@@ -152,9 +225,10 @@ export class SuperAdminComponent
         }
 
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
 
-        if (!user) {
+        if (!user || !this.group) {
             return;
         }
 
@@ -169,7 +243,10 @@ export class SuperAdminComponent
             .subscribe({
 
                 next: () => {
-                    this.loadGroupRequests();
+
+                    this.loadRequests(
+                        this.group!.id
+                    );
                 },
 
                 error: error => {

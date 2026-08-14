@@ -10,7 +10,16 @@ import { superAdminGuard } from './guards/super-admin.guard';
 import { userGuard } from './guards/user.guard';
 import { ProfileComponent }
     from './components/profile/profile.component';
-export const routes: Routes = [
+
+import {
+    GroupAdminComponent
+} from './components/group-admin/group-admin.component';
+
+import {
+    groupAdminGuard
+} from './guards/group-admin.guard';
+
+    export const routes: Routes = [
 
     {
         path: 'login',
@@ -43,6 +52,18 @@ export const routes: Routes = [
     canActivate: [
         authGuard,
         userGuard
+    ]
+},
+{
+    path: 'groups/:groupId/admin',
+
+    component:
+        GroupAdminComponent,
+
+    canActivate: [
+        authGuard,
+        userGuard,
+        groupAdminGuard
     ]
 },
 

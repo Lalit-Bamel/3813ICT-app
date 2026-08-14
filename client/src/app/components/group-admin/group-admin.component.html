@@ -1,0 +1,58 @@
+<app-navbar></app-navbar>
+
+
+<main class="admin-page">
+
+    <a routerLink="/groups">
+        ← Back to Groups
+    </a>
+
+
+    <h1 *ngIf="group">
+        {{ group.title }} — Admin
+    </h1>
+
+
+    <h2>Join Requests</h2>
+
+
+    <p *ngIf="joinRequests.length === 0">
+        No pending join requests.
+    </p>
+
+
+    <div
+        class="request-card"
+        *ngFor="let request of joinRequests"
+    >
+
+        <p>
+            User:
+            {{ request.requesterUsername }}
+        </p>
+
+
+        <button
+            (click)="approve(request)"
+        >
+            Approve
+        </button>
+
+
+        <button
+            (click)="reject(request)"
+        >
+            Reject
+        </button>
+
+    </div>
+
+
+    <p
+        *ngIf="errorMessage"
+        class="error"
+    >
+        {{ errorMessage }}
+    </p>
+
+</main>
