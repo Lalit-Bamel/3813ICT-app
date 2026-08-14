@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject,signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 
@@ -27,7 +27,11 @@ export class AuthService {
 
     private apiUrl = 'http://localhost:3000/api';
     private storageKey = 'currentUser';
+    private currentUserSignal = signal<User | null>(
+    this.loadStoredUser()
+);
 
+    readonly currentUser = this.currentUserSignal.asReadonly();
     register(data: RegisterData) {
         return this.http.post<AuthResponse>(
             `${this.apiUrl}/register`,
@@ -43,36 +47,55 @@ export class AuthService {
                 password
             }
         ).pipe(
-            tap(response => {
-                localStorage.setItem(
-                    this.storageKey,
-                    JSON.stringify(response.user)
+                tap(response => {
+                    this.setCurrentUser(response.user);
+                })
                 );
-            })
-        );
+                }
+    private loadStoredUser(): User | null {
+
+    const storedUser =
+        localStorage.getItem(this.storageKey);
+
+    if (!storedUser) {
+        return null;
     }
 
-    logout() {
-        localStorage.removeItem(this.storageKey);
-    }
+    return JSON.parse(storedUser) as User;
+}
 
-    getCurrentUser(): User | null {
-        const storedUser =
-            localStorage.getItem(this.storageKey);
+setCurrentUser(user: User) {
 
-        if (!storedUser) {
-            return null;
-        }
+    localStorage.setItem(
+        this.storageKey,
+        JSON.stringify(user)
+    );
 
-        return JSON.parse(storedUser) as User;
-    }
+    this.currentUserSignal.set(user);
+}
 
-    isLoggedIn(): boolean {
-        return this.getCurrentUser() !== null;
-    }
-    isSuperAdmin(): boolean {
-    const user = this.getCurrentUser();
 
-    return user?.systemRole === 'superAdmin';
+getCurrentUser(): User | null {
+    return this.currentUserSignal();
+}
+
+
+logout() {
+
+    localStorage.removeItem(this.storageKey);
+
+    this.currentUserSignal.set(null);
+}
+
+
+isLoggedIn(): boolean {
+    return this.currentUserSignal() !== null;
+}
+
+
+isSuperAdmin(): boolean {
+
+    return this.currentUserSignal()?.systemRole
+        === 'superAdmin';
 }
 }

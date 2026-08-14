@@ -1,43 +1,6 @@
 {
-  "bootstrapCompleted": true,
-  "users": [
-    {
-      "id": "dede502c-5494-408d-bbc1-83083c805856",
-      "firstName": "Initial",
-      "lastName": "Administrator",
-      "username": "superadmin",
-      "email": "superadmin@3813ict.local",
-      "age": 30,
-      "passwordHash": "$2b$10$e.sOE2eMlOh/tEmVIJfP2.0lwm9qdAppPZBcqt3pnITIYKcxEHeCW",
-      "profilePicture": "",
-      "systemRole": "superAdmin",
-      "createdAt": "2026-08-12T07:57:22.238Z"
-    },
-    {
-      "id": "7cda56a4-242a-4e0a-be00-a75e03b25253",
-      "firstName": "Lalit",
-      "lastName": "Bamel",
-      "username": "lalitnew",
-      "email": "lalit@email.com",
-      "age": 21,
-      "passwordHash": "$2b$10$bXmjvYcYAY85vZqdl5xRY.LEpuIaqeWQ3mwOLiIfUFCvI3373Ugou",
-      "profilePicture": "",
-      "systemRole": "user",
-      "createdAt": "2026-08-12T07:58:21.835Z"
-    },
-    {
-      "id": "fc431447-f3a3-431e-9b04-cd7bb388b227",
-      "firstName": "lalit",
-      "lastName": "bamel",
-      "username": "lalit",
-      "email": "lalit@gmail.com",
-      "age": 44,
-      "passwordHash": "$2b$10$xmxBZwVCt0M0x7rfbm25W.suZ3XAXbNCa0FsAXQ96XeOr.8qncx5q",
-      "profilePicture": "",
-      "systemRole": "user",
-      "createdAt": "2026-08-13T01:31:40.487Z"
-    }
-  ],
+  "bootstrapCompleted": false,
+  "users": [],
   "groups": [],
   "rooms": [],
   "requests": [],

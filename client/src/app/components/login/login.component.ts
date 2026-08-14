@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef,Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -18,6 +18,7 @@ export class LoginComponent {
 
     private authService = inject(AuthService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     username = '';
     password = '';
@@ -28,8 +29,9 @@ export class LoginComponent {
         this.errorMessage = '';
 
         this.authService
-            .login(this.username, this.password)
-            .subscribe({
+    .login(this.username, this.password)
+    .subscribe({
+
         next: response => {
 
             if (response.user.systemRole === 'superAdmin') {
@@ -37,13 +39,18 @@ export class LoginComponent {
             } else {
                 this.router.navigate(['/groups']);
             }
-},
 
-                error: error => {
-                    this.errorMessage =
-                        error.error?.message ||
-                        'Unable to log in.';
-                }
-            });
+            this.cdr.markForCheck();
+        },
+
+        error: error => {
+
+            this.errorMessage =
+                error.error?.message ||
+                'Unable to log in.';
+
+            this.cdr.markForCheck();
+        }
+    });
     }
 }

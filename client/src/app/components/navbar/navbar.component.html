@@ -20,9 +20,15 @@
             Super Admin
         </a>
 
-        <span *ngIf="currentUser">
-            {{ currentUser.username }}
-        </span>
+        <a
+            *ngIf="!isSuperAdmin"
+            routerLink="/profile"
+>
+            Profile
+        </a>
+    <span *ngIf="currentUser()">
+        {{ currentUser()?.username }}
+    </span>
 
         <button (click)="logout()">
             Logout

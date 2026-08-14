@@ -1,0 +1,143 @@
+<app-navbar></app-navbar>
+
+<main class="profile-page">
+
+    <h1>Profile</h1>
+
+
+    <div class="profile-picture">
+
+        <img
+            *ngIf="profilePicture"
+            [src]="profilePicture"
+            alt="Profile picture"
+        >
+
+        <div
+            *ngIf="!profilePicture"
+            class="picture-placeholder"
+        >
+            No Profile Picture
+        </div>
+
+
+        <label for="profilePicture">
+            Change Profile Picture
+        </label>
+
+        <input
+            id="profilePicture"
+            type="file"
+            accept="image/*"
+            (change)="onProfilePictureSelected($event)"
+        >
+
+    </div>
+
+
+    <form (ngSubmit)="onSubmit()">
+
+        <label for="firstName">
+            First Name
+        </label>
+
+        <input
+            id="firstName"
+            name="firstName"
+            [(ngModel)]="firstName"
+            required
+        >
+
+
+        <label for="lastName">
+            Last Name
+        </label>
+
+        <input
+            id="lastName"
+            name="lastName"
+            [(ngModel)]="lastName"
+            required
+        >
+
+
+        <label for="username">
+            Username
+        </label>
+
+        <input
+            id="username"
+            name="username"
+            [(ngModel)]="username"
+            required
+        >
+
+
+        <label for="age">
+            Age
+        </label>
+
+        <input
+            id="age"
+            name="age"
+            type="number"
+            [(ngModel)]="age"
+            required
+        >
+
+
+        <label for="email">
+            Email
+        </label>
+
+        <input
+            id="email"
+            type="email"
+            [value]="email"
+            disabled
+        >
+
+        <small>
+            Email address cannot be changed.
+        </small>
+
+
+        <label for="newPassword">
+            New Password
+        </label>
+
+        <input
+            id="newPassword"
+            name="newPassword"
+            type="password"
+            [(ngModel)]="newPassword"
+        >
+
+        <small>
+            Leave blank to keep your current password.
+        </small>
+
+
+        <p
+            *ngIf="errorMessage"
+            class="error"
+        >
+            {{ errorMessage }}
+        </p>
+
+
+        <p
+            *ngIf="successMessage"
+            class="success"
+        >
+            {{ successMessage }}
+        </p>
+
+
+        <button type="submit">
+            Save Changes
+        </button>
+
+    </form>
+
+</main>

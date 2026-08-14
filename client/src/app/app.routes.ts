@@ -8,7 +8,8 @@ import { SuperAdminComponent } from './components/super-admin/super-admin.compon
 import { authGuard } from './guards/auth.guard';
 import { superAdminGuard } from './guards/super-admin.guard';
 import { userGuard } from './guards/user.guard';
-
+import { ProfileComponent }
+    from './components/profile/profile.component';
 export const routes: Routes = [
 
     {
@@ -35,6 +36,15 @@ export const routes: Routes = [
             superAdminGuard
         ]
     },
+
+    {
+    path: 'profile',
+    component: ProfileComponent,
+    canActivate: [
+        authGuard,
+        userGuard
+    ]
+},
 
     {
         path: '',
