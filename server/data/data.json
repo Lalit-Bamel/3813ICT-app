@@ -53,11 +53,20 @@
         "45210022-19d8-43cc-8808-69c6671d83dc"
       ],
       "bannedUserIds": [],
-      "roomIds": [],
+      "roomIds": [
+        "57cd49e6-b084-4bf7-96b6-19bf07d4e455"
+      ],
       "createdAt": "2026-08-14T02:05:57.156Z"
     }
   ],
-  "rooms": [],
+  "rooms": [
+    {
+      "id": "57cd49e6-b084-4bf7-96b6-19bf07d4e455",
+      "groupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "name": "General Chat",
+      "createdAt": "2026-08-17T08:18:35.157Z"
+    }
+  ],
   "requests": [
     {
       "id": "9b2a6f3a-a46e-42e2-b715-d31b19ea3f92",
@@ -87,6 +96,20 @@
       "status": "approved",
       "rejectionReason": null,
       "createdAt": "2026-08-14T02:07:14.072Z"
+    },
+    {
+      "id": "2df6568b-489e-4eb6-a1e9-d527b3f1bf8e",
+      "type": "roomCreation",
+      "requesterId": "45210022-19d8-43cc-8808-69c6671d83dc",
+      "targetGroupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "targetUserId": null,
+      "details": {
+        "roomName": "Gaming"
+      },
+      "reason": null,
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-17T08:21:25.388Z"
     }
   ],
   "auditLogs": [],

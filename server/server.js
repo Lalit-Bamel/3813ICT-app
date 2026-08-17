@@ -8,7 +8,8 @@ const app = express();
 const PORT =3000;
 const groupRoutes = require("./routes/groups.routes");
 const requestRoutes = require("./routes/requests.routes");
-
+const roomRoutes =
+    require("./routes/rooms.routes");
 
 app.use(cors({
     origin: "http://localhost:4200"
@@ -19,6 +20,7 @@ app.use("/api",authRoutes);
 app.use("/api/users",userRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/requests", requestRoutes);
+app.use("/api/rooms", roomRoutes);
 app.get("/api/health", function(req, res) {
     const data = readData();
 

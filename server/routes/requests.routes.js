@@ -266,7 +266,8 @@ router.post("/join", function(req, res) {
         const pendingRequest =
             data.requests.some(
                 request =>
-                    request.type === "joinGroup" &&
+                    request.type === "joinGroup" ||
+                    request.type === "roomCreation" &&
                     request.requesterId === user.id &&
                     request.targetGroupId === group.id &&
                     request.status === "pending"
@@ -331,7 +332,141 @@ router.post("/join", function(req, res) {
     }
 });
 
+// ROOM CREATION REQUEST
+router.post("/room-creation", function(req, res) {
 
+    try {
+
+        const {
+            requesterId,
+            groupId,
+            roomName
+        } = req.body;
+
+
+        if (
+            !requesterId ||
+            !groupId ||
+            !roomName?.trim()
+        ) {
+            return res.status(400).json({
+                message:
+                    "User, group and room name are required."
+            });
+        }
+
+
+        const data = readData();
+
+
+        const user = data.users.find(
+            currentUser =>
+                currentUser.id === requesterId
+        );
+
+
+        const group = data.groups.find(
+            currentGroup =>
+                currentGroup.id === groupId
+        );
+
+
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found."
+            });
+        }
+
+
+        if (!group) {
+            return res.status(404).json({
+                message: "Group not found."
+            });
+        }
+
+
+        if (!group.memberIds.includes(user.id)) {
+            return res.status(403).json({
+                message:
+                    "You must be a member of the group to propose a room."
+            });
+        }
+
+
+        const pendingRequest =
+            data.requests.some(
+                request =>
+                    request.type === "roomCreation" &&
+                    request.requesterId === user.id &&
+                    request.targetGroupId === group.id &&
+                    request.status === "pending" &&
+                    request.details?.roomName
+                        ?.toLowerCase() ===
+                    roomName.trim().toLowerCase()
+            );
+
+
+        if (pendingRequest) {
+            return res.status(409).json({
+                message:
+                    "You already have a pending request for this room."
+            });
+        }
+
+
+        const request = {
+
+            id: crypto.randomUUID(),
+
+            type: "roomCreation",
+
+            requesterId: user.id,
+
+            targetGroupId: group.id,
+
+            targetUserId: null,
+
+            details: {
+                roomName:
+                    roomName.trim()
+            },
+
+            reason: null,
+
+            status: "pending",
+
+            rejectionReason: null,
+
+            createdAt:
+                new Date().toISOString()
+        };
+
+
+        data.requests.push(request);
+
+        writeData(data);
+
+
+        return res.status(201).json({
+            message:
+                "Room creation request submitted.",
+            request: request
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            "Room request error:",
+            error
+        );
+
+        return res.status(500).json({
+            message:
+                "Unable to submit room request."
+        });
+    }
+});
 
 // SUPER ADMIN GROUP REQUESTS
 router.get(
@@ -686,7 +821,52 @@ router.put("/:requestId", function(req, res) {
                 }
             }
         }
-
+        // ROOM CREATION
+        if (request.type === "roomCreation") {
+        
+            const group = data.groups.find(
+                currentGroup =>
+                    currentGroup.id ===
+                    request.targetGroupId
+            );
+        
+        
+            if (!group) {
+                return res.status(404).json({
+                    message: "Group not found."
+                });
+            }
+        
+        
+            if (!group.adminIds.includes(actorId)) {
+                return res.status(403).json({
+                    message:
+                        "Only a Group Administrator can action this room request."
+                });
+            }
+        
+        
+            if (status === "approved") {
+            
+                const room = {
+                
+                    id: crypto.randomUUID(),
+                
+                    groupId: group.id,
+                
+                    name:
+                        request.details.roomName,
+                
+                    createdAt:
+                        new Date().toISOString()
+                };
+            
+            
+                data.rooms.push(room);
+            
+                group.roomIds.push(room.id);
+            }
+        }
 
         request.status = status;
 
