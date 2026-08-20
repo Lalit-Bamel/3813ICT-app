@@ -1,5 +1,4 @@
 const express = require("express");
-const crypto = require("crypto");
 
 const {
     readData,
@@ -16,18 +15,24 @@ router.get("/:roomId", function(req, res) {
 
         const data = readData();
 
+
         const room = data.rooms.find(
             currentRoom =>
-                currentRoom.id === req.params.roomId
+                currentRoom.id ===
+                req.params.roomId
         );
 
+
         if (!room) {
+
             return res.status(404).json({
                 message: "Room not found."
             });
         }
 
+
         return res.json(room);
+
 
     } catch (error) {
 
@@ -36,14 +41,16 @@ router.get("/:roomId", function(req, res) {
             error
         );
 
+
         return res.status(500).json({
-            message: "Unable to retrieve room."
+            message:
+                "Unable to retrieve room."
         });
     }
 });
 
 
-// RENAME / EDIT ROOM
+// RENAME ROOM
 router.put("/:roomId", function(req, res) {
 
     try {
@@ -55,6 +62,7 @@ router.put("/:roomId", function(req, res) {
 
 
         if (!actorId || !name?.trim()) {
+
             return res.status(400).json({
                 message:
                     "Administrator and room name are required."
@@ -67,31 +75,40 @@ router.put("/:roomId", function(req, res) {
 
         const room = data.rooms.find(
             currentRoom =>
-                currentRoom.id === req.params.roomId
+                currentRoom.id ===
+                req.params.roomId
         );
 
 
         if (!room) {
+
             return res.status(404).json({
-                message: "Room not found."
+                message:
+                    "Room not found."
             });
         }
 
 
         const group = data.groups.find(
             currentGroup =>
-                currentGroup.id === room.groupId
+                currentGroup.id ===
+                room.groupId
         );
 
 
         if (!group) {
+
             return res.status(404).json({
-                message: "Parent group not found."
+                message:
+                    "Parent group not found."
             });
         }
 
 
-        if (!group.adminIds.includes(actorId)) {
+        if (
+            !group.adminIds.includes(actorId)
+        ) {
+
             return res.status(403).json({
                 message:
                     "Only a Group Administrator can edit this room."
@@ -106,7 +123,10 @@ router.put("/:roomId", function(req, res) {
 
 
         return res.json({
-            message: "Room updated successfully.",
+
+            message:
+                "Room updated successfully.",
+
             room: room
         });
 
@@ -118,8 +138,10 @@ router.put("/:roomId", function(req, res) {
             error
         );
 
+
         return res.status(500).json({
-            message: "Unable to update room."
+            message:
+                "Unable to update room."
         });
     }
 });
@@ -135,6 +157,7 @@ router.delete("/:roomId", function(req, res) {
 
 
         if (!actorId) {
+
             return res.status(400).json({
                 message:
                     "Administrator is required."
@@ -148,13 +171,16 @@ router.delete("/:roomId", function(req, res) {
         const roomIndex =
             data.rooms.findIndex(
                 room =>
-                    room.id === req.params.roomId
+                    room.id ===
+                    req.params.roomId
             );
 
 
         if (roomIndex === -1) {
+
             return res.status(404).json({
-                message: "Room not found."
+                message:
+                    "Room not found."
             });
         }
 
@@ -163,20 +189,27 @@ router.delete("/:roomId", function(req, res) {
             data.rooms[roomIndex];
 
 
-        const group = data.groups.find(
-            currentGroup =>
-                currentGroup.id === room.groupId
-        );
+        const group =
+            data.groups.find(
+                currentGroup =>
+                    currentGroup.id ===
+                    room.groupId
+            );
 
 
         if (!group) {
+
             return res.status(404).json({
-                message: "Parent group not found."
+                message:
+                    "Parent group not found."
             });
         }
 
 
-        if (!group.adminIds.includes(actorId)) {
+        if (
+            !group.adminIds.includes(actorId)
+        ) {
+
             return res.status(403).json({
                 message:
                     "Only a Group Administrator can delete this room."
@@ -184,7 +217,10 @@ router.delete("/:roomId", function(req, res) {
         }
 
 
-        data.rooms.splice(roomIndex, 1);
+        data.rooms.splice(
+            roomIndex,
+            1
+        );
 
 
         group.roomIds =
@@ -198,7 +234,8 @@ router.delete("/:roomId", function(req, res) {
 
 
         return res.json({
-            message: "Room deleted successfully."
+            message:
+                "Room deleted successfully."
         });
 
 
@@ -209,8 +246,10 @@ router.delete("/:roomId", function(req, res) {
             error
         );
 
+
         return res.status(500).json({
-            message: "Unable to delete room."
+            message:
+                "Unable to delete room."
         });
     }
 });

@@ -1,0 +1,42 @@
+.rooms-page {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.room-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border: 1px solid #cccccc;
+
+    padding: 15px;
+    margin: 10px 0;
+}
+
+.room-card span {
+    display: flex;
+    gap: 10px;
+}
+
+section {
+    margin-top: 30px;
+}
+
+section input {
+    padding: 10px;
+    margin-right: 10px;
+}
+
+button {
+    cursor: pointer;
+}
+
+.success {
+    color: green;
+}
+
+.error {
+    color: red;
+}

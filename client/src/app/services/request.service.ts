@@ -7,8 +7,9 @@ import {
     HttpClient
 } from '@angular/common/http';
 
-import { Request }
-    from '../models/request';
+import {
+    Request
+} from '../models/request';
 
 
 @Injectable({
@@ -53,6 +54,23 @@ export class RequestService {
             {
                 requesterId,
                 groupId
+            }
+        );
+    }
+
+
+    createRoomRequest(
+        requesterId: string,
+        groupId: string,
+        roomName: string
+    ) {
+
+        return this.http.post(
+            `${this.apiUrl}/room-creation`,
+            {
+                requesterId,
+                groupId,
+                roomName
             }
         );
     }

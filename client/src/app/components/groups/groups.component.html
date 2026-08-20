@@ -130,6 +130,16 @@
                 {{ group.title }}
             </h3>
 
+            <a
+                [routerLink]="[
+                    '/groups',
+                    group.id
+                ]"
+            >
+            Open Group
+            </a>
+
+
             <p>
                 {{ group.description }}
             </p>

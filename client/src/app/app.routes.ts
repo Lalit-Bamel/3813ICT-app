@@ -16,6 +16,10 @@ import {
 } from './components/group-admin/group-admin.component';
 
 import {
+    GroupRoomsComponent
+} from './components/group-rooms/group-rooms.component';
+
+import {
     groupAdminGuard
 } from './guards/group-admin.guard';
 
@@ -72,6 +76,20 @@ import {
         redirectTo: 'login',
         pathMatch: 'full'
     },
+
+{
+    path: 'groups/:groupId',
+
+    component:
+        GroupRoomsComponent,
+
+    canActivate: [
+        authGuard,
+        userGuard
+    ]
+},
+
+
 
     {
         path: '**',

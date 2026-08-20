@@ -2,106 +2,106 @@
   "bootstrapCompleted": true,
   "users": [
     {
-      "id": "58b6a9b7-1528-462f-b130-1d007533f04b",
+      "id": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
       "firstName": "Initial",
       "lastName": "Administrator",
       "username": "superadmin",
       "email": "superadmin@3813ict.local",
       "age": 30,
-      "passwordHash": "$2b$10$XhytoqIhRNU27SIj8xgc9.Gw.uP2CelnKZIpA7larVKNutMWfY/0C",
+      "passwordHash": "$2b$10$SuwKlM9MFdIkQnbkcLx6j.5IfB4NpC88RWTqhIFtWELXnjB3vki42",
       "profilePicture": "",
       "systemRole": "superAdmin",
-      "createdAt": "2026-08-14T02:04:07.835Z"
+      "createdAt": "2026-08-20T03:04:00.106Z"
     },
     {
-      "id": "87855745-9345-449e-88af-24aefee5087f",
-      "firstName": "lalit",
-      "lastName": "test",
-      "username": "lalit",
-      "email": "lalit@gmail.com",
+      "id": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "firstName": "user",
+      "lastName": "1",
+      "username": "user1",
+      "email": "user1@gmail.com",
       "age": 22,
-      "passwordHash": "$2b$10$7rKjcaK261Fif.BoVhOh5eX5sfgtkYDt.u5ikN8RWXYoxupQOz6/S",
+      "passwordHash": "$2b$10$tE1GJmqqIK2CNH0wQbp1nO4EjePkauiXLZGpu1tk8UfZurPqP5N72",
       "profilePicture": "",
       "systemRole": "user",
-      "createdAt": "2026-08-14T02:04:35.567Z"
+      "createdAt": "2026-08-20T03:06:29.508Z"
     },
     {
-      "id": "45210022-19d8-43cc-8808-69c6671d83dc",
-      "firstName": "krishan",
-      "lastName": "test",
-      "username": "krishan",
-      "email": "krishan@gmail.com",
-      "age": 23,
-      "passwordHash": "$2b$10$ddlkIjMeVxHD4P57Vwpv3ee.S9fWJXblHM9vc2ZpfH7H0zYb51ryS",
+      "id": "33f0a490-f28e-4767-8bfe-291563b5f089",
+      "firstName": "user",
+      "lastName": "2",
+      "username": "user2",
+      "email": "user2@gmail.com",
+      "age": 22,
+      "passwordHash": "$2b$10$AHAZqLXVBM3F5YBxMNyzm.zcTAeMKTcXf0k849PjomLUYrgMlXeH.",
       "profilePicture": "",
       "systemRole": "user",
-      "createdAt": "2026-08-14T02:07:03.505Z"
+      "createdAt": "2026-08-20T03:30:54.422Z"
     }
   ],
   "groups": [
     {
-      "id": "c8fd3961-9452-4556-87d4-ba4c60a05414",
-      "title": "Technology Club",
-      "description": "tech discussion",
+      "id": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
+      "title": "Tech club",
+      "description": "tech",
       "minimumAge": 18,
       "theme": "blue",
       "adminIds": [
-        "87855745-9345-449e-88af-24aefee5087f"
+        "0b5decde-7589-4cff-ba71-dcf6a108c307"
       ],
       "memberIds": [
-        "87855745-9345-449e-88af-24aefee5087f",
-        "45210022-19d8-43cc-8808-69c6671d83dc"
+        "0b5decde-7589-4cff-ba71-dcf6a108c307",
+        "33f0a490-f28e-4767-8bfe-291563b5f089"
       ],
       "bannedUserIds": [],
       "roomIds": [
-        "57cd49e6-b084-4bf7-96b6-19bf07d4e455"
+        "aa3832a7-0f25-4fc0-b249-9baaa60b57b4"
       ],
-      "createdAt": "2026-08-14T02:05:57.156Z"
+      "createdAt": "2026-08-20T03:09:27.392Z"
     }
   ],
   "rooms": [
     {
-      "id": "57cd49e6-b084-4bf7-96b6-19bf07d4e455",
-      "groupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "id": "aa3832a7-0f25-4fc0-b249-9baaa60b57b4",
+      "groupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
       "name": "General Chat",
-      "createdAt": "2026-08-17T08:18:35.157Z"
+      "createdAt": "2026-08-20T03:09:55.841Z"
     }
   ],
   "requests": [
     {
-      "id": "9b2a6f3a-a46e-42e2-b715-d31b19ea3f92",
+      "id": "78ef7831-9fcc-4414-a1c8-c9ca9d690213",
       "type": "groupCreation",
-      "requesterId": "87855745-9345-449e-88af-24aefee5087f",
+      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
       "targetGroupId": null,
       "targetUserId": null,
       "details": {
-        "title": "Technology Club",
-        "description": "tech discussion",
+        "title": "Tech club",
+        "description": "tech",
         "minimumAge": 18,
         "theme": "blue"
       },
       "reason": null,
       "status": "approved",
       "rejectionReason": null,
-      "createdAt": "2026-08-14T02:05:36.150Z"
+      "createdAt": "2026-08-20T03:08:50.112Z"
     },
     {
-      "id": "46add9c7-1715-47b6-809c-5b186ea7b518",
+      "id": "8fe5af3b-b82a-4633-abab-e77303d97244",
       "type": "joinGroup",
-      "requesterId": "45210022-19d8-43cc-8808-69c6671d83dc",
-      "targetGroupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
+      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
       "targetUserId": null,
       "details": {},
       "reason": null,
       "status": "approved",
       "rejectionReason": null,
-      "createdAt": "2026-08-14T02:07:14.072Z"
+      "createdAt": "2026-08-20T03:31:07.111Z"
     },
     {
-      "id": "2df6568b-489e-4eb6-a1e9-d527b3f1bf8e",
+      "id": "653c0733-9352-4b42-b0ac-5ce85772fe6e",
       "type": "roomCreation",
-      "requesterId": "45210022-19d8-43cc-8808-69c6671d83dc",
-      "targetGroupId": "c8fd3961-9452-4556-87d4-ba4c60a05414",
+      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
+      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
       "targetUserId": null,
       "details": {
         "roomName": "Gaming"
@@ -109,7 +109,21 @@
       "reason": null,
       "status": "approved",
       "rejectionReason": null,
-      "createdAt": "2026-08-17T08:21:25.388Z"
+      "createdAt": "2026-08-20T03:32:21.134Z"
+    },
+    {
+      "id": "27c53d12-b40b-4928-9a40-022b36f874f1",
+      "type": "roomCreation",
+      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
+      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
+      "targetUserId": null,
+      "details": {
+        "roomName": "meme"
+      },
+      "reason": null,
+      "status": "rejected",
+      "rejectionReason": "not good",
+      "createdAt": "2026-08-20T03:48:36.214Z"
     }
   ],
   "auditLogs": [],

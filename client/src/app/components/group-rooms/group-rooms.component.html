@@ -1,0 +1,183 @@
+<app-navbar></app-navbar>
+
+
+<main
+    class="rooms-page"
+    *ngIf="group"
+>
+
+    <a routerLink="/groups">
+        ← Back to Groups
+    </a>
+
+
+    <h1>
+        {{ group.title }}
+    </h1>
+
+
+    <p>
+        {{ group.description }}
+    </p>
+
+
+    <p>
+        Minimum Age:
+        {{ group.minimumAge }}+
+    </p>
+
+
+    <p>
+        Theme:
+        {{ group.theme }}
+    </p>
+
+
+    <hr>
+
+
+    <h2>Rooms</h2>
+
+
+    <p *ngIf="rooms.length === 0">
+        This group currently has no rooms.
+    </p>
+
+
+    <div
+        class="room-card"
+        *ngFor="let room of rooms"
+    >
+
+        <!-- NORMAL ROOM DISPLAY -->
+        <div *ngIf="editingRoomId !== room.id">
+
+            <strong>
+                # {{ room.name }}
+            </strong>
+
+        </div>
+
+
+        <!-- RENAME MODE -->
+        <div *ngIf="editingRoomId === room.id">
+
+            <input
+                type="text"
+                [(ngModel)]="editedRoomName"
+            >
+
+            <button
+                type="button"
+                (click)="saveRoomName(room)"
+            >
+                Save
+            </button>
+
+            <button
+                type="button"
+                (click)="cancelRename()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+
+        <div class="room-actions">
+
+            <a
+                [routerLink]="[
+                    '/groups',
+                    group.id,
+                    'rooms',
+                    room.id
+                ]"
+            >
+                Enter
+            </a>
+
+
+            <button
+                type="button"
+                *ngIf="
+                    isAdmin &&
+                    editingRoomId !== room.id
+                "
+                (click)="renameRoom(room)"
+            >
+                Rename
+            </button>
+
+
+            <button
+                type="button"
+                *ngIf="isAdmin"
+                (click)="deleteRoom(room)"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- GROUP ADMIN -->
+    <section *ngIf="isAdmin">
+
+        <h2>Create Room</h2>
+
+        <input
+            type="text"
+            [(ngModel)]="newRoomName"
+            placeholder="Room name"
+        >
+
+        <button
+            type="button"
+            (click)="createRoom()"
+        >
+            Create Room
+        </button>
+
+    </section>
+
+
+    <!-- NORMAL MEMBER -->
+    <section *ngIf="!isAdmin">
+
+        <h2>Propose New Room</h2>
+
+        <input
+            type="text"
+            [(ngModel)]="proposedRoomName"
+            placeholder="Proposed room name"
+        >
+
+        <button
+            type="button"
+            (click)="proposeRoom()"
+        >
+            Submit Proposal
+        </button>
+
+    </section>
+
+
+    <p
+        class="success"
+        *ngIf="successMessage"
+    >
+        {{ successMessage }}
+    </p>
+
+
+    <p
+        class="error"
+        *ngIf="errorMessage"
+    >
+        {{ errorMessage }}
+    </p>
+
+</main>

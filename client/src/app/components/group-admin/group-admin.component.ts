@@ -10,10 +10,13 @@ import {
 } from '@angular/common';
 
 import {
+    FormsModule
+} from '@angular/forms';
+
+import {
     ActivatedRoute,
     RouterLink
 } from '@angular/router';
-
 
 import {
     AuthService
@@ -45,6 +48,7 @@ import {
 
     imports: [
         CommonModule,
+        FormsModule,
         RouterLink,
         NavbarComponent
     ],
@@ -55,9 +59,7 @@ import {
     styleUrl:
         './group-admin.component.css'
 })
-export class GroupAdminComponent
-    implements OnInit {
-
+export class GroupAdminComponent implements OnInit {
 
     private route =
         inject(ActivatedRoute);
@@ -82,6 +84,14 @@ export class GroupAdminComponent
     group: Group | null = null;
 
     joinRequests: Request[] = [];
+
+
+    rejectingRequestId: string | null = null;
+
+    rejectionReason = '';
+
+
+    successMessage = '';
 
     errorMessage = '';
 
@@ -115,8 +125,7 @@ export class GroupAdminComponent
 
                     this.group = group;
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -125,8 +134,7 @@ export class GroupAdminComponent
                         error.error?.message ||
                         'Unable to load group.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
@@ -136,6 +144,7 @@ export class GroupAdminComponent
 
         const user =
             this.currentUser();
+
 
         if (!user) {
             return;
@@ -154,8 +163,7 @@ export class GroupAdminComponent
                     this.joinRequests =
                         requests;
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -164,8 +172,7 @@ export class GroupAdminComponent
                         error.error?.message ||
                         'Unable to load requests.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
@@ -176,9 +183,15 @@ export class GroupAdminComponent
         const user =
             this.currentUser();
 
+
         if (!user || !this.group) {
             return;
         }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
 
 
         this.requestService
@@ -191,6 +204,9 @@ export class GroupAdminComponent
 
                 next: () => {
 
+                    this.successMessage =
+                        'Request approved successfully.';
+
                     this.loadRequests(
                         this.group!.id
                     );
@@ -198,6 +214,8 @@ export class GroupAdminComponent
                     this.loadGroup(
                         this.group!.id
                     );
+
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -206,31 +224,57 @@ export class GroupAdminComponent
                         error.error?.message ||
                         'Unable to approve request.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
 
 
-    reject(request: Request) {
+    startReject(request: Request) {
 
-        const reason = window.prompt(
-            'Enter rejection reason:'
-        );
+        this.rejectingRequestId =
+            request.id;
+
+        this.rejectionReason = '';
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+    }
 
 
-        if (!reason?.trim()) {
-            return;
-        }
+    cancelReject() {
 
+        this.rejectingRequestId = null;
+
+        this.rejectionReason = '';
+    }
+
+
+    confirmReject(request: Request) {
 
         const user =
             this.currentUser();
 
-        if (!user || !this.group) {
+
+        if (
+            !user ||
+            !this.group ||
+            !this.rejectionReason.trim()
+        ) {
+
+            this.errorMessage =
+                'Please enter a rejection reason.';
+
+            this.cdr.markForCheck();
+
             return;
         }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
 
 
         this.requestService
@@ -238,15 +282,27 @@ export class GroupAdminComponent
                 request.id,
                 user.id,
                 'rejected',
-                reason
+                this.rejectionReason
             )
             .subscribe({
 
                 next: () => {
 
+                    this.successMessage =
+                        'Request rejected successfully.';
+
+                    this.rejectingRequestId =
+                        null;
+
+                    this.rejectionReason = '';
+
+
                     this.loadRequests(
                         this.group!.id
                     );
+
+
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -255,8 +311,7 @@ export class GroupAdminComponent
                         error.error?.message ||
                         'Unable to reject request.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
