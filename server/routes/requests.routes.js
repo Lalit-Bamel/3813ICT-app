@@ -9,7 +9,11 @@ const {
 const router = express.Router();
 
 
+// ======================================================
+// HELPER
 // Adds the requester's username to a request
+// ======================================================
+
 function addRequesterUsername(request, data) {
 
     const requester = data.users.find(
@@ -18,6 +22,7 @@ function addRequesterUsername(request, data) {
 
     return {
         ...request,
+
         requesterUsername:
             requester?.username || "Unknown User"
     };
@@ -41,6 +46,10 @@ router.post("/group-creation", function(req, res) {
         } = req.body;
 
 
+        // -----------------------------
+        // Basic validation
+        // -----------------------------
+
         if (
             !requesterId ||
             !title ||
@@ -56,7 +65,8 @@ router.post("/group-creation", function(req, res) {
         }
 
 
-        const cleanTitle = title.trim();
+        const cleanTitle =
+            title.trim();
 
         const cleanDescription =
             description.trim();
@@ -64,6 +74,10 @@ router.post("/group-creation", function(req, res) {
         const numericAge =
             Number(minimumAge);
 
+
+        // -----------------------------
+        // Title validation
+        // -----------------------------
 
         if (
             cleanTitle.length === 0 ||
@@ -77,6 +91,10 @@ router.post("/group-creation", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Description validation
+        // -----------------------------
+
         if (
             cleanDescription.length === 0 ||
             cleanDescription.length > 250
@@ -88,6 +106,10 @@ router.post("/group-creation", function(req, res) {
             });
         }
 
+
+        // -----------------------------
+        // Minimum age validation
+        // -----------------------------
 
         if (
             !Number.isInteger(numericAge) ||
@@ -103,6 +125,10 @@ router.post("/group-creation", function(req, res) {
 
         const data = readData();
 
+
+        // -----------------------------
+        // Find requester
+        // -----------------------------
 
         const requester =
             data.users.find(
@@ -120,6 +146,31 @@ router.post("/group-creation", function(req, res) {
         }
 
 
+        // -----------------------------
+        // IMPORTANT AGE CHECK
+        //
+        // Requester will become the first
+        // member + admin if approved.
+        // Therefore they must satisfy
+        // their own group's age limit.
+        // -----------------------------
+
+        if (
+            requester.age <
+            numericAge
+        ) {
+
+            return res.status(403).json({
+                message:
+                    `You must be at least ${numericAge} years old to request this group.`
+            });
+        }
+
+
+        // -----------------------------
+        // Super Admin cannot request groups
+        // -----------------------------
+
         if (
             requester.systemRole ===
             "superAdmin"
@@ -132,9 +183,14 @@ router.post("/group-creation", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Prevent duplicate pending request
+        // -----------------------------
+
         const duplicateRequest =
             data.requests.some(
                 request =>
+
                     request.type ===
                         "groupCreation" &&
 
@@ -146,7 +202,7 @@ router.post("/group-creation", function(req, res) {
 
                     request.details?.title
                         ?.toLowerCase() ===
-                    cleanTitle.toLowerCase()
+                        cleanTitle.toLowerCase()
             );
 
 
@@ -159,32 +215,50 @@ router.post("/group-creation", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Create request
+        // -----------------------------
+
         const request = {
 
-            id: crypto.randomUUID(),
+            id:
+                crypto.randomUUID(),
 
-            type: "groupCreation",
+            type:
+                "groupCreation",
 
-            requesterId: requesterId,
+            requesterId:
+                requesterId,
 
-            targetGroupId: null,
+            targetGroupId:
+                null,
 
-            targetUserId: null,
+            targetUserId:
+                null,
 
             details: {
-                title: cleanTitle,
+
+                title:
+                    cleanTitle,
+
                 description:
                     cleanDescription,
+
                 minimumAge:
                     numericAge,
-                theme: theme
+
+                theme:
+                    theme
             },
 
-            reason: null,
+            reason:
+                null,
 
-            status: "pending",
+            status:
+                "pending",
 
-            rejectionReason: null,
+            rejectionReason:
+                null,
 
             createdAt:
                 new Date().toISOString()
@@ -201,7 +275,8 @@ router.post("/group-creation", function(req, res) {
             message:
                 "Group creation request submitted.",
 
-            request: request
+            request:
+                request
         });
 
 
@@ -235,7 +310,10 @@ router.post("/join", function(req, res) {
         } = req.body;
 
 
-        if (!requesterId || !groupId) {
+        if (
+            !requesterId ||
+            !groupId
+        ) {
 
             return res.status(400).json({
                 message:
@@ -244,8 +322,13 @@ router.post("/join", function(req, res) {
         }
 
 
-        const data = readData();
+        const data =
+            readData();
 
+
+        // -----------------------------
+        // Find user
+        // -----------------------------
 
         const user =
             data.users.find(
@@ -254,6 +337,10 @@ router.post("/join", function(req, res) {
                     requesterId
             );
 
+
+        // -----------------------------
+        // Find group
+        // -----------------------------
 
         const group =
             data.groups.find(
@@ -281,6 +368,10 @@ router.post("/join", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Already a member
+        // -----------------------------
+
         if (
             group.memberIds.includes(
                 user.id
@@ -293,6 +384,10 @@ router.post("/join", function(req, res) {
             });
         }
 
+
+        // -----------------------------
+        // Banned from group
+        // -----------------------------
 
         if (
             group.bannedUserIds.includes(
@@ -307,6 +402,10 @@ router.post("/join", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Age restriction
+        // -----------------------------
+
         if (
             user.age <
             group.minimumAge
@@ -319,9 +418,14 @@ router.post("/join", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Existing pending join request
+        // -----------------------------
+
         const pendingRequest =
             data.requests.some(
                 request =>
+
                     request.type ===
                         "joinGroup" &&
 
@@ -345,25 +449,38 @@ router.post("/join", function(req, res) {
         }
 
 
+        // -----------------------------
+        // Create join request
+        // -----------------------------
+
         const request = {
 
-            id: crypto.randomUUID(),
+            id:
+                crypto.randomUUID(),
 
-            type: "joinGroup",
+            type:
+                "joinGroup",
 
-            requesterId: user.id,
+            requesterId:
+                user.id,
 
-            targetGroupId: group.id,
+            targetGroupId:
+                group.id,
 
-            targetUserId: null,
+            targetUserId:
+                null,
 
-            details: {},
+            details:
+                {},
 
-            reason: null,
+            reason:
+                null,
 
-            status: "pending",
+            status:
+                "pending",
 
-            rejectionReason: null,
+            rejectionReason:
+                null,
 
             createdAt:
                 new Date().toISOString()
@@ -380,7 +497,8 @@ router.post("/join", function(req, res) {
             message:
                 "Join request submitted.",
 
-            request: request
+            request:
+                request
         });
 
 
@@ -430,8 +548,13 @@ router.post(
             }
 
 
-            const data = readData();
+            const data =
+                readData();
 
+
+            // -----------------------------
+            // Find user
+            // -----------------------------
 
             const user =
                 data.users.find(
@@ -440,6 +563,10 @@ router.post(
                         requesterId
                 );
 
+
+            // -----------------------------
+            // Find group
+            // -----------------------------
 
             const group =
                 data.groups.find(
@@ -467,6 +594,10 @@ router.post(
             }
 
 
+            // -----------------------------
+            // Must be group member
+            // -----------------------------
+
             if (
                 !group.memberIds.includes(
                     user.id
@@ -480,9 +611,14 @@ router.post(
             }
 
 
+            // -----------------------------
+            // Prevent duplicate request
+            // -----------------------------
+
             const pendingRequest =
                 data.requests.some(
                     request =>
+
                         request.type ===
                             "roomCreation" &&
 
@@ -498,9 +634,10 @@ router.post(
                         request.details
                             ?.roomName
                             ?.toLowerCase() ===
-                        roomName
-                            .trim()
-                            .toLowerCase()
+
+                            roomName
+                                .trim()
+                                .toLowerCase()
                 );
 
 
@@ -513,11 +650,17 @@ router.post(
             }
 
 
+            // -----------------------------
+            // Create room request
+            // -----------------------------
+
             const request = {
 
-                id: crypto.randomUUID(),
+                id:
+                    crypto.randomUUID(),
 
-                type: "roomCreation",
+                type:
+                    "roomCreation",
 
                 requesterId:
                     user.id,
@@ -525,18 +668,23 @@ router.post(
                 targetGroupId:
                     group.id,
 
-                targetUserId: null,
+                targetUserId:
+                    null,
 
                 details: {
+
                     roomName:
                         roomName.trim()
                 },
 
-                reason: null,
+                reason:
+                    null,
 
-                status: "pending",
+                status:
+                    "pending",
 
-                rejectionReason: null,
+                rejectionReason:
+                    null,
 
                 createdAt:
                     new Date().toISOString()
@@ -553,7 +701,8 @@ router.post(
                 message:
                     "Room creation request submitted.",
 
-                request: request
+                request:
+                    request
             });
 
 
@@ -575,7 +724,8 @@ router.post(
 
 
 // ======================================================
-// SUPER ADMIN - GET GROUP CREATION REQUESTS
+// SUPER ADMIN
+// GET PENDING GROUP CREATION REQUESTS
 // ======================================================
 
 router.get(
@@ -584,7 +734,8 @@ router.get(
 
         try {
 
-            const data = readData();
+            const data =
+                readData();
 
 
             const user =
@@ -595,10 +746,14 @@ router.get(
                 );
 
 
+            // -----------------------------
+            // Verify Super Admin
+            // -----------------------------
+
             if (
                 !user ||
                 user.systemRole !==
-                "superAdmin"
+                    "superAdmin"
             ) {
 
                 return res.status(403).json({
@@ -608,11 +763,16 @@ router.get(
             }
 
 
+            // -----------------------------
+            // Find pending creation requests
+            // -----------------------------
+
             const requests =
                 data.requests
 
                     .filter(
                         request =>
+
                             request.type ===
                                 "groupCreation" &&
 
@@ -629,7 +789,9 @@ router.get(
                     );
 
 
-            return res.json(requests);
+            return res.json(
+                requests
+            );
 
 
         } catch (error) {
@@ -650,7 +812,8 @@ router.get(
 
 
 // ======================================================
-// GROUP ADMIN - GET JOIN + ROOM REQUESTS
+// GROUP ADMIN
+// GET PENDING JOIN + ROOM REQUESTS
 // ======================================================
 
 router.get(
@@ -659,7 +822,8 @@ router.get(
 
         try {
 
-            const data = readData();
+            const data =
+                readData();
 
 
             const group =
@@ -679,6 +843,10 @@ router.get(
             }
 
 
+            // -----------------------------
+            // Verify Group Admin
+            // -----------------------------
+
             if (
                 !group.adminIds.includes(
                     req.params.userId
@@ -692,6 +860,10 @@ router.get(
             }
 
 
+            // -----------------------------
+            // Retrieve relevant requests
+            // -----------------------------
+
             const requests =
                 data.requests
 
@@ -704,14 +876,10 @@ router.get(
 
                                 request.type ===
                                     "roomCreation"
-                            )
-
-                            &&
+                            ) &&
 
                             request.targetGroupId ===
-                                group.id
-
-                            &&
+                                group.id &&
 
                             request.status ===
                                 "pending"
@@ -726,7 +894,9 @@ router.get(
                     );
 
 
-            return res.json(requests);
+            return res.json(
+                requests
+            );
 
 
         } catch (error) {
@@ -763,6 +933,10 @@ router.put(
             } = req.body;
 
 
+            // -----------------------------
+            // Validate status
+            // -----------------------------
+
             if (
                 status !== "approved" &&
                 status !== "rejected"
@@ -774,6 +948,10 @@ router.put(
                 });
             }
 
+
+            // -----------------------------
+            // Rejection requires reason
+            // -----------------------------
 
             if (
                 status === "rejected" &&
@@ -787,8 +965,13 @@ router.put(
             }
 
 
-            const data = readData();
+            const data =
+                readData();
 
+
+            // -----------------------------
+            // Find request
+            // -----------------------------
 
             const request =
                 data.requests.find(
@@ -807,9 +990,13 @@ router.put(
             }
 
 
+            // -----------------------------
+            // Request already actioned
+            // -----------------------------
+
             if (
                 request.status !==
-                "pending"
+                    "pending"
             ) {
 
                 return res.status(409).json({
@@ -819,13 +1006,13 @@ router.put(
             }
 
 
-            // ==========================================
+            // ==================================================
             // GROUP CREATION
-            // ==========================================
+            // ==================================================
 
             if (
                 request.type ===
-                "groupCreation"
+                    "groupCreation"
             ) {
 
                 const actor =
@@ -836,10 +1023,14 @@ router.put(
                     );
 
 
+                // -----------------------------
+                // Only Super Admin can action
+                // -----------------------------
+
                 if (
                     !actor ||
                     actor.systemRole !==
-                    "superAdmin"
+                        "superAdmin"
                 ) {
 
                     return res.status(403).json({
@@ -849,9 +1040,13 @@ router.put(
                 }
 
 
+                // -----------------------------
+                // Approve group creation
+                // -----------------------------
+
                 if (
                     status ===
-                    "approved"
+                        "approved"
                 ) {
 
                     const requester =
@@ -870,6 +1065,33 @@ router.put(
                         });
                     }
 
+
+                    // -----------------------------
+                    // RECHECK AGE
+                    //
+                    // User could have changed their
+                    // age while request was pending.
+                    // -----------------------------
+
+                    if (
+                        requester.age <
+                        request.details.minimumAge
+                    ) {
+
+                        return res.status(403).json({
+                            message:
+                                "The requester no longer meets the minimum age requirement for this group."
+                        });
+                    }
+
+
+                    // -----------------------------
+                    // Create group
+                    //
+                    // Requester becomes:
+                    // - first member
+                    // - first admin
+                    // -----------------------------
 
                     const group = {
 
@@ -896,9 +1118,11 @@ router.put(
                             requester.id
                         ],
 
-                        bannedUserIds: [],
+                        bannedUserIds:
+                            [],
 
-                        roomIds: [],
+                        roomIds:
+                            [],
 
                         createdAt:
                             new Date()
@@ -906,18 +1130,20 @@ router.put(
                     };
 
 
-                    data.groups.push(group);
+                    data.groups.push(
+                        group
+                    );
                 }
             }
 
 
-            // ==========================================
+            // ==================================================
             // JOIN GROUP
-            // ==========================================
+            // ==================================================
 
             if (
                 request.type ===
-                "joinGroup"
+                    "joinGroup"
             ) {
 
                 const group =
@@ -937,6 +1163,10 @@ router.put(
                 }
 
 
+                // -----------------------------
+                // Only Group Admin can action
+                // -----------------------------
+
                 if (
                     !group.adminIds.includes(
                         actorId
@@ -950,9 +1180,13 @@ router.put(
                 }
 
 
+                // -----------------------------
+                // Approve membership
+                // -----------------------------
+
                 if (
                     status ===
-                    "approved"
+                        "approved"
                 ) {
 
                     const user =
@@ -972,6 +1206,9 @@ router.put(
                     }
 
 
+                    // Recheck age because their
+                    // profile may have changed.
+
                     if (
                         user.age <
                         group.minimumAge
@@ -983,6 +1220,8 @@ router.put(
                         });
                     }
 
+
+                    // Recheck group ban.
 
                     if (
                         group.bannedUserIds.includes(
@@ -1011,13 +1250,13 @@ router.put(
             }
 
 
-            // ==========================================
+            // ==================================================
             // ROOM CREATION
-            // ==========================================
+            // ==================================================
 
             if (
                 request.type ===
-                "roomCreation"
+                    "roomCreation"
             ) {
 
                 const group =
@@ -1037,6 +1276,10 @@ router.put(
                 }
 
 
+                // -----------------------------
+                // Only Group Admin can action
+                // -----------------------------
+
                 if (
                     !group.adminIds.includes(
                         actorId
@@ -1050,9 +1293,13 @@ router.put(
                 }
 
 
+                // -----------------------------
+                // Approve room
+                // -----------------------------
+
                 if (
                     status ===
-                    "approved"
+                        "approved"
                 ) {
 
                     const room = {
@@ -1073,7 +1320,10 @@ router.put(
                     };
 
 
-                    data.rooms.push(room);
+                    data.rooms.push(
+                        room
+                    );
+
 
                     group.roomIds.push(
                         room.id
@@ -1082,11 +1332,12 @@ router.put(
             }
 
 
-            // ==========================================
+            // ==================================================
             // FINALISE REQUEST
-            // ==========================================
+            // ==================================================
 
-            request.status = status;
+            request.status =
+                status;
 
 
             request.rejectionReason =
@@ -1103,7 +1354,8 @@ router.put(
                 message:
                     `Request ${status} successfully.`,
 
-                request: request
+                request:
+                    request
             });
 
 

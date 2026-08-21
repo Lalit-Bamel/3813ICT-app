@@ -9,6 +9,9 @@ import {
     CommonModule
 } from '@angular/common';
 
+import {
+    FormsModule
+} from '@angular/forms';
 
 import {
     NavbarComponent
@@ -32,6 +35,7 @@ import {
 
     imports: [
         CommonModule,
+        FormsModule,
         NavbarComponent
     ],
 
@@ -61,17 +65,33 @@ export class SuperAdminComponent
 
     groupRequests: Request[] = [];
 
+
+    rejectingRequestId:
+        string | null = null;
+
+    rejectionReason = '';
+
+
     errorMessage = '';
+
+    successMessage = '';
 
 
     ngOnInit() {
+
         this.loadGroupRequests();
     }
 
 
+    // ==================================================
+    // LOAD PENDING GROUP CREATION REQUESTS
+    // ==================================================
+
     loadGroupRequests() {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return;
@@ -93,11 +113,12 @@ export class SuperAdminComponent
                         .markForCheck();
                 },
 
+
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to load requests.';
+                        'Unable to load group requests.';
 
                     this.cdr
                         .markForCheck();
@@ -106,13 +127,26 @@ export class SuperAdminComponent
     }
 
 
-    approveRequest(request: Request) {
+    // ==================================================
+    // APPROVE GROUP REQUEST
+    // ==================================================
 
-        const user = this.currentUser();
+    approveRequest(
+        request: Request
+    ) {
+
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return;
         }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
 
 
         this.requestService
@@ -124,14 +158,25 @@ export class SuperAdminComponent
             .subscribe({
 
                 next: () => {
+
+                    this.successMessage =
+                        'Group request approved successfully.';
+
+
                     this.loadGroupRequests();
+
+
+                    this.cdr
+                        .markForCheck();
                 },
+
 
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to approve request.';
+                        'Unable to approve group request.';
+
 
                     this.cdr
                         .markForCheck();
@@ -140,23 +185,86 @@ export class SuperAdminComponent
     }
 
 
-    rejectRequest(request: Request) {
+    // ==================================================
+    // START REJECTION
+    // ==================================================
 
-        const reason = window.prompt(
-            'Enter rejection reason:'
-        );
+    startReject(
+        request: Request
+    ) {
+
+        this.rejectingRequestId =
+            request.id;
 
 
-        if (!reason?.trim()) {
-            return;
-        }
+        this.rejectionReason = '';
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
 
 
-        const user = this.currentUser();
+        this.cdr
+            .markForCheck();
+    }
+
+
+    // ==================================================
+    // CANCEL REJECTION
+    // ==================================================
+
+    cancelReject() {
+
+        this.rejectingRequestId =
+            null;
+
+
+        this.rejectionReason = '';
+
+        this.errorMessage = '';
+
+
+        this.cdr
+            .markForCheck();
+    }
+
+
+    // ==================================================
+    // CONFIRM REJECTION
+    // ==================================================
+
+    confirmReject(
+        request: Request
+    ) {
+
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return;
         }
+
+
+        if (
+            !this.rejectionReason.trim()
+        ) {
+
+            this.errorMessage =
+                'Please enter a rejection reason.';
+
+
+            this.cdr
+                .markForCheck();
+
+
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
 
 
         this.requestService
@@ -164,19 +272,38 @@ export class SuperAdminComponent
                 request.id,
                 user.id,
                 'rejected',
-                reason
+                this.rejectionReason
             )
             .subscribe({
 
                 next: () => {
+
+                    this.successMessage =
+                        'Group request rejected successfully.';
+
+
+                    this.rejectingRequestId =
+                        null;
+
+
+                    this.rejectionReason =
+                        '';
+
+
                     this.loadGroupRequests();
+
+
+                    this.cdr
+                        .markForCheck();
                 },
+
 
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to reject request.';
+                        'Unable to reject group request.';
+
 
                     this.cdr
                         .markForCheck();

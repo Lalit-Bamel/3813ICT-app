@@ -3,66 +3,21 @@
 
 <main class="admin-page">
 
-    <h1>Super Administrator</h1>
+    <h1>
+        Super Administrator
+    </h1>
 
 
-    <h2>Pending Group Requests</h2>
+    <!-- ========================================= -->
+    <!-- SUCCESS / ERROR MESSAGES -->
+    <!-- ========================================= -->
 
-
-    <p *ngIf="groupRequests.length === 0">
-        No pending group requests.
-    </p>
-
-
-    <div
-        *ngFor="let request of groupRequests"
-        class="request-card"
+    <p
+        class="success"
+        *ngIf="successMessage"
     >
-
-        <p>
-            <strong>Requested by:</strong>
-            {{ request.requesterUsername }}
-        </p>
-
-
-        <p>
-            <strong>Title:</strong>
-            {{ request.details.title }}
-        </p>
-
-
-        <p>
-            <strong>Description:</strong>
-            {{ request.details.description }}
-        </p>
-
-
-        <p>
-            <strong>Minimum Age:</strong>
-            {{ request.details.minimumAge }}+
-        </p>
-
-
-        <p>
-            <strong>Theme:</strong>
-            {{ request.details.theme }}
-        </p>
-
-
-        <button
-            (click)="approveRequest(request)"
-        >
-            Approve
-        </button>
-
-
-        <button
-            (click)="rejectRequest(request)"
-        >
-            Reject
-        </button>
-
-    </div>
+        {{ successMessage }}
+    </p>
 
 
     <p
@@ -73,21 +28,213 @@
     </p>
 
 
+    <!-- ========================================= -->
+    <!-- GROUP CREATION REQUESTS -->
+    <!-- ========================================= -->
+
+    <section>
+
+        <h2>
+            Pending Group Requests
+        </h2>
+
+
+        <p
+            *ngIf="
+                groupRequests.length === 0
+            "
+        >
+            No pending group requests.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="
+                let request
+                of groupRequests
+            "
+        >
+
+            <p>
+                <strong>
+                    Requested by:
+                </strong>
+
+                {{
+                    request.requesterUsername
+                }}
+            </p>
+
+
+            <p>
+                <strong>
+                    Group Title:
+                </strong>
+
+                {{
+                    request.details.title
+                }}
+            </p>
+
+
+            <p>
+                <strong>
+                    Description:
+                </strong>
+
+                {{
+                    request.details.description
+                }}
+            </p>
+
+
+            <p>
+                <strong>
+                    Minimum Age:
+                </strong>
+
+                {{
+                    request.details.minimumAge
+                }}+
+            </p>
+
+
+            <p>
+                <strong>
+                    Theme:
+                </strong>
+
+                {{
+                    request.details.theme
+                }}
+            </p>
+
+
+            <!-- ================================= -->
+            <!-- NORMAL APPROVE / REJECT BUTTONS -->
+            <!-- ================================= -->
+
+            <div
+                *ngIf="
+                    rejectingRequestId
+                    !== request.id
+                "
+            >
+
+                <button
+                    (click)="
+                        approveRequest(request)
+                    "
+                >
+                    Approve
+                </button>
+
+
+                <button
+                    (click)="
+                        startReject(request)
+                    "
+                >
+                    Reject
+                </button>
+
+            </div>
+
+
+            <!-- ================================= -->
+            <!-- REJECTION FORM -->
+            <!-- ================================= -->
+
+            <div
+                *ngIf="
+                    rejectingRequestId
+                    === request.id
+                "
+            >
+
+                <label>
+                    Rejection Reason
+                </label>
+
+
+                <input
+                    type="text"
+                    [(ngModel)]="
+                        rejectionReason
+                    "
+                    placeholder="
+                        Enter rejection reason
+                    "
+                >
+
+
+                <button
+                    (click)="
+                        confirmReject(request)
+                    "
+                >
+                    Confirm Reject
+                </button>
+
+
+                <button
+                    (click)="
+                        cancelReject()
+                    "
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
     <hr>
 
 
-    <div class="admin-options">
+    <!-- ========================================= -->
+    <!-- OTHER SUPER ADMIN FUNCTIONS -->
+    <!-- ========================================= -->
 
-        <button>Ban Requests</button>
+    <section>
 
-        <button>Delete Group Requests</button>
+        <h2>
+            Administration
+        </h2>
 
-        <button>Users</button>
 
-        <button>Banned Users</button>
+        <div class="admin-options">
 
-        <button>Audit Logs</button>
+            <button>
+                Ban Requests
+            </button>
 
-    </div>
+
+            <button>
+                Delete Group Requests
+            </button>
+
+
+            <button>
+                Users
+            </button>
+
+
+            <button>
+                Banned Users
+            </button>
+
+
+            <button>
+                Audit Logs
+            </button>
+
+        </div>
+
+    </section>
 
 </main>

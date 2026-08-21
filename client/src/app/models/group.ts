@@ -20,3 +20,9 @@ export interface Group {
 
     createdAt: string;
 }
+export interface GroupMember {
+
+    id: string;
+
+    username: string;
+}

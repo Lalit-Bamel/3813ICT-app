@@ -7,6 +7,123 @@
         ← Back to Groups
     </a>
 
+    <section
+    *ngIf="group"
+    class="admin-section"
+>
+
+    <h2>Edit Group</h2>
+
+
+    <label>Title</label>
+
+    <input
+        [(ngModel)]="editTitle"
+        maxlength="30"
+    >
+
+    <section
+    *ngIf="group"
+    class="admin-section"
+>
+
+    <h2>Members</h2>
+
+
+    <div
+        *ngFor="let member of members"
+        class="member-row"
+    >
+
+        <span>
+
+            {{ member.username }}
+
+            <strong
+                *ngIf="isAdmin(member)"
+            >
+                — Group Admin
+            </strong>
+
+        </span>
+
+
+        <button
+            *ngIf="!isAdmin(member)"
+            (click)="promote(member)"
+        >
+            Promote to Admin
+        </button>
+
+
+        <button
+            *ngIf="
+                isAdmin(member) &&
+                member.id !== currentUser()?.id
+            "
+            (click)="demote(member)"
+        >
+            Demote Admin
+        </button>
+
+    </div>
+
+
+    <button
+        class="resign-button"
+        (click)="resign()"
+    >
+        Resign as Group Administrator
+    </button>
+
+</section>
+
+
+    <label>Description</label>
+
+    <textarea
+        [(ngModel)]="editDescription"
+        maxlength="250"
+    ></textarea>
+
+
+    <label>Minimum Age</label>
+
+    <input
+        type="number"
+        [(ngModel)]="editMinimumAge"
+    >
+
+
+    <label>Theme</label>
+
+    <select
+        [(ngModel)]="editTheme"
+    >
+
+        <option value="default">
+            Default
+        </option>
+
+        <option value="dark">
+            Dark
+        </option>
+
+        <option value="blue">
+            Blue
+        </option>
+
+    </select>
+
+
+    <button
+        (click)="saveGroupChanges()"
+    >
+        Save Group Changes
+    </button>
+
+</section>
+
 
     <h1 *ngIf="group">
         {{ group.title }} — Admin

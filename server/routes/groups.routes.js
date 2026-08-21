@@ -668,7 +668,7 @@ router.put("/:groupId", function(req, res) {
 
 
 // GET ONE GROUP
-router.get("/:groupId/rooms", function(req, res) {
+router.get("/:groupId", function(req, res) {
     try {
         const data = readData();
 

@@ -15,7 +15,8 @@ import {
 
 import {
     ActivatedRoute,
-    RouterLink
+    RouterLink,
+    Router
 } from '@angular/router';
 
 import {
@@ -31,7 +32,8 @@ import {
 } from '../../services/request.service';
 
 import {
-    Group
+    Group,
+    GroupMember
 } from '../../models/group';
 
 import {
@@ -80,6 +82,7 @@ export class GroupAdminComponent implements OnInit {
     currentUser =
         this.authService.currentUser;
 
+    
 
     group: Group | null = null;
 
@@ -91,10 +94,33 @@ export class GroupAdminComponent implements OnInit {
     rejectionReason = '';
 
 
-    successMessage = '';
 
     errorMessage = '';
 
+    loadMembers(groupId: string) {
+
+    this.groupService
+        .getGroupMembers(groupId)
+        .subscribe({
+
+            next: members => {
+
+                this.members =
+                    members;
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to load members.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
 
     ngOnInit() {
 
@@ -112,8 +138,226 @@ export class GroupAdminComponent implements OnInit {
         this.loadGroup(groupId);
 
         this.loadRequests(groupId);
+
+        this.loadMembers(groupId);
     }
 
+saveGroupChanges() {
+
+    const user =
+        this.currentUser();
+
+
+    if (
+        !user ||
+        !this.group ||
+        this.editMinimumAge === null
+    ) {
+        return;
+    }
+
+
+    this.errorMessage = '';
+    this.successMessage = '';
+
+
+    this.groupService
+        .updateGroup(
+            this.group.id,
+            user.id,
+            {
+                title:
+                    this.editTitle,
+
+                description:
+                    this.editDescription,
+
+                minimumAge:
+                    this.editMinimumAge,
+
+                theme:
+                    this.editTheme
+            }
+        )
+        .subscribe({
+
+            next: () => {
+
+                this.successMessage =
+                    'Group updated successfully.';
+
+                this.loadGroup(
+                    this.group!.id
+                );
+
+                this.loadMembers(
+                    this.group!.id
+                );
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to update group.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
+isAdmin(member: GroupMember): boolean {
+
+    return (
+        this.group?.adminIds
+            .includes(member.id)
+        ?? false
+    );
+}
+
+promote(member: GroupMember) {
+
+    const user =
+        this.currentUser();
+
+
+    if (!user || !this.group) {
+        return;
+    }
+
+
+    this.groupService
+        .promoteAdmin(
+            this.group.id,
+            user.id,
+            member.id
+        )
+        .subscribe({
+
+            next: () => {
+
+                this.successMessage =
+                    `${member.username} promoted to Group Administrator.`;
+
+                this.loadGroup(
+                    this.group!.id
+                );
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to promote member.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
+
+demote(member: GroupMember) {
+
+    const user =
+        this.currentUser();
+
+
+    if (!user || !this.group) {
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            `Demote ${member.username} from Group Administrator?`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    this.groupService
+        .demoteAdmin(
+            this.group.id,
+            user.id,
+            member.id
+        )
+        .subscribe({
+
+            next: () => {
+
+                this.successMessage =
+                    `${member.username} is no longer a Group Administrator.`;
+
+                this.loadGroup(
+                    this.group!.id
+                );
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to demote administrator.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
+
+resign() {
+
+    const user =
+        this.currentUser();
+
+
+    if (!user || !this.group) {
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            'Resign as Group Administrator?'
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    this.groupService
+        .resignAdmin(
+            this.group.id,
+            user.id
+        )
+        .subscribe({
+
+            next: () => {
+
+                this.router.navigate([
+                    '/groups',
+                    this.group!.id
+                ]);
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to resign.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
 
     loadGroup(groupId: string) {
 
@@ -121,12 +365,24 @@ export class GroupAdminComponent implements OnInit {
             .getGroup(groupId)
             .subscribe({
 
-                next: group => {
-
-                    this.group = group;
-
-                    this.cdr.markForCheck();
-                },
+        next: group => {
+        
+            this.group = group;
+        
+            this.editTitle =
+                group.title;
+        
+            this.editDescription =
+                group.description;
+        
+            this.editMinimumAge =
+                group.minimumAge;
+        
+            this.editTheme =
+                group.theme;
+        
+            this.cdr.markForCheck();
+        },
 
                 error: error => {
 
@@ -315,4 +571,22 @@ export class GroupAdminComponent implements OnInit {
                 }
             });
     }
+    private router =
+    inject(Router);
+
+
+members: GroupMember[] = [];
+
+
+editTitle = '';
+
+editDescription = '';
+
+editMinimumAge:
+    number | null = null;
+
+editTheme = 'default';
+
+
+successMessage = '';
 }

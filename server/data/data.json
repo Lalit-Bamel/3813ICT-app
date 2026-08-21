@@ -31,22 +31,34 @@
       "lastName": "2",
       "username": "user2",
       "email": "user2@gmail.com",
-      "age": 22,
+      "age": 29,
       "passwordHash": "$2b$10$AHAZqLXVBM3F5YBxMNyzm.zcTAeMKTcXf0k849PjomLUYrgMlXeH.",
       "profilePicture": "",
       "systemRole": "user",
       "createdAt": "2026-08-20T03:30:54.422Z"
+    },
+    {
+      "id": "69bed503-4573-47bd-82d4-583496675dbd",
+      "firstName": "user",
+      "lastName": "3",
+      "username": "user3",
+      "email": "user3@gmail.com",
+      "age": 66,
+      "passwordHash": "$2b$10$1oq00CWAybUAd6erQNrXIuXV6wC999iU43EjOQAQa0cbLzeHzwVRy",
+      "profilePicture": "",
+      "systemRole": "user",
+      "createdAt": "2026-08-21T02:44:55.045Z"
     }
   ],
   "groups": [
     {
       "id": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
-      "title": "Updated Technology Club",
+      "title": "Programming Club",
       "description": "New description",
-      "minimumAge": 18,
+      "minimumAge": 20,
       "theme": "dark",
       "adminIds": [
-        "0b5decde-7589-4cff-ba71-dcf6a108c307"
+        "33f0a490-f28e-4767-8bfe-291563b5f089"
       ],
       "memberIds": [
         "0b5decde-7589-4cff-ba71-dcf6a108c307",
@@ -67,65 +79,7 @@
       "createdAt": "2026-08-20T03:09:55.841Z"
     }
   ],
-  "requests": [
-    {
-      "id": "78ef7831-9fcc-4414-a1c8-c9ca9d690213",
-      "type": "groupCreation",
-      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
-      "targetGroupId": null,
-      "targetUserId": null,
-      "details": {
-        "title": "Tech club",
-        "description": "tech",
-        "minimumAge": 18,
-        "theme": "blue"
-      },
-      "reason": null,
-      "status": "approved",
-      "rejectionReason": null,
-      "createdAt": "2026-08-20T03:08:50.112Z"
-    },
-    {
-      "id": "8fe5af3b-b82a-4633-abab-e77303d97244",
-      "type": "joinGroup",
-      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
-      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
-      "targetUserId": null,
-      "details": {},
-      "reason": null,
-      "status": "approved",
-      "rejectionReason": null,
-      "createdAt": "2026-08-20T03:31:07.111Z"
-    },
-    {
-      "id": "653c0733-9352-4b42-b0ac-5ce85772fe6e",
-      "type": "roomCreation",
-      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
-      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
-      "targetUserId": null,
-      "details": {
-        "roomName": "Gaming"
-      },
-      "reason": null,
-      "status": "approved",
-      "rejectionReason": null,
-      "createdAt": "2026-08-20T03:32:21.134Z"
-    },
-    {
-      "id": "27c53d12-b40b-4928-9a40-022b36f874f1",
-      "type": "roomCreation",
-      "requesterId": "33f0a490-f28e-4767-8bfe-291563b5f089",
-      "targetGroupId": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
-      "targetUserId": null,
-      "details": {
-        "roomName": "meme"
-      },
-      "reason": null,
-      "status": "rejected",
-      "rejectionReason": "not good",
-      "createdAt": "2026-08-20T03:48:36.214Z"
-    }
-  ],
+  "requests": [],
   "auditLogs": [],
   "messages": [],
   "bannedUsers": []
