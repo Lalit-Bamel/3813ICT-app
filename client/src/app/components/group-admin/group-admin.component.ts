@@ -116,6 +116,12 @@ implements OnInit {
     systemBanReason = '';
 
 
+    showGroupDeletionForm =
+        false;
+
+    groupDeletionReason = '';
+
+
     successMessage = '';
 
     errorMessage = '';
@@ -141,10 +147,6 @@ implements OnInit {
         this.loadMembers(groupId);
     }
 
-
-    // ==========================================
-    // LOAD GROUP
-    // ==========================================
 
     loadGroup(groupId: string) {
 
@@ -183,10 +185,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // LOAD MEMBERS
-    // ==========================================
-
     loadMembers(groupId: string) {
 
         this.groupService
@@ -195,8 +193,7 @@ implements OnInit {
 
                 next: members => {
 
-                    this.members =
-                        members;
+                    this.members = members;
 
                     this.cdr.markForCheck();
                 },
@@ -212,10 +209,6 @@ implements OnInit {
             });
     }
 
-
-    // ==========================================
-    // LOAD REQUESTS
-    // ==========================================
 
     loadRequests(groupId: string) {
 
@@ -255,10 +248,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // EDIT GROUP
-    // ==========================================
-
     saveGroupChanges() {
 
         const user =
@@ -275,7 +264,6 @@ implements OnInit {
 
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
 
@@ -327,10 +315,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // CHECK ADMIN
-    // ==========================================
-
     isAdmin(
         member: GroupMember
     ): boolean {
@@ -343,10 +327,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // PROMOTE ADMIN
-    // ==========================================
-
     promote(member: GroupMember) {
 
         const user =
@@ -356,11 +336,6 @@ implements OnInit {
         if (!user || !this.group) {
             return;
         }
-
-
-        this.errorMessage = '';
-
-        this.successMessage = '';
 
 
         this.groupService
@@ -395,10 +370,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // DEMOTE ADMIN
-    // ==========================================
-
     demote(member: GroupMember) {
 
         const user =
@@ -419,11 +390,6 @@ implements OnInit {
         if (!confirmed) {
             return;
         }
-
-
-        this.errorMessage = '';
-
-        this.successMessage = '';
 
 
         this.groupService
@@ -457,10 +423,6 @@ implements OnInit {
             });
     }
 
-
-    // ==========================================
-    // RESIGN ADMIN
-    // ==========================================
 
     resign() {
 
@@ -511,10 +473,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // SYSTEM BAN REQUEST
-    // ==========================================
-
     startSystemBan(
         member: GroupMember
     ) {
@@ -525,7 +483,6 @@ implements OnInit {
         this.systemBanReason = '';
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
         this.cdr.markForCheck();
@@ -567,11 +524,6 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
-
-        this.successMessage = '';
-
-
         this.requestService
             .createSystemBanRequest(
                 user.id,
@@ -606,9 +558,89 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // REQUEST ACTION PERMISSION
-    // ==========================================
+    startGroupDeletionRequest() {
+
+        this.showGroupDeletionForm =
+            true;
+
+        this.groupDeletionReason = '';
+
+        this.errorMessage = '';
+        this.successMessage = '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    cancelGroupDeletionRequest() {
+
+        this.showGroupDeletionForm =
+            false;
+
+        this.groupDeletionReason = '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    confirmGroupDeletionRequest() {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user || !this.group) {
+            return;
+        }
+
+
+        if (
+            !this.groupDeletionReason
+                .trim()
+        ) {
+
+            this.errorMessage =
+                'Please enter a reason for deleting the group.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.requestService
+            .createGroupDeletionRequest(
+                user.id,
+                this.group.id,
+                this.groupDeletionReason
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        'Group deletion request submitted to the Super Administrator.';
+
+                    this.showGroupDeletionForm =
+                        false;
+
+                    this.groupDeletionReason =
+                        '';
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to submit group deletion request.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
 
     canActionRequest(
         request: Request
@@ -635,10 +667,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // APPROVE REQUEST
-    // ==========================================
-
     approve(request: Request) {
 
         const user =
@@ -651,7 +679,6 @@ implements OnInit {
 
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
 
@@ -695,10 +722,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // START REJECT
-    // ==========================================
-
     startReject(
         request: Request
     ) {
@@ -709,16 +732,11 @@ implements OnInit {
         this.rejectionReason = '';
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
         this.cdr.markForCheck();
     }
 
-
-    // ==========================================
-    // CANCEL REJECT
-    // ==========================================
 
     cancelReject() {
 
@@ -731,10 +749,6 @@ implements OnInit {
     }
 
 
-    // ==========================================
-    // CONFIRM REJECT
-    // ==========================================
-
     confirmReject(
         request: Request
     ) {
@@ -743,10 +757,7 @@ implements OnInit {
             this.currentUser();
 
 
-        if (
-            !user ||
-            !this.group
-        ) {
+        if (!user || !this.group) {
             return;
         }
 
@@ -762,11 +773,6 @@ implements OnInit {
 
             return;
         }
-
-
-        this.errorMessage = '';
-
-        this.successMessage = '';
 
 
         this.requestService

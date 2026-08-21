@@ -8,8 +8,6 @@
     </h1>
 
 
-    <!-- MESSAGES -->
-
     <p
         class="success"
         *ngIf="successMessage"
@@ -26,21 +24,14 @@
     </p>
 
 
-
-    <!-- ====================================== -->
-    <!-- GROUP CREATION REQUESTS -->
-    <!-- ====================================== -->
+    <!-- GROUP CREATION -->
 
     <section>
 
-        <h2>
-            Pending Group Requests
-        </h2>
+        <h2>Pending Group Requests</h2>
 
 
-        <p
-            *ngIf="groupRequests.length === 0"
-        >
+        <p *ngIf="groupRequests.length === 0">
             No pending group requests.
         </p>
 
@@ -51,110 +42,50 @@
         >
 
             <p>
-                <strong>Requested by:</strong>
-
+                Requested by:
                 {{ request.requesterUsername }}
             </p>
 
-
             <p>
-                <strong>Group Title:</strong>
-
+                Group:
                 {{ request.details.title }}
             </p>
 
-
             <p>
-                <strong>Description:</strong>
-
+                Description:
                 {{ request.details.description }}
             </p>
 
-
             <p>
-                <strong>Minimum Age:</strong>
-
+                Minimum Age:
                 {{ request.details.minimumAge }}+
             </p>
 
-
             <p>
-                <strong>Theme:</strong>
-
+                Theme:
                 {{ request.details.theme }}
             </p>
 
 
-            <div
-                *ngIf="
-                    rejectingRequestId !==
-                    request.id
+            <ng-container
+                *ngTemplateOutlet="
+                    requestActions;
+                    context: {
+                        $implicit: request
+                    }
                 "
             >
-
-                <button
-                    (click)="approveRequest(request)"
-                >
-                    Approve
-                </button>
-
-
-                <button
-                    (click)="startReject(request)"
-                >
-                    Reject
-                </button>
-
-            </div>
-
-
-            <div
-                *ngIf="
-                    rejectingRequestId ===
-                    request.id
-                "
-            >
-
-                <label>
-                    Rejection Reason
-                </label>
-
-
-                <input
-                    type="text"
-                    [(ngModel)]="rejectionReason"
-                    placeholder="Enter rejection reason"
-                >
-
-
-                <button
-                    (click)="confirmReject(request)"
-                >
-                    Confirm Reject
-                </button>
-
-
-                <button
-                    (click)="cancelReject()"
-                >
-                    Cancel
-                </button>
-
-            </div>
+            </ng-container>
 
         </div>
 
     </section>
 
 
-
     <hr>
 
 
-
-    <!-- ====================================== -->
-    <!-- SYSTEM BAN REQUESTS -->
-    <!-- ====================================== -->
+    <!-- SYSTEM BANS -->
 
     <section>
 
@@ -175,101 +106,108 @@
         <div
             class="request-card"
             *ngFor="
-                let request of systemBanRequests
+                let request
+                of systemBanRequests
             "
         >
 
             <p>
-                <strong>Requested by:</strong>
-
+                Requested by:
                 {{ request.requesterUsername }}
             </p>
 
-
             <p>
-                <strong>Target:</strong>
-
+                Target:
                 {{ request.targetUsername }}
             </p>
 
-
             <p>
-                <strong>Reason:</strong>
-
+                Reason:
                 {{ request.reason }}
             </p>
 
 
-            <div
-                *ngIf="
-                    rejectingRequestId !==
-                    request.id
+            <ng-container
+                *ngTemplateOutlet="
+                    requestActions;
+                    context: {
+                        $implicit: request
+                    }
                 "
             >
-
-                <button
-                    (click)="approveRequest(request)"
-                >
-                    Approve Permanent Ban
-                </button>
-
-
-                <button
-                    (click)="startReject(request)"
-                >
-                    Reject
-                </button>
-
-            </div>
-
-
-            <div
-                *ngIf="
-                    rejectingRequestId ===
-                    request.id
-                "
-            >
-
-                <label>
-                    Rejection Reason
-                </label>
-
-
-                <input
-                    type="text"
-                    [(ngModel)]="rejectionReason"
-                    placeholder="Enter rejection reason"
-                >
-
-
-                <button
-                    (click)="confirmReject(request)"
-                >
-                    Confirm Reject
-                </button>
-
-
-                <button
-                    (click)="cancelReject()"
-                >
-                    Cancel
-                </button>
-
-            </div>
+            </ng-container>
 
         </div>
 
     </section>
 
 
+    <hr>
+
+
+    <!-- GROUP DELETIONS -->
+
+    <section>
+
+        <h2>
+            Pending Group Deletion Requests
+        </h2>
+
+
+        <p
+            *ngIf="
+                groupDeletionRequests.length === 0
+            "
+        >
+            No pending group deletion requests.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="
+                let request
+                of groupDeletionRequests
+            "
+        >
+
+            <p>
+                Requested by:
+                {{ request.requesterUsername }}
+            </p>
+
+
+            <p>
+                Group:
+                {{ request.groupTitle }}
+            </p>
+
+
+            <p>
+                Reason:
+                {{ request.reason || 'No reason provided' }}
+            </p>
+
+
+            <ng-container
+                *ngTemplateOutlet="
+                    requestActions;
+                    context: {
+                        $implicit: request
+                    }
+                "
+            >
+            </ng-container>
+
+        </div>
+
+    </section>
+
 
     <hr>
 
 
-
-    <!-- ====================================== -->
-    <!-- PERMANENTLY BANNED USERS -->
-    <!-- ====================================== -->
+    <!-- BANNED USERS -->
 
     <section>
 
@@ -278,9 +216,7 @@
         </h2>
 
 
-        <p
-            *ngIf="bannedUsers.length === 0"
-        >
+        <p *ngIf="bannedUsers.length === 0">
             No permanently banned users.
         </p>
 
@@ -291,30 +227,22 @@
         >
 
             <p>
-                <strong>Name:</strong>
-
                 {{ user.firstName }}
                 {{ user.lastName }}
             </p>
 
-
             <p>
-                <strong>Email:</strong>
-
+                Email:
                 {{ user.email }}
             </p>
 
-
             <p>
-                <strong>Reason:</strong>
-
+                Reason:
                 {{ user.reason }}
             </p>
 
-
             <p>
-                <strong>Banned At:</strong>
-
+                Banned:
                 {{ user.bannedAt }}
             </p>
 
@@ -323,40 +251,154 @@
     </section>
 
 
-
     <hr>
 
 
-
-    <!-- ====================================== -->
-    <!-- REMAINING ADMIN FUNCTIONS -->
-    <!-- ====================================== -->
+    <!-- AUDIT LOGS -->
 
     <section>
 
         <h2>
-            Administration
+            Audit Logs
         </h2>
 
 
-        <div class="admin-options">
-
-            <button>
-                Delete Group Requests
-            </button>
+        <label>
+            Filter by type
+        </label>
 
 
-            <button>
-                Users
-            </button>
+        <select
+            [(ngModel)]="auditFilter"
+        >
+
+            <option value="all">
+                All
+            </option>
+
+            <option value="requestApproved">
+                Request Approved
+            </option>
+
+            <option value="requestRejected">
+                Request Rejected
+            </option>
+
+            <option value="groupDeleted">
+                Group Deleted
+            </option>
+
+            <option value="groupBan">
+                Group Ban
+            </option>
+
+            <option value="systemBan">
+                System Ban
+            </option>
+
+        </select>
 
 
-            <button>
-                Audit Logs
-            </button>
+        <p
+            *ngIf="
+                filteredAuditLogs.length === 0
+            "
+        >
+            No audit logs found.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="
+                let log of filteredAuditLogs
+            "
+        >
+
+            <p>
+                <strong>Type:</strong>
+                {{ log.type }}
+            </p>
+
+
+            <p>
+                <strong>Actor:</strong>
+                {{ log.actorUsername }}
+            </p>
+
+
+            <p *ngIf="log.targetUsername">
+                <strong>Target:</strong>
+                {{ log.targetUsername }}
+            </p>
+
+
+            <p>
+                <strong>Date:</strong>
+                {{ log.createdAt }}
+            </p>
 
         </div>
 
     </section>
+
+
+    <!-- SHARED REQUEST ACTION TEMPLATE -->
+
+    <ng-template
+        #requestActions
+        let-request
+    >
+
+        <div
+            *ngIf="
+                rejectingRequestId !== request.id
+            "
+        >
+
+            <button
+                (click)="approveRequest(request)"
+            >
+                Approve
+            </button>
+
+
+            <button
+                (click)="startReject(request)"
+            >
+                Reject
+            </button>
+
+        </div>
+
+
+        <div
+            *ngIf="
+                rejectingRequestId === request.id
+            "
+        >
+
+            <textarea
+                [(ngModel)]="rejectionReason"
+                placeholder="Rejection reason"
+            ></textarea>
+
+
+            <button
+                (click)="confirmReject(request)"
+            >
+                Confirm Reject
+            </button>
+
+
+            <button
+                (click)="cancelReject()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </ng-template>
 
 </main>

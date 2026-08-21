@@ -43,42 +43,6 @@ export class RequestService {
         );
     }
 
-            createGroupBanRequest(
-            requesterId: string,
-            groupId: string,
-            targetUserId: string,
-            reason: string
-        ) {
-        
-            return this.http.post(
-                `${this.apiUrl}/group-ban`,
-                {
-                    requesterId,
-                    groupId,
-                    targetUserId,
-                    reason
-                }
-            );
-        }
-        
-        
-        createSystemBanRequest(
-            requesterId: string,
-            groupId: string,
-            targetUserId: string,
-            reason: string
-        ) {
-        
-            return this.http.post(
-                `${this.apiUrl}/system-ban`,
-                {
-                    requesterId,
-                    groupId,
-                    targetUserId,
-                    reason
-                }
-            );
-        }
 
     requestJoin(
         requesterId: string,
@@ -112,6 +76,61 @@ export class RequestService {
     }
 
 
+    createGroupBanRequest(
+        requesterId: string,
+        groupId: string,
+        targetUserId: string,
+        reason: string
+    ) {
+
+        return this.http.post(
+            `${this.apiUrl}/group-ban`,
+            {
+                requesterId,
+                groupId,
+                targetUserId,
+                reason
+            }
+        );
+    }
+
+
+    createSystemBanRequest(
+        requesterId: string,
+        groupId: string,
+        targetUserId: string,
+        reason: string
+    ) {
+
+        return this.http.post(
+            `${this.apiUrl}/system-ban`,
+            {
+                requesterId,
+                groupId,
+                targetUserId,
+                reason
+            }
+        );
+    }
+
+
+    createGroupDeletionRequest(
+        requesterId: string,
+        groupId: string,
+        reason: string
+    ) {
+
+        return this.http.post(
+            `${this.apiUrl}/group-deletion`,
+            {
+                requesterId,
+                groupId,
+                reason
+            }
+        );
+    }
+
+
     getSuperAdminRequests(
         userId: string
     ) {
@@ -129,6 +148,16 @@ export class RequestService {
 
         return this.http.get<Request[]>(
             `${this.apiUrl}/group-admin/${userId}/${groupId}`
+        );
+    }
+
+
+    getUserRequestHistory(
+        userId: string
+    ) {
+
+        return this.http.get<Request[]>(
+            `${this.apiUrl}/user/${userId}/history`
         );
     }
 

@@ -10,6 +10,8 @@ export interface Request {
 
     targetUsername?: string | null;
 
+    groupTitle?: string | null;
+
     targetGroupId: string | null;
 
     targetUserId: string | null;

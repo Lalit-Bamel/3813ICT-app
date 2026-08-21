@@ -3,17 +3,21 @@
 
 <main class="groups-page">
 
-    <h1>Groups</h1>
+    <h1>
+        Groups
+    </h1>
 
+
+    <!-- SEARCH -->
 
     <div class="search">
 
-        <label for="search">
+        <label>
             Search Groups
         </label>
 
+
         <input
-            id="search"
             type="text"
             [(ngModel)]="searchTerm"
             placeholder="Search groups"
@@ -22,9 +26,13 @@
     </div>
 
 
+    <!-- CREATE GROUP REQUEST -->
+
     <button
-        (click)="showGroupRequestForm =
-            !showGroupRequestForm"
+        (click)="
+            showGroupRequestForm =
+                !showGroupRequestForm
+        "
     >
         Request New Group
     </button>
@@ -36,7 +44,9 @@
         class="group-request-form"
     >
 
-        <h2>Request New Group</h2>
+        <h2>
+            Request New Group
+        </h2>
 
 
         <label>Title</label>
@@ -59,7 +69,9 @@
         ></textarea>
 
 
-        <label>Minimum Age</label>
+        <label>
+            Minimum Age
+        </label>
 
         <input
             name="requestMinimumAge"
@@ -114,7 +126,11 @@
     </p>
 
 
-    <h2>Your Groups</h2>
+    <!-- YOUR GROUPS -->
+
+    <h2>
+        Your Groups
+    </h2>
 
 
     <div
@@ -130,19 +146,11 @@
                 {{ group.title }}
             </h3>
 
-            <a
-                [routerLink]="[
-                    '/groups',
-                    group.id
-                ]"
-            >
-            Open Group
-            </a>
-
 
             <p>
                 {{ group.description }}
             </p>
+
 
             <p>
                 Minimum Age:
@@ -155,6 +163,22 @@
             >
                 Group Administrator
             </strong>
+
+
+            <br>
+
+
+            <a
+                [routerLink]="[
+                    '/groups',
+                    group.id
+                ]"
+            >
+                Open Group
+            </a>
+
+
+            <br>
 
 
             <a
@@ -173,7 +197,11 @@
     </div>
 
 
-    <h2>All Groups</h2>
+    <!-- ALL GROUPS -->
+
+    <h2>
+        All Groups
+    </h2>
 
 
     <div
@@ -189,9 +217,11 @@
                 {{ group.title }}
             </h3>
 
+
             <p>
                 {{ group.description }}
             </p>
+
 
             <p>
                 Minimum Age:
@@ -208,5 +238,89 @@
         </ng-container>
 
     </div>
+
+
+    <hr>
+
+
+    <!-- REQUEST HISTORY -->
+
+    <section>
+
+        <h2>
+            My Request History
+        </h2>
+
+
+        <p
+            *ngIf="
+                requestHistory.length === 0
+            "
+        >
+            You have not submitted any requests.
+        </p>
+
+
+        <div
+            class="group-card"
+            *ngFor="
+                let request
+                of requestHistory
+            "
+        >
+
+            <p>
+                <strong>Type:</strong>
+
+                {{
+                    getRequestTypeLabel(
+                        request
+                    )
+                }}
+            </p>
+
+
+            <p>
+                <strong>Subject:</strong>
+
+                {{
+                    getRequestSubject(
+                        request
+                    )
+                }}
+            </p>
+
+
+            <p>
+                <strong>Status:</strong>
+
+                {{ request.status }}
+            </p>
+
+
+            <p>
+                <strong>Submitted:</strong>
+
+                {{ request.createdAt }}
+            </p>
+
+
+            <p
+                *ngIf="
+                    request.rejectionReason
+                "
+            >
+                <strong>
+                    Rejection Reason:
+                </strong>
+
+                {{
+                    request.rejectionReason
+                }}
+            </p>
+
+        </div>
+
+    </section>
 
 </main>

@@ -52,8 +52,157 @@
   ],
   "groups": [],
   "rooms": [],
-  "requests": [],
-  "auditLogs": [],
+  "requests": [
+    {
+      "id": "d34daec5-9223-4736-b03c-a0ba4208abd0",
+      "type": "groupCreation",
+      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "targetGroupId": null,
+      "targetUserId": null,
+      "details": {
+        "title": "Tech club",
+        "description": "Tech nerds",
+        "minimumAge": 18,
+        "theme": "blue"
+      },
+      "reason": null,
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-21T06:37:15.716Z"
+    },
+    {
+      "id": "716b3404-2f8c-40b7-9de5-da7f1edc61c1",
+      "type": "joinGroup",
+      "requesterId": "69bed503-4573-47bd-82d4-583496675dbd",
+      "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "targetUserId": null,
+      "details": {},
+      "reason": null,
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-21T06:37:44.950Z"
+    },
+    {
+      "id": "ecb4d45c-a742-434d-91ad-3b8d0a618d4a",
+      "type": "groupDeletion",
+      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "targetUserId": null,
+      "details": {
+        "groupTitle": "Tech club"
+      },
+      "reason": "Group is no longer required",
+      "status": "rejected",
+      "rejectionReason": "s",
+      "createdAt": "2026-08-21T06:39:10.058Z"
+    },
+    {
+      "id": "c41be504-fab8-4956-bb6b-887f91584e4b",
+      "type": "groupDeletion",
+      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "targetUserId": null,
+      "details": {
+        "groupTitle": "Tech club"
+      },
+      "reason": "testing",
+      "status": "rejected",
+      "rejectionReason": "keep it",
+      "createdAt": "2026-08-21T07:00:43.684Z"
+    },
+    {
+      "id": "30d2e939-bf05-4e4f-a3ff-a6d13387ab9e",
+      "type": "groupDeletion",
+      "requesterId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "targetUserId": null,
+      "details": {
+        "groupTitle": "Tech club"
+      },
+      "reason": "bad",
+      "status": "approved",
+      "rejectionReason": null,
+      "createdAt": "2026-08-21T07:07:40.994Z"
+    }
+  ],
+  "auditLogs": [
+    {
+      "id": "32dd94d0-cfe8-4126-8910-994fbab22c7d",
+      "type": "requestApproved",
+      "actorId": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
+      "targetId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "details": {
+        "requestId": "d34daec5-9223-4736-b03c-a0ba4208abd0",
+        "requestType": "groupCreation",
+        "targetGroupId": null,
+        "rejectionReason": null
+      },
+      "createdAt": "2026-08-21T06:37:25.549Z"
+    },
+    {
+      "id": "790681f7-1787-40f1-a24c-948e0880d819",
+      "type": "requestApproved",
+      "actorId": "0b5decde-7589-4cff-ba71-dcf6a108c307",
+      "targetId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "details": {
+        "requestId": "716b3404-2f8c-40b7-9de5-da7f1edc61c1",
+        "requestType": "joinGroup",
+        "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+        "rejectionReason": null
+      },
+      "createdAt": "2026-08-21T06:37:57.572Z"
+    },
+    {
+      "id": "9548629e-67b2-4e85-b339-f3d197e68bdd",
+      "type": "requestRejected",
+      "actorId": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
+      "targetId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "details": {
+        "requestId": "ecb4d45c-a742-434d-91ad-3b8d0a618d4a",
+        "requestType": "groupDeletion",
+        "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+        "rejectionReason": "s"
+      },
+      "createdAt": "2026-08-21T06:40:29.134Z"
+    },
+    {
+      "id": "8bc0f8bc-fe73-41e4-a7c0-005d794083ef",
+      "type": "requestRejected",
+      "actorId": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
+      "targetId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "details": {
+        "requestId": "c41be504-fab8-4956-bb6b-887f91584e4b",
+        "requestType": "groupDeletion",
+        "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+        "rejectionReason": "keep it"
+      },
+      "createdAt": "2026-08-21T07:07:05.849Z"
+    },
+    {
+      "id": "e30e75fd-c8f0-4be1-b33c-9b973180ed95",
+      "type": "requestApproved",
+      "actorId": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
+      "targetId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "details": {
+        "requestId": "30d2e939-bf05-4e4f-a3ff-a6d13387ab9e",
+        "requestType": "groupDeletion",
+        "targetGroupId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+        "rejectionReason": null
+      },
+      "createdAt": "2026-08-21T07:07:50.351Z"
+    },
+    {
+      "id": "04d15504-deac-42b5-bde8-b7621a8d3da5",
+      "type": "groupDeleted",
+      "actorId": "5d63be83-f9e5-4a76-89e3-33aff6c07805",
+      "targetId": "213d5002-2ae7-4223-b0d6-b950d5f72b75",
+      "details": {
+        "groupTitle": "Tech club",
+        "requestId": "30d2e939-bf05-4e4f-a3ff-a6d13387ab9e"
+      },
+      "createdAt": "2026-08-21T07:07:50.351Z"
+    }
+  ],
   "messages": [],
   "bannedUsers": []
 }

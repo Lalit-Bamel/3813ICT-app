@@ -13,8 +13,6 @@
     </h1>
 
 
-    <!-- MESSAGES -->
-
     <p
         *ngIf="successMessage"
         class="success"
@@ -31,23 +29,17 @@
     </p>
 
 
-    <!-- ================================= -->
     <!-- EDIT GROUP -->
-    <!-- ================================= -->
 
     <section
         *ngIf="group"
         class="admin-section"
     >
 
-        <h2>
-            Edit Group
-        </h2>
+        <h2>Edit Group</h2>
 
 
-        <label>
-            Title
-        </label>
+        <label>Title</label>
 
         <input
             [(ngModel)]="editTitle"
@@ -55,9 +47,7 @@
         >
 
 
-        <label>
-            Description
-        </label>
+        <label>Description</label>
 
         <textarea
             [(ngModel)]="editDescription"
@@ -65,9 +55,7 @@
         ></textarea>
 
 
-        <label>
-            Minimum Age
-        </label>
+        <label>Minimum Age</label>
 
         <input
             type="number"
@@ -75,9 +63,7 @@
         >
 
 
-        <label>
-            Theme
-        </label>
+        <label>Theme</label>
 
         <select
             [(ngModel)]="editTheme"
@@ -107,23 +93,14 @@
     </section>
 
 
-    <!-- ================================= -->
-    <!-- MEMBER MANAGEMENT -->
-    <!-- ================================= -->
+    <!-- MEMBERS -->
 
     <section
         *ngIf="group"
         class="admin-section"
     >
 
-        <h2>
-            Members
-        </h2>
-
-
-        <p *ngIf="members.length === 0">
-            No members found.
-        </p>
+        <h2>Members</h2>
 
 
         <div
@@ -134,7 +111,6 @@
             <span>
 
                 {{ member.username }}
-
 
                 <strong
                     *ngIf="isAdmin(member)"
@@ -147,8 +123,6 @@
 
             <div>
 
-                <!-- PROMOTE -->
-
                 <button
                     *ngIf="!isAdmin(member)"
                     (click)="promote(member)"
@@ -157,13 +131,10 @@
                 </button>
 
 
-                <!-- DEMOTE -->
-
                 <button
                     *ngIf="
                         isAdmin(member) &&
-                        member.id !==
-                        currentUser()?.id
+                        member.id !== currentUser()?.id
                     "
                     (click)="demote(member)"
                 >
@@ -171,14 +142,10 @@
                 </button>
 
 
-                <!-- SYSTEM BAN START BUTTON -->
-
                 <button
                     *ngIf="
-                        member.id !==
-                        currentUser()?.id &&
-                        systemBanTargetId !==
-                        member.id
+                        member.id !== currentUser()?.id &&
+                        systemBanTargetId !== member.id
                     "
                     (click)="startSystemBan(member)"
                 >
@@ -186,30 +153,22 @@
                 </button>
 
 
-                <!-- SYSTEM BAN REASON FORM -->
-
                 <div
                     *ngIf="
-                        systemBanTargetId ===
-                        member.id
+                        systemBanTargetId === member.id
                     "
                 >
 
-                    <label>
-                        System Ban Reason
-                    </label>
-
-
                     <textarea
                         [(ngModel)]="systemBanReason"
-                        placeholder="Enter reason for permanent system ban"
+                        placeholder="System ban reason"
                     ></textarea>
 
 
                     <button
                         (click)="confirmSystemBan(member)"
                     >
-                        Submit System Ban Request
+                        Submit
                     </button>
 
 
@@ -227,7 +186,6 @@
 
 
         <button
-            class="resign-button"
             (click)="resign()"
         >
             Resign as Group Administrator
@@ -236,15 +194,69 @@
     </section>
 
 
-    <!-- ================================= -->
+    <!-- GROUP DELETION -->
+
+    <section
+        *ngIf="group"
+        class="admin-section"
+    >
+
+        <h2>Group Deletion</h2>
+
+
+        <p>
+            Group Administrators cannot delete
+            groups directly. A request must be
+            approved by the Super Administrator.
+        </p>
+
+
+        <button
+            *ngIf="!showGroupDeletionForm"
+            (click)="startGroupDeletionRequest()"
+        >
+            Request Group Deletion
+        </button>
+
+
+        <div
+            *ngIf="showGroupDeletionForm"
+        >
+
+            <label>
+                Reason for deletion
+            </label>
+
+
+            <textarea
+                [(ngModel)]="groupDeletionReason"
+                placeholder="Enter reason"
+            ></textarea>
+
+
+            <button
+                (click)="confirmGroupDeletionRequest()"
+            >
+                Submit Deletion Request
+            </button>
+
+
+            <button
+                (click)="cancelGroupDeletionRequest()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </section>
+
+
     <!-- PENDING REQUESTS -->
-    <!-- ================================= -->
 
     <section class="admin-section">
 
-        <h2>
-            Pending Requests
-        </h2>
+        <h2>Pending Requests</h2>
 
 
         <p *ngIf="joinRequests.length === 0">
@@ -257,113 +269,67 @@
             *ngFor="let request of joinRequests"
         >
 
-            <!-- JOIN REQUEST -->
-
             <ng-container
-                *ngIf="
-                    request.type ===
-                    'joinGroup'
-                "
+                *ngIf="request.type === 'joinGroup'"
             >
 
-                <h3>
-                    Join Request
-                </h3>
-
+                <h3>Join Request</h3>
 
                 <p>
-                    <strong>User:</strong>
-
+                    User:
                     {{ request.requesterUsername }}
                 </p>
 
             </ng-container>
 
 
-            <!-- ROOM CREATION REQUEST -->
-
             <ng-container
-                *ngIf="
-                    request.type ===
-                    'roomCreation'
-                "
+                *ngIf="request.type === 'roomCreation'"
             >
 
-                <h3>
-                    Room Proposal
-                </h3>
-
+                <h3>Room Proposal</h3>
 
                 <p>
-                    <strong>
-                        Requested by:
-                    </strong>
-
+                    Requested by:
                     {{ request.requesterUsername }}
                 </p>
 
-
                 <p>
-                    <strong>
-                        Proposed Room:
-                    </strong>
-
+                    Room:
                     {{ request.details.roomName }}
                 </p>
 
             </ng-container>
 
 
-            <!-- GROUP BAN REQUEST -->
-
             <ng-container
-                *ngIf="
-                    request.type ===
-                    'groupBan'
-                "
+                *ngIf="request.type === 'groupBan'"
             >
 
-                <h3>
-                    Group Ban Request
-                </h3>
-
+                <h3>Group Ban Request</h3>
 
                 <p>
-                    <strong>
-                        Requested by:
-                    </strong>
-
+                    Requested by:
                     {{ request.requesterUsername }}
                 </p>
 
-
                 <p>
-                    <strong>
-                        Target User:
-                    </strong>
-
+                    Target:
                     {{ request.targetUsername }}
                 </p>
 
-
                 <p>
-                    <strong>
-                        Reason:
-                    </strong>
-
+                    Reason:
                     {{ request.reason }}
                 </p>
 
             </ng-container>
 
 
-            <!-- APPROVE / START REJECT -->
-
             <div
                 *ngIf="
                     canActionRequest(request) &&
-                    rejectingRequestId !==
-                    request.id
+                    rejectingRequestId !== request.id
                 "
             >
 
@@ -383,24 +349,16 @@
             </div>
 
 
-            <!-- REJECTION REASON -->
-
             <div
                 *ngIf="
                     canActionRequest(request) &&
-                    rejectingRequestId ===
-                    request.id
+                    rejectingRequestId === request.id
                 "
             >
 
-                <label>
-                    Rejection Reason
-                </label>
-
-
                 <textarea
                     [(ngModel)]="rejectionReason"
-                    placeholder="Enter reason for rejection"
+                    placeholder="Rejection reason"
                 ></textarea>
 
 
@@ -420,12 +378,8 @@
             </div>
 
 
-            <!-- SELF-APPROVAL BLOCK -->
-
             <p
-                *ngIf="
-                    !canActionRequest(request)
-                "
+                *ngIf="!canActionRequest(request)"
             >
                 Another Group Administrator
                 must action this request.

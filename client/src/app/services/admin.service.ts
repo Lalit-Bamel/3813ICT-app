@@ -11,6 +11,10 @@ import {
     BannedUser
 } from '../models/user';
 
+import {
+    AuditLog
+} from '../models/audit-log';
+
 
 @Injectable({
     providedIn: 'root'
@@ -30,6 +34,16 @@ export class AdminService {
 
         return this.http.get<BannedUser[]>(
             `${this.apiUrl}/banned-users/${userId}`
+        );
+    }
+
+
+    getAuditLogs(
+        userId: string
+    ) {
+
+        return this.http.get<AuditLog[]>(
+            `${this.apiUrl}/audit-logs/${userId}`
         );
     }
 }

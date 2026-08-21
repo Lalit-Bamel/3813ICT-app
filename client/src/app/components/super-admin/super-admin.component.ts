@@ -37,6 +37,10 @@ import {
     BannedUser
 } from '../../models/user';
 
+import {
+    AuditLog
+} from '../../models/audit-log';
+
 
 @Component({
     selector: 'app-super-admin',
@@ -77,16 +81,20 @@ implements OnInit {
 
     systemBanRequests: Request[] = [];
 
+    groupDeletionRequests: Request[] = [];
+
     bannedUsers: BannedUser[] = [];
+
+    auditLogs: AuditLog[] = [];
+
+
+    auditFilter = 'all';
 
 
     rejectingRequestId:
         string | null = null;
 
     rejectionReason = '';
-    systemBanTargetId: string | null = null;
-
-    systemBanReason = '';
 
 
     errorMessage = '';
@@ -99,12 +107,10 @@ implements OnInit {
         this.loadRequests();
 
         this.loadBannedUsers();
+
+        this.loadAuditLogs();
     }
 
-
-    // ============================================
-    // LOAD SUPER ADMIN REQUESTS
-    // ============================================
 
     loadRequests() {
 
@@ -141,6 +147,14 @@ implements OnInit {
                         );
 
 
+                    this.groupDeletionRequests =
+                        requests.filter(
+                            request =>
+                                request.type ===
+                                'groupDeletion'
+                        );
+
+
                     this.cdr.markForCheck();
                 },
 
@@ -155,10 +169,6 @@ implements OnInit {
             });
     }
 
-
-    // ============================================
-    // LOAD PERMANENTLY BANNED USERS
-    // ============================================
 
     loadBannedUsers() {
 
@@ -197,9 +207,61 @@ implements OnInit {
     }
 
 
-    // ============================================
-    // APPROVE REQUEST
-    // ============================================
+    loadAuditLogs() {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user) {
+            return;
+        }
+
+
+        this.adminService
+            .getAuditLogs(
+                user.id
+            )
+            .subscribe({
+
+                next: logs => {
+
+                    this.auditLogs =
+                        logs;
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load audit logs.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    get filteredAuditLogs():
+        AuditLog[] {
+
+        if (
+            this.auditFilter ===
+            'all'
+        ) {
+            return this.auditLogs;
+        }
+
+
+        return this.auditLogs.filter(
+            log =>
+                log.type ===
+                this.auditFilter
+        );
+    }
+
 
     approveRequest(
         request: Request
@@ -215,7 +277,6 @@ implements OnInit {
 
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
 
@@ -232,11 +293,11 @@ implements OnInit {
                     this.successMessage =
                         'Request approved successfully.';
 
-
                     this.loadRequests();
 
                     this.loadBannedUsers();
 
+                    this.loadAuditLogs();
 
                     this.cdr.markForCheck();
                 },
@@ -253,10 +314,6 @@ implements OnInit {
     }
 
 
-    // ============================================
-    // START REJECTION
-    // ============================================
-
     startReject(
         request: Request
     ) {
@@ -267,16 +324,11 @@ implements OnInit {
         this.rejectionReason = '';
 
         this.errorMessage = '';
-
         this.successMessage = '';
 
         this.cdr.markForCheck();
     }
 
-
-    // ============================================
-    // CANCEL REJECTION
-    // ============================================
 
     cancelReject() {
 
@@ -285,15 +337,9 @@ implements OnInit {
 
         this.rejectionReason = '';
 
-        this.errorMessage = '';
-
         this.cdr.markForCheck();
     }
 
-
-    // ============================================
-    // CONFIRM REJECTION
-    // ============================================
 
     confirmReject(
         request: Request
@@ -321,11 +367,6 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
-
-        this.successMessage = '';
-
-
         this.requestService
             .actionRequest(
                 request.id,
@@ -340,16 +381,15 @@ implements OnInit {
                     this.successMessage =
                         'Request rejected successfully.';
 
-
                     this.rejectingRequestId =
                         null;
 
                     this.rejectionReason =
                         '';
 
-
                     this.loadRequests();
 
+                    this.loadAuditLogs();
 
                     this.cdr.markForCheck();
                 },

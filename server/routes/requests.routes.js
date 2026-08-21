@@ -9,524 +9,487 @@ const {
 const router = express.Router();
 
 
-// ======================================================
-// HELPER
-// Adds the requester's username to a request
-// ======================================================
+// ==================================================
+// HELPERS
+// ==================================================
 
 function enrichRequest(request, data) {
 
     const requester = data.users.find(
-        user => user.id === request.requesterId
+        user =>
+            user.id === request.requesterId
     );
 
+
     const target = data.users.find(
-        user => user.id === request.targetUserId
+        user =>
+            user.id === request.targetUserId
     );
+
+
+    const group = data.groups.find(
+        currentGroup =>
+            currentGroup.id ===
+            request.targetGroupId
+    );
+
 
     return {
         ...request,
 
         requesterUsername:
-            requester?.username || "Unknown User",
+            requester?.username ||
+            "Unknown User",
 
         targetUsername:
-            target?.username || null
+            target?.username ||
+            null,
+
+        groupTitle:
+            group?.title ||
+            request.details?.groupTitle ||
+            null
     };
 }
 
-// ======================================================
-// CREATE GROUP REQUEST
-// ======================================================
 
-router.post("/group-creation", function(req, res) {
+function addAuditLog(
+    data,
+    type,
+    actorId,
+    targetId,
+    details
+) {
 
-    try {
-
-        const {
-            requesterId,
-            title,
-            description,
-            minimumAge,
-            theme
-        } = req.body;
+    if (!Array.isArray(data.auditLogs)) {
+        data.auditLogs = [];
+    }
 
 
-        // -----------------------------
-        // Basic validation
-        // -----------------------------
+    data.auditLogs.push({
 
-        if (
-            !requesterId ||
-            !title ||
-            !description ||
-            minimumAge === undefined ||
-            !theme
-        ) {
+        id: crypto.randomUUID(),
 
-            return res.status(400).json({
-                message:
-                    "All group information is required."
-            });
-        }
+        type,
 
+        actorId,
 
-        const cleanTitle =
-            title.trim();
+        targetId:
+            targetId || null,
 
-        const cleanDescription =
-            description.trim();
+        details:
+            details || {},
 
-        const numericAge =
-            Number(minimumAge);
+        createdAt:
+            new Date().toISOString()
+    });
+}
 
 
-        // -----------------------------
-        // Title validation
-        // -----------------------------
 
-        if (
-            cleanTitle.length === 0 ||
-            cleanTitle.length > 30
-        ) {
+// ==================================================
+// GROUP CREATION REQUEST
+// ==================================================
 
-            return res.status(400).json({
-                message:
-                    "Group title must contain between 1 and 30 characters."
-            });
-        }
+router.post(
+    "/group-creation",
+    function(req, res) {
 
+        try {
 
-        // -----------------------------
-        // Description validation
-        // -----------------------------
-
-        if (
-            cleanDescription.length === 0 ||
-            cleanDescription.length > 250
-        ) {
-
-            return res.status(400).json({
-                message:
-                    "Group description must contain between 1 and 250 characters."
-            });
-        }
+            const {
+                requesterId,
+                title,
+                description,
+                minimumAge,
+                theme
+            } = req.body;
 
 
-        // -----------------------------
-        // Minimum age validation
-        // -----------------------------
-
-        if (
-            !Number.isInteger(numericAge) ||
-            numericAge < 0
-        ) {
-
-            return res.status(400).json({
-                message:
-                    "A valid minimum age is required."
-            });
-        }
+            if (
+                !requesterId ||
+                !title ||
+                !description ||
+                minimumAge === undefined ||
+                !theme
+            ) {
+                return res.status(400).json({
+                    message:
+                        "All group information is required."
+                });
+            }
 
 
-        const data = readData();
+            const cleanTitle =
+                title.trim();
+
+            const cleanDescription =
+                description.trim();
+
+            const numericAge =
+                Number(minimumAge);
 
 
-        // -----------------------------
-        // Find requester
-        // -----------------------------
-
-        const requester =
-            data.users.find(
-                user =>
-                    user.id === requesterId
-            );
-
-
-        if (!requester) {
-
-            return res.status(404).json({
-                message:
-                    "Requesting user not found."
-            });
-        }
+            if (
+                cleanTitle.length < 1 ||
+                cleanTitle.length > 30
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Group title must contain between 1 and 30 characters."
+                });
+            }
 
 
-        // -----------------------------
-        // IMPORTANT AGE CHECK
-        //
-        // Requester will become the first
-        // member + admin if approved.
-        // Therefore they must satisfy
-        // their own group's age limit.
-        // -----------------------------
-
-        if (
-            requester.age <
-            numericAge
-        ) {
-
-            return res.status(403).json({
-                message:
-                    `You must be at least ${numericAge} years old to request this group.`
-            });
-        }
+            if (
+                cleanDescription.length < 1 ||
+                cleanDescription.length > 250
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Group description must contain between 1 and 250 characters."
+                });
+            }
 
 
-        // -----------------------------
-        // Super Admin cannot request groups
-        // -----------------------------
-
-        if (
-            requester.systemRole ===
-            "superAdmin"
-        ) {
-
-            return res.status(403).json({
-                message:
-                    "Super Administrator cannot request groups."
-            });
-        }
+            if (
+                !Number.isInteger(numericAge) ||
+                numericAge < 0
+            ) {
+                return res.status(400).json({
+                    message:
+                        "A valid minimum age is required."
+                });
+            }
 
 
-        // -----------------------------
-        // Prevent duplicate pending request
-        // -----------------------------
+            const data =
+                readData();
 
-        const duplicateRequest =
-            data.requests.some(
-                request =>
 
-                    request.type ===
-                        "groupCreation" &&
+            const requester =
+                data.users.find(
+                    user =>
+                        user.id ===
+                        requesterId
+                );
 
-                    request.requesterId ===
-                        requesterId &&
 
-                    request.status ===
-                        "pending" &&
+            if (!requester) {
+                return res.status(404).json({
+                    message:
+                        "Requesting user not found."
+                });
+            }
 
-                    request.details?.title
-                        ?.toLowerCase() ===
+
+            if (
+                requester.systemRole ===
+                "superAdmin"
+            ) {
+                return res.status(403).json({
+                    message:
+                        "Super Administrator cannot request groups."
+                });
+            }
+
+
+            // Creator must satisfy their own age restriction.
+            if (
+                requester.age <
+                numericAge
+            ) {
+                return res.status(403).json({
+                    message:
+                        `You must be at least ${numericAge} years old to create this group.`
+                });
+            }
+
+
+            const duplicateRequest =
+                data.requests.some(
+                    request =>
+                        request.type ===
+                            "groupCreation" &&
+                        request.requesterId ===
+                            requesterId &&
+                        request.status ===
+                            "pending" &&
+                        request.details?.title
+                            ?.toLowerCase() ===
                         cleanTitle.toLowerCase()
-            );
+                );
 
 
-        if (duplicateRequest) {
+            if (duplicateRequest) {
+                return res.status(409).json({
+                    message:
+                        "A pending request already exists for this group."
+                });
+            }
 
-            return res.status(409).json({
-                message:
-                    "A pending request already exists for this group."
-            });
-        }
 
+            const request = {
 
-        // -----------------------------
-        // Create request
-        // -----------------------------
+                id:
+                    crypto.randomUUID(),
 
-        const request = {
+                type:
+                    "groupCreation",
 
-            id:
-                crypto.randomUUID(),
-
-            type:
-                "groupCreation",
-
-            requesterId:
                 requesterId,
 
-            targetGroupId:
-                null,
+                targetGroupId:
+                    null,
 
-            targetUserId:
-                null,
+                targetUserId:
+                    null,
 
-            details: {
+                details: {
+                    title:
+                        cleanTitle,
 
-                title:
-                    cleanTitle,
+                    description:
+                        cleanDescription,
 
-                description:
-                    cleanDescription,
+                    minimumAge:
+                        numericAge,
 
-                minimumAge:
-                    numericAge,
-
-                theme:
                     theme
-            },
+                },
 
-            reason:
-                null,
+                reason:
+                    null,
 
-            status:
-                "pending",
+                status:
+                    "pending",
 
-            rejectionReason:
-                null,
+                rejectionReason:
+                    null,
 
-            createdAt:
-                new Date().toISOString()
-        };
-
-
-        data.requests.push(request);
-
-        writeData(data);
+                createdAt:
+                    new Date().toISOString()
+            };
 
 
-        return res.status(201).json({
+            data.requests.push(request);
 
-            message:
-                "Group creation request submitted.",
+            writeData(data);
 
-            request:
+
+            return res.status(201).json({
+                message:
+                    "Group creation request submitted.",
+
                 request
-        });
+            });
 
 
-    } catch (error) {
+        } catch (error) {
 
-        console.error(
-            "Group request error:",
-            error
-        );
+            console.error(
+                "Group creation request error:",
+                error
+            );
 
 
-        return res.status(500).json({
-            message:
-                "Unable to submit group request."
-        });
+            return res.status(500).json({
+                message:
+                    "Unable to submit group creation request."
+            });
+        }
     }
-});
+);
 
 
-// ======================================================
+
+// ==================================================
 // JOIN GROUP REQUEST
-// ======================================================
+// ==================================================
 
-router.post("/join", function(req, res) {
+router.post(
+    "/join",
+    function(req, res) {
 
-    try {
+        try {
 
-        const {
-            requesterId,
-            groupId
-        } = req.body;
+            const {
+                requesterId,
+                groupId
+            } = req.body;
 
 
-        if (
-            !requesterId ||
-            !groupId
-        ) {
+            if (
+                !requesterId ||
+                !groupId
+            ) {
+                return res.status(400).json({
+                    message:
+                        "User and group are required."
+                });
+            }
 
-            return res.status(400).json({
+
+            const data =
+                readData();
+
+
+            const user =
+                data.users.find(
+                    currentUser =>
+                        currentUser.id ===
+                        requesterId
+                );
+
+
+            const group =
+                data.groups.find(
+                    currentGroup =>
+                        currentGroup.id ===
+                        groupId
+                );
+
+
+            if (!user) {
+                return res.status(404).json({
+                    message:
+                        "User not found."
+                });
+            }
+
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Group not found."
+                });
+            }
+
+
+            if (
+                group.memberIds.includes(
+                    user.id
+                )
+            ) {
+                return res.status(409).json({
+                    message:
+                        "You are already a member of this group."
+                });
+            }
+
+
+            if (
+                group.bannedUserIds.includes(
+                    user.id
+                )
+            ) {
+                return res.status(403).json({
+                    message:
+                        "You are banned from this group."
+                });
+            }
+
+
+            if (
+                user.age <
+                group.minimumAge
+            ) {
+                return res.status(403).json({
+                    message:
+                        `You must be at least ${group.minimumAge} years old to join this group.`
+                });
+            }
+
+
+            const pendingRequest =
+                data.requests.some(
+                    request =>
+                        request.type ===
+                            "joinGroup" &&
+                        request.requesterId ===
+                            user.id &&
+                        request.targetGroupId ===
+                            group.id &&
+                        request.status ===
+                            "pending"
+                );
+
+
+            if (pendingRequest) {
+                return res.status(409).json({
+                    message:
+                        "You already have a pending request for this group."
+                });
+            }
+
+
+            const request = {
+
+                id:
+                    crypto.randomUUID(),
+
+                type:
+                    "joinGroup",
+
+                requesterId:
+                    user.id,
+
+                targetGroupId:
+                    group.id,
+
+                targetUserId:
+                    null,
+
+                details: {},
+
+                reason:
+                    null,
+
+                status:
+                    "pending",
+
+                rejectionReason:
+                    null,
+
+                createdAt:
+                    new Date().toISOString()
+            };
+
+
+            data.requests.push(request);
+
+            writeData(data);
+
+
+            return res.status(201).json({
                 message:
-                    "User and group are required."
-            });
-        }
+                    "Join request submitted.",
 
-
-        const data =
-            readData();
-
-
-        // -----------------------------
-        // Find user
-        // -----------------------------
-
-        const user =
-            data.users.find(
-                currentUser =>
-                    currentUser.id ===
-                    requesterId
-            );
-
-
-        // -----------------------------
-        // Find group
-        // -----------------------------
-
-        const group =
-            data.groups.find(
-                currentGroup =>
-                    currentGroup.id ===
-                    groupId
-            );
-
-
-        if (!user) {
-
-            return res.status(404).json({
-                message:
-                    "User not found."
-            });
-        }
-
-
-        if (!group) {
-
-            return res.status(404).json({
-                message:
-                    "Group not found."
-            });
-        }
-
-
-        // -----------------------------
-        // Already a member
-        // -----------------------------
-
-        if (
-            group.memberIds.includes(
-                user.id
-            )
-        ) {
-
-            return res.status(409).json({
-                message:
-                    "You are already a member of this group."
-            });
-        }
-
-
-        // -----------------------------
-        // Banned from group
-        // -----------------------------
-
-        if (
-            group.bannedUserIds.includes(
-                user.id
-            )
-        ) {
-
-            return res.status(403).json({
-                message:
-                    "You are banned from this group."
-            });
-        }
-
-
-        // -----------------------------
-        // Age restriction
-        // -----------------------------
-
-        if (
-            user.age <
-            group.minimumAge
-        ) {
-
-            return res.status(403).json({
-                message:
-                    `You must be at least ${group.minimumAge} years old to join this group.`
-            });
-        }
-
-
-        // -----------------------------
-        // Existing pending join request
-        // -----------------------------
-
-        const pendingRequest =
-            data.requests.some(
-                request =>
-
-                    request.type ===
-                        "joinGroup" &&
-
-                    request.requesterId ===
-                        user.id &&
-
-                    request.targetGroupId ===
-                        group.id &&
-
-                    request.status ===
-                        "pending"
-            );
-
-
-        if (pendingRequest) {
-
-            return res.status(409).json({
-                message:
-                    "You already have a pending request for this group."
-            });
-        }
-
-
-        // -----------------------------
-        // Create join request
-        // -----------------------------
-
-        const request = {
-
-            id:
-                crypto.randomUUID(),
-
-            type:
-                "joinGroup",
-
-            requesterId:
-                user.id,
-
-            targetGroupId:
-                group.id,
-
-            targetUserId:
-                null,
-
-            details:
-                {},
-
-            reason:
-                null,
-
-            status:
-                "pending",
-
-            rejectionReason:
-                null,
-
-            createdAt:
-                new Date().toISOString()
-        };
-
-
-        data.requests.push(request);
-
-        writeData(data);
-
-
-        return res.status(201).json({
-
-            message:
-                "Join request submitted.",
-
-            request:
                 request
-        });
+            });
 
 
-    } catch (error) {
+        } catch (error) {
 
-        console.error(
-            "Join request error:",
-            error
-        );
+            console.error(
+                "Join request error:",
+                error
+            );
 
 
-        return res.status(500).json({
-            message:
-                "Unable to submit join request."
-        });
+            return res.status(500).json({
+                message:
+                    "Unable to submit join request."
+            });
+        }
     }
-});
+);
 
 
-// ======================================================
+
+// ==================================================
 // ROOM CREATION REQUEST
-// ======================================================
+// ==================================================
 
 router.post(
     "/room-creation",
@@ -546,7 +509,6 @@ router.post(
                 !groupId ||
                 !roomName?.trim()
             ) {
-
                 return res.status(400).json({
                     message:
                         "User, group and room name are required."
@@ -558,10 +520,6 @@ router.post(
                 readData();
 
 
-            // -----------------------------
-            // Find user
-            // -----------------------------
-
             const user =
                 data.users.find(
                     currentUser =>
@@ -569,10 +527,6 @@ router.post(
                         requesterId
                 );
 
-
-            // -----------------------------
-            // Find group
-            // -----------------------------
 
             const group =
                 data.groups.find(
@@ -583,7 +537,6 @@ router.post(
 
 
             if (!user) {
-
                 return res.status(404).json({
                     message:
                         "User not found."
@@ -592,7 +545,6 @@ router.post(
 
 
             if (!group) {
-
                 return res.status(404).json({
                     message:
                         "Group not found."
@@ -600,16 +552,11 @@ router.post(
             }
 
 
-            // -----------------------------
-            // Must be group member
-            // -----------------------------
-
             if (
                 !group.memberIds.includes(
                     user.id
                 )
             ) {
-
                 return res.status(403).json({
                     message:
                         "You must be a member of the group to propose a room."
@@ -617,48 +564,32 @@ router.post(
             }
 
 
-            // -----------------------------
-            // Prevent duplicate request
-            // -----------------------------
-
             const pendingRequest =
                 data.requests.some(
                     request =>
-
                         request.type ===
                             "roomCreation" &&
-
                         request.requesterId ===
                             user.id &&
-
                         request.targetGroupId ===
                             group.id &&
-
                         request.status ===
                             "pending" &&
-
-                        request.details
-                            ?.roomName
+                        request.details?.roomName
                             ?.toLowerCase() ===
-
-                            roomName
-                                .trim()
-                                .toLowerCase()
+                        roomName
+                            .trim()
+                            .toLowerCase()
                 );
 
 
             if (pendingRequest) {
-
                 return res.status(409).json({
                     message:
                         "You already have a pending request for this room."
                 });
             }
 
-
-            // -----------------------------
-            // Create room request
-            // -----------------------------
 
             const request = {
 
@@ -678,7 +609,6 @@ router.post(
                     null,
 
                 details: {
-
                     roomName:
                         roomName.trim()
                 },
@@ -703,353 +633,559 @@ router.post(
 
 
             return res.status(201).json({
-
                 message:
                     "Room creation request submitted.",
 
-                request:
-                    request
+                request
             });
 
 
         } catch (error) {
 
             console.error(
-                "Room request error:",
+                "Room creation request error:",
                 error
             );
 
 
             return res.status(500).json({
                 message:
-                    "Unable to submit room request."
+                    "Unable to submit room creation request."
             });
         }
     }
 );
 
 
-// ======================================================
+
+// ==================================================
 // GROUP BAN REQUEST
-// ======================================================
+// ==================================================
+
+router.post(
+    "/group-ban",
+    function(req, res) {
+
+        try {
+
+            const {
+                requesterId,
+                groupId,
+                targetUserId,
+                reason
+            } = req.body;
 
 
+            if (
+                !requesterId ||
+                !groupId ||
+                !targetUserId ||
+                !reason?.trim()
+            ) {
+                return res.status(400).json({
+                    message:
+                        "User, group, target user and reason are required."
+                });
+            }
 
-router.post("/group-ban", function(req, res) {
 
-    try {
+            if (
+                requesterId ===
+                targetUserId
+            ) {
+                return res.status(400).json({
+                    message:
+                        "You cannot request a ban against yourself."
+                });
+            }
 
-        const {
-            requesterId,
-            groupId,
-            targetUserId,
-            reason
-        } = req.body;
+
+            const data =
+                readData();
 
 
-        if (
-            !requesterId ||
-            !groupId ||
-            !targetUserId ||
-            !reason?.trim()
-        ) {
-            return res.status(400).json({
+            const requester =
+                data.users.find(
+                    user =>
+                        user.id ===
+                        requesterId
+                );
+
+
+            const target =
+                data.users.find(
+                    user =>
+                        user.id ===
+                        targetUserId
+                );
+
+
+            const group =
+                data.groups.find(
+                    currentGroup =>
+                        currentGroup.id ===
+                        groupId
+                );
+
+
+            if (!requester || !target) {
+                return res.status(404).json({
+                    message:
+                        "User not found."
+                });
+            }
+
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Group not found."
+                });
+            }
+
+
+            if (
+                !group.memberIds.includes(
+                    requesterId
+                )
+            ) {
+                return res.status(403).json({
+                    message:
+                        "You must be a group member to submit a ban request."
+                });
+            }
+
+
+            if (
+                !group.memberIds.includes(
+                    targetUserId
+                )
+            ) {
+                return res.status(400).json({
+                    message:
+                        "The target user is not a member of this group."
+                });
+            }
+
+
+            const existingRequest =
+                data.requests.some(
+                    request =>
+                        request.type ===
+                            "groupBan" &&
+                        request.targetGroupId ===
+                            groupId &&
+                        request.targetUserId ===
+                            targetUserId &&
+                        request.status ===
+                            "pending"
+                );
+
+
+            if (existingRequest) {
+                return res.status(409).json({
+                    message:
+                        "A pending ban request already exists for this user."
+                });
+            }
+
+
+            const request = {
+
+                id:
+                    crypto.randomUUID(),
+
+                type:
+                    "groupBan",
+
+                requesterId,
+
+                targetGroupId:
+                    groupId,
+
+                targetUserId,
+
+                details: {},
+
+                reason:
+                    reason.trim(),
+
+                status:
+                    "pending",
+
+                rejectionReason:
+                    null,
+
+                createdAt:
+                    new Date().toISOString()
+            };
+
+
+            data.requests.push(request);
+
+            writeData(data);
+
+
+            return res.status(201).json({
                 message:
-                    "User, group, target user and reason are required."
+                    "Group ban request submitted.",
+
+                request
             });
-        }
 
 
-        if (requesterId === targetUserId) {
-            return res.status(400).json({
-                message:
-                    "You cannot request a ban against yourself."
-            });
-        }
+        } catch (error) {
 
-
-        const data = readData();
-
-
-        const group = data.groups.find(
-            currentGroup =>
-                currentGroup.id === groupId
-        );
-
-
-        if (!group) {
-            return res.status(404).json({
-                message: "Group not found."
-            });
-        }
-
-
-        const requester = data.users.find(
-            user => user.id === requesterId
-        );
-
-
-        const target = data.users.find(
-            user => user.id === targetUserId
-        );
-
-
-        if (!requester || !target) {
-            return res.status(404).json({
-                message: "User not found."
-            });
-        }
-
-
-        if (
-            !group.memberIds.includes(requesterId)
-        ) {
-            return res.status(403).json({
-                message:
-                    "You must be a group member to submit a ban request."
-            });
-        }
-
-
-        if (
-            !group.memberIds.includes(targetUserId)
-        ) {
-            return res.status(400).json({
-                message:
-                    "The target user is not a member of this group."
-            });
-        }
-
-
-        const existingRequest =
-            data.requests.some(
-                request =>
-                    request.type === "groupBan" &&
-                    request.targetGroupId === groupId &&
-                    request.targetUserId === targetUserId &&
-                    request.status === "pending"
+            console.error(
+                "Group ban request error:",
+                error
             );
 
 
-        if (existingRequest) {
-            return res.status(409).json({
+            return res.status(500).json({
                 message:
-                    "A pending ban request already exists for this user."
+                    "Unable to submit group ban request."
             });
         }
-
-
-        const request = {
-
-            id: crypto.randomUUID(),
-
-            type: "groupBan",
-
-            requesterId,
-
-            targetGroupId: groupId,
-
-            targetUserId,
-
-            details: {},
-
-            reason: reason.trim(),
-
-            status: "pending",
-
-            rejectionReason: null,
-
-            createdAt:
-                new Date().toISOString()
-        };
-
-
-        data.requests.push(request);
-
-        writeData(data);
-
-
-        return res.status(201).json({
-            message:
-                "Group ban request submitted.",
-            request
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "Group ban request error:",
-            error
-        );
-
-        return res.status(500).json({
-            message:
-                "Unable to submit group ban request."
-        });
     }
-});
+);
 
 
-// ======================================================
+
+// ==================================================
 // SYSTEM BAN REQUEST
-// ======================================================
+// ==================================================
+
+router.post(
+    "/system-ban",
+    function(req, res) {
+
+        try {
+
+            const {
+                requesterId,
+                groupId,
+                targetUserId,
+                reason
+            } = req.body;
 
 
-router.post("/system-ban", function(req, res) {
+            if (
+                !requesterId ||
+                !groupId ||
+                !targetUserId ||
+                !reason?.trim()
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Administrator, group, target user and reason are required."
+                });
+            }
 
-    try {
 
-        const {
-            requesterId,
-            groupId,
-            targetUserId,
-            reason
-        } = req.body;
+            if (
+                requesterId ===
+                targetUserId
+            ) {
+                return res.status(400).json({
+                    message:
+                        "You cannot request a system ban against yourself."
+                });
+            }
 
 
-        if (
-            !requesterId ||
-            !groupId ||
-            !targetUserId ||
-            !reason?.trim()
-        ) {
-            return res.status(400).json({
+            const data =
+                readData();
+
+
+            const group =
+                data.groups.find(
+                    currentGroup =>
+                        currentGroup.id ===
+                        groupId
+                );
+
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Group not found."
+                });
+            }
+
+
+            if (
+                !group.adminIds.includes(
+                    requesterId
+                )
+            ) {
+                return res.status(403).json({
+                    message:
+                        "Only a Group Administrator can request a system ban."
+                });
+            }
+
+
+            if (
+                !group.memberIds.includes(
+                    targetUserId
+                )
+            ) {
+                return res.status(400).json({
+                    message:
+                        "The target user is not a member of this group."
+                });
+            }
+
+
+            const target =
+                data.users.find(
+                    user =>
+                        user.id ===
+                        targetUserId
+                );
+
+
+            if (!target) {
+                return res.status(404).json({
+                    message:
+                        "Target user not found."
+                });
+            }
+
+
+            const existingRequest =
+                data.requests.some(
+                    request =>
+                        request.type ===
+                            "systemBan" &&
+                        request.targetUserId ===
+                            targetUserId &&
+                        request.status ===
+                            "pending"
+                );
+
+
+            if (existingRequest) {
+                return res.status(409).json({
+                    message:
+                        "A pending system ban request already exists for this user."
+                });
+            }
+
+
+            const request = {
+
+                id:
+                    crypto.randomUUID(),
+
+                type:
+                    "systemBan",
+
+                requesterId,
+
+                targetGroupId:
+                    groupId,
+
+                targetUserId,
+
+                details: {},
+
+                reason:
+                    reason.trim(),
+
+                status:
+                    "pending",
+
+                rejectionReason:
+                    null,
+
+                createdAt:
+                    new Date().toISOString()
+            };
+
+
+            data.requests.push(request);
+
+            writeData(data);
+
+
+            return res.status(201).json({
                 message:
-                    "Administrator, group, target user and reason are required."
+                    "System ban request submitted.",
+
+                request
             });
-        }
 
 
-        if (requesterId === targetUserId) {
-            return res.status(400).json({
-                message:
-                    "You cannot request a system ban against yourself."
-            });
-        }
+        } catch (error) {
 
-
-        const data = readData();
-
-
-        const group = data.groups.find(
-            currentGroup =>
-                currentGroup.id === groupId
-        );
-
-
-        if (!group) {
-            return res.status(404).json({
-                message: "Group not found."
-            });
-        }
-
-
-        if (
-            !group.adminIds.includes(requesterId)
-        ) {
-            return res.status(403).json({
-                message:
-                    "Only a Group Administrator can request a system ban."
-            });
-        }
-
-
-        if (
-            !group.memberIds.includes(targetUserId)
-        ) {
-            return res.status(400).json({
-                message:
-                    "The target user is not a member of this group."
-            });
-        }
-
-
-        const target = data.users.find(
-            user => user.id === targetUserId
-        );
-
-
-        if (!target) {
-            return res.status(404).json({
-                message: "Target user not found."
-            });
-        }
-
-
-        const existingRequest =
-            data.requests.some(
-                request =>
-                    request.type === "systemBan" &&
-                    request.targetUserId === targetUserId &&
-                    request.status === "pending"
+            console.error(
+                "System ban request error:",
+                error
             );
 
 
-        if (existingRequest) {
-            return res.status(409).json({
+            return res.status(500).json({
                 message:
-                    "A pending system ban request already exists for this user."
+                    "Unable to submit system ban request."
             });
         }
-
-
-        const request = {
-
-            id: crypto.randomUUID(),
-
-            type: "systemBan",
-
-            requesterId,
-
-            targetGroupId: groupId,
-
-            targetUserId,
-
-            details: {},
-
-            reason: reason.trim(),
-
-            status: "pending",
-
-            rejectionReason: null,
-
-            createdAt:
-                new Date().toISOString()
-        };
-
-
-        data.requests.push(request);
-
-        writeData(data);
-
-
-        return res.status(201).json({
-            message:
-                "System ban request submitted.",
-            request
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "System ban request error:",
-            error
-        );
-
-        return res.status(500).json({
-            message:
-                "Unable to submit system ban request."
-        });
     }
-});
+);
 
 
-// ======================================================
-// SUPER ADMIN
-// GET PENDING GROUP CREATION REQUESTS
-// ======================================================
+
+// ==================================================
+// STAGE P — GROUP DELETION REQUEST
+// ==================================================
+
+router.post(
+    "/group-deletion",
+    function(req, res) {
+
+        try {
+
+            const {
+                requesterId,
+                groupId,
+                reason
+            } = req.body;
+
+
+            if (
+                !requesterId ||
+                !groupId
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Administrator and group are required."
+                });
+            }
+
+
+            const data =
+                readData();
+
+
+            const group =
+                data.groups.find(
+                    currentGroup =>
+                        currentGroup.id ===
+                        groupId
+                );
+
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Group not found."
+                });
+            }
+
+
+            if (
+                !group.adminIds.includes(
+                    requesterId
+                )
+            ) {
+                return res.status(403).json({
+                    message:
+                        "Only a Group Administrator can request group deletion."
+                });
+            }
+
+
+            const existingRequest =
+                data.requests.some(
+                    request =>
+                        request.type ===
+                            "groupDeletion" &&
+                        request.targetGroupId ===
+                            groupId &&
+                        request.status ===
+                            "pending"
+                );
+
+
+            if (existingRequest) {
+                return res.status(409).json({
+                    message:
+                        "A group deletion request is already pending."
+                });
+            }
+
+
+            const request = {
+
+                id:
+                    crypto.randomUUID(),
+
+                type:
+                    "groupDeletion",
+
+                requesterId,
+
+                targetGroupId:
+                    group.id,
+
+                targetUserId:
+                    null,
+
+                details: {
+                    groupTitle:
+                        group.title
+                },
+
+                reason:
+                    reason?.trim() ||
+                    null,
+
+                status:
+                    "pending",
+
+                rejectionReason:
+                    null,
+
+                createdAt:
+                    new Date().toISOString()
+            };
+
+
+            data.requests.push(request);
+
+            writeData(data);
+
+
+            return res.status(201).json({
+                message:
+                    "Group deletion request submitted to the Super Administrator.",
+
+                request
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "Group deletion request error:",
+                error
+            );
+
+
+            return res.status(500).json({
+                message:
+                    "Unable to submit group deletion request."
+            });
+        }
+    }
+);
+
+
+
+// ==================================================
+// SUPER ADMIN PENDING REQUESTS
+// ==================================================
 
 router.get(
     "/super-admin/:userId",
@@ -1069,16 +1205,11 @@ router.get(
                 );
 
 
-            // -----------------------------
-            // Verify Super Admin
-            // -----------------------------
-
             if (
                 !user ||
                 user.systemRole !==
                     "superAdmin"
             ) {
-
                 return res.status(403).json({
                     message:
                         "Access denied."
@@ -1086,26 +1217,24 @@ router.get(
             }
 
 
-            // -----------------------------
-            // Find pending creation requests
-            // -----------------------------
-
             const requests =
                 data.requests
-
                     .filter(
                         request =>
+                            (
+                                request.type ===
+                                    "groupCreation" ||
 
-                            request.type ===
-                                "groupCreation"||
-                            request.type ===
-                                "systemBan"
-                                 &&
+                                request.type ===
+                                    "systemBan" ||
 
+                                request.type ===
+                                    "groupDeletion"
+                            )
+                            &&
                             request.status ===
                                 "pending"
                     )
-
                     .map(
                         request =>
                             enrichRequest(
@@ -1115,15 +1244,13 @@ router.get(
                     );
 
 
-            return res.json(
-                requests
-            );
+            return res.json(requests);
 
 
         } catch (error) {
 
             console.error(
-                "Request retrieval error:",
+                "Super Admin request retrieval error:",
                 error
             );
 
@@ -1137,10 +1264,10 @@ router.get(
 );
 
 
-// ======================================================
-// GROUP ADMIN
-// GET PENDING JOIN + ROOM REQUESTS
-// ======================================================
+
+// ==================================================
+// GROUP ADMIN PENDING REQUESTS
+// ==================================================
 
 router.get(
     "/group-admin/:userId/:groupId",
@@ -1161,7 +1288,6 @@ router.get(
 
 
             if (!group) {
-
                 return res.status(404).json({
                     message:
                         "Group not found."
@@ -1169,16 +1295,11 @@ router.get(
             }
 
 
-            // -----------------------------
-            // Verify Group Admin
-            // -----------------------------
-
             if (
                 !group.adminIds.includes(
                     req.params.userId
                 )
             ) {
-
                 return res.status(403).json({
                     message:
                         "Access denied."
@@ -1186,34 +1307,27 @@ router.get(
             }
 
 
-            // -----------------------------
-            // Retrieve relevant requests
-            // -----------------------------
-
             const requests =
                 data.requests
-
                     .filter(
                         request =>
-
                             (
                                 request.type ===
                                     "joinGroup" ||
 
                                 request.type ===
-                                    "roomCreation"||
-                                
+                                    "roomCreation" ||
+
                                 request.type ===
                                     "groupBan"
-                            ) &&
-
+                            )
+                            &&
                             request.targetGroupId ===
-                                group.id &&
-
+                                group.id
+                            &&
                             request.status ===
                                 "pending"
                     )
-
                     .map(
                         request =>
                             enrichRequest(
@@ -1223,15 +1337,13 @@ router.get(
                     );
 
 
-            return res.json(
-                requests
-            );
+            return res.json(requests);
 
 
         } catch (error) {
 
             console.error(
-                "Request retrieval error:",
+                "Group Admin request retrieval error:",
                 error
             );
 
@@ -1245,9 +1357,82 @@ router.get(
 );
 
 
-// ======================================================
+
+// ==================================================
+// STAGE P — USER REQUEST HISTORY
+// ==================================================
+
+router.get(
+    "/user/:userId/history",
+    function(req, res) {
+
+        try {
+
+            const data =
+                readData();
+
+
+            const user =
+                data.users.find(
+                    currentUser =>
+                        currentUser.id ===
+                        req.params.userId
+                );
+
+
+            if (!user) {
+                return res.status(404).json({
+                    message:
+                        "User not found."
+                });
+            }
+
+
+            const requests =
+                data.requests
+                    .filter(
+                        request =>
+                            request.requesterId ===
+                            user.id
+                    )
+                    .map(
+                        request =>
+                            enrichRequest(
+                                request,
+                                data
+                            )
+                    )
+                    .sort(
+                        (a, b) =>
+                            new Date(b.createdAt) -
+                            new Date(a.createdAt)
+                    );
+
+
+            return res.json(requests);
+
+
+        } catch (error) {
+
+            console.error(
+                "Request history retrieval error:",
+                error
+            );
+
+
+            return res.status(500).json({
+                message:
+                    "Unable to retrieve request history."
+            });
+        }
+    }
+);
+
+
+
+// ==================================================
 // APPROVE / REJECT REQUEST
-// ======================================================
+// ==================================================
 
 router.put(
     "/:requestId",
@@ -1262,15 +1447,18 @@ router.put(
             } = req.body;
 
 
-            // -----------------------------
-            // Validate status
-            // -----------------------------
+            if (!actorId) {
+                return res.status(400).json({
+                    message:
+                        "Administrator is required."
+                });
+            }
+
 
             if (
                 status !== "approved" &&
                 status !== "rejected"
             ) {
-
                 return res.status(400).json({
                     message:
                         "Request status must be approved or rejected."
@@ -1278,15 +1466,10 @@ router.put(
             }
 
 
-            // -----------------------------
-            // Rejection requires reason
-            // -----------------------------
-
             if (
                 status === "rejected" &&
                 !rejectionReason?.trim()
             ) {
-
                 return res.status(400).json({
                     message:
                         "A rejection reason is required."
@@ -1298,10 +1481,6 @@ router.put(
                 readData();
 
 
-            // -----------------------------
-            // Find request
-            // -----------------------------
-
             const request =
                 data.requests.find(
                     currentRequest =>
@@ -1311,7 +1490,6 @@ router.put(
 
 
             if (!request) {
-
                 return res.status(404).json({
                     message:
                         "Request not found."
@@ -1319,15 +1497,10 @@ router.put(
             }
 
 
-            // -----------------------------
-            // Request already actioned
-            // -----------------------------
-
             if (
                 request.status !==
-                    "pending"
+                "pending"
             ) {
-
                 return res.status(409).json({
                     message:
                         "This request has already been actioned."
@@ -1335,13 +1508,14 @@ router.put(
             }
 
 
-            // ==================================================
+
+            // ==========================================
             // GROUP CREATION
-            // ==================================================
+            // ==========================================
 
             if (
                 request.type ===
-                    "groupCreation"
+                "groupCreation"
             ) {
 
                 const actor =
@@ -1352,16 +1526,11 @@ router.put(
                     );
 
 
-                // -----------------------------
-                // Only Super Admin can action
-                // -----------------------------
-
                 if (
                     !actor ||
                     actor.systemRole !==
                         "superAdmin"
                 ) {
-
                     return res.status(403).json({
                         message:
                             "Only the Super Administrator can action group creation requests."
@@ -1369,13 +1538,9 @@ router.put(
                 }
 
 
-                // -----------------------------
-                // Approve group creation
-                // -----------------------------
-
                 if (
                     status ===
-                        "approved"
+                    "approved"
                 ) {
 
                     const requester =
@@ -1387,7 +1552,6 @@ router.put(
 
 
                     if (!requester) {
-
                         return res.status(404).json({
                             message:
                                 "Requesting user no longer exists."
@@ -1395,32 +1559,16 @@ router.put(
                     }
 
 
-                    // -----------------------------
-                    // RECHECK AGE
-                    //
-                    // User could have changed their
-                    // age while request was pending.
-                    // -----------------------------
-
                     if (
                         requester.age <
                         request.details.minimumAge
                     ) {
-
                         return res.status(403).json({
                             message:
                                 "The requester no longer meets the minimum age requirement for this group."
                         });
                     }
 
-
-                    // -----------------------------
-                    // Create group
-                    //
-                    // Requester becomes:
-                    // - first member
-                    // - first admin
-                    // -----------------------------
 
                     const group = {
 
@@ -1447,32 +1595,28 @@ router.put(
                             requester.id
                         ],
 
-                        bannedUserIds:
-                            [],
+                        bannedUserIds: [],
 
-                        roomIds:
-                            [],
+                        roomIds: [],
 
                         createdAt:
-                            new Date()
-                                .toISOString()
+                            new Date().toISOString()
                     };
 
 
-                    data.groups.push(
-                        group
-                    );
+                    data.groups.push(group);
                 }
             }
 
 
-            // ==================================================
+
+            // ==========================================
             // JOIN GROUP
-            // ==================================================
+            // ==========================================
 
             if (
                 request.type ===
-                    "joinGroup"
+                "joinGroup"
             ) {
 
                 const group =
@@ -1484,7 +1628,6 @@ router.put(
 
 
                 if (!group) {
-
                     return res.status(404).json({
                         message:
                             "Group not found."
@@ -1492,16 +1635,11 @@ router.put(
                 }
 
 
-                // -----------------------------
-                // Only Group Admin can action
-                // -----------------------------
-
                 if (
                     !group.adminIds.includes(
                         actorId
                     )
                 ) {
-
                     return res.status(403).json({
                         message:
                             "Only a Group Administrator can action this join request."
@@ -1509,13 +1647,9 @@ router.put(
                 }
 
 
-                // -----------------------------
-                // Approve membership
-                // -----------------------------
-
                 if (
                     status ===
-                        "approved"
+                    "approved"
                 ) {
 
                     const user =
@@ -1527,7 +1661,6 @@ router.put(
 
 
                     if (!user) {
-
                         return res.status(404).json({
                             message:
                                 "Requesting user no longer exists."
@@ -1535,14 +1668,10 @@ router.put(
                     }
 
 
-                    // Recheck age because their
-                    // profile may have changed.
-
                     if (
                         user.age <
                         group.minimumAge
                     ) {
-
                         return res.status(403).json({
                             message:
                                 "User no longer meets the minimum age requirement."
@@ -1550,14 +1679,11 @@ router.put(
                     }
 
 
-                    // Recheck group ban.
-
                     if (
                         group.bannedUserIds.includes(
                             user.id
                         )
                     ) {
-
                         return res.status(403).json({
                             message:
                                 "User is banned from this group."
@@ -1570,7 +1696,6 @@ router.put(
                             user.id
                         )
                     ) {
-
                         group.memberIds.push(
                             user.id
                         );
@@ -1579,13 +1704,14 @@ router.put(
             }
 
 
-            // ==================================================
+
+            // ==========================================
             // ROOM CREATION
-            // ==================================================
+            // ==========================================
 
             if (
                 request.type ===
-                    "roomCreation"
+                "roomCreation"
             ) {
 
                 const group =
@@ -1597,7 +1723,6 @@ router.put(
 
 
                 if (!group) {
-
                     return res.status(404).json({
                         message:
                             "Group not found."
@@ -1605,16 +1730,11 @@ router.put(
                 }
 
 
-                // -----------------------------
-                // Only Group Admin can action
-                // -----------------------------
-
                 if (
                     !group.adminIds.includes(
                         actorId
                     )
                 ) {
-
                     return res.status(403).json({
                         message:
                             "Only a Group Administrator can action this room request."
@@ -1622,13 +1742,9 @@ router.put(
                 }
 
 
-                // -----------------------------
-                // Approve room
-                // -----------------------------
-
                 if (
                     status ===
-                        "approved"
+                    "approved"
                 ) {
 
                     const room = {
@@ -1640,19 +1756,14 @@ router.put(
                             group.id,
 
                         name:
-                            request.details
-                                .roomName,
+                            request.details.roomName,
 
                         createdAt:
-                            new Date()
-                                .toISOString()
+                            new Date().toISOString()
                     };
 
 
-                    data.rooms.push(
-                        room
-                    );
-
+                    data.rooms.push(room);
 
                     group.roomIds.push(
                         room.id
@@ -1660,46 +1771,65 @@ router.put(
                 }
             }
 
-                        // GROUP BAN
-            if (request.type === "groupBan") {
-            
-                const group = data.groups.find(
-                    currentGroup =>
-                        currentGroup.id ===
-                        request.targetGroupId
-                );
-            
-            
+
+
+            // ==========================================
+            // GROUP BAN
+            // ==========================================
+
+            if (
+                request.type ===
+                "groupBan"
+            ) {
+
+                const group =
+                    data.groups.find(
+                        currentGroup =>
+                            currentGroup.id ===
+                            request.targetGroupId
+                    );
+
+
                 if (!group) {
                     return res.status(404).json({
-                        message: "Group not found."
+                        message:
+                            "Group not found."
                     });
                 }
-            
-            
-                if (!group.adminIds.includes(actorId)) {
+
+
+                if (
+                    !group.adminIds.includes(
+                        actorId
+                    )
+                ) {
                     return res.status(403).json({
                         message:
                             "Only a Group Administrator can action this ban request."
                     });
                 }
-            
-            
-                // Group Admin cannot action their own request.
-                if (actorId === request.requesterId) {
+
+
+                if (
+                    actorId ===
+                    request.requesterId
+                ) {
                     return res.status(403).json({
                         message:
                             "You cannot action a ban request that you submitted yourself."
                     });
                 }
-            
-            
-                if (status === "approved") {
-                
+
+
+                if (
+                    status ===
+                    "approved"
+                ) {
+
                     const targetUserId =
                         request.targetUserId;
-                
-                
+
+
                     if (
                         !group.memberIds.includes(
                             targetUserId
@@ -1710,10 +1840,13 @@ router.put(
                                 "Target user is no longer a member of this group."
                         });
                     }
-                
-                
+
+
                     if (
-                        group.adminIds.includes(targetUserId) &&
+                        group.adminIds.includes(
+                            targetUserId
+                        )
+                        &&
                         group.adminIds.length <= 1
                     ) {
                         return res.status(409).json({
@@ -1721,8 +1854,8 @@ router.put(
                                 "The only Group Administrator cannot be banned. Promote another administrator first."
                         });
                     }
-                
-                
+
+
                     if (
                         !group.bannedUserIds.includes(
                             targetUserId
@@ -1732,131 +1865,276 @@ router.put(
                             targetUserId
                         );
                     }
-                
-                
+
+
                     group.memberIds =
                         group.memberIds.filter(
                             memberId =>
-                                memberId !== targetUserId
+                                memberId !==
+                                targetUserId
                         );
-                    
-                    
+
+
                     group.adminIds =
                         group.adminIds.filter(
                             adminId =>
-                                adminId !== targetUserId
+                                adminId !==
+                                targetUserId
                         );
                 }
             }
+
+
+
+            // ==========================================
             // SYSTEM BAN
-            if (request.type === "systemBan") {
-            
-                const actor = data.users.find(
-                    user => user.id === actorId
-                );
-            
-            
+            // ==========================================
+
+            if (
+                request.type ===
+                "systemBan"
+            ) {
+
+                const actor =
+                    data.users.find(
+                        user =>
+                            user.id ===
+                            actorId
+                    );
+
+
                 if (
                     !actor ||
-                    actor.systemRole !== "superAdmin"
+                    actor.systemRole !==
+                        "superAdmin"
                 ) {
                     return res.status(403).json({
                         message:
                             "Only the Super Administrator can action a system ban request."
                     });
                 }
-            
-            
-                if (status === "approved") {
-                
-                    const target = data.users.find(
-                        user =>
-                            user.id ===
-                            request.targetUserId
-                    );
-                
-                
+
+
+                if (
+                    status ===
+                    "approved"
+                ) {
+
+                    const target =
+                        data.users.find(
+                            user =>
+                                user.id ===
+                                request.targetUserId
+                        );
+
+
                     if (!target) {
                         return res.status(404).json({
                             message:
                                 "Target user no longer exists."
                         });
                     }
-                
-                
+
+
                     const soleAdminGroup =
                         data.groups.find(
                             group =>
                                 group.adminIds.includes(
                                     target.id
-                                ) &&
+                                )
+                                &&
                                 group.adminIds.length === 1
                         );
-                    
-                    
+
+
                     if (soleAdminGroup) {
                         return res.status(409).json({
                             message:
                                 `User is the only administrator of "${soleAdminGroup.title}". Promote another administrator first.`
                         });
                     }
-                
-                
-                    // Remove account from every group.
-                    for (const group of data.groups) {
-                    
+
+
+                    for (
+                        const group
+                        of data.groups
+                    ) {
+
                         group.memberIds =
                             group.memberIds.filter(
-                                id => id !== target.id
+                                id =>
+                                    id !==
+                                    target.id
                             );
-                        
+
+
                         group.adminIds =
                             group.adminIds.filter(
-                                id => id !== target.id
+                                id =>
+                                    id !==
+                                    target.id
                             );
                     }
-                
-                
-                    // Permanent ban record.
+
+
+                    if (
+                        !Array.isArray(
+                            data.bannedUsers
+                        )
+                    ) {
+                        data.bannedUsers = [];
+                    }
+
+
                     data.bannedUsers.push({
-                    
-                        id: crypto.randomUUID(),
-                    
+
+                        id:
+                            crypto.randomUUID(),
+
                         originalUserId:
                             target.id,
-                    
+
                         firstName:
                             target.firstName,
-                    
+
                         lastName:
                             target.lastName,
-                    
+
                         email:
                             target.email,
-                    
+
                         reason:
                             request.reason,
-                    
+
                         bannedBy:
                             actor.id,
-                    
+
                         bannedAt:
                             new Date().toISOString()
                     });
-                
-                
-                    // Delete active account.
+
+
                     data.users =
                         data.users.filter(
                             user =>
-                                user.id !== target.id
+                                user.id !==
+                                target.id
                         );
                 }
             }
 
-            // ==================================================
-            // FINALISE REQUEST
-            // ==================================================
+
+
+            // ==========================================
+            // STAGE P — GROUP DELETION
+            // ==========================================
+
+            if (
+                request.type ===
+                "groupDeletion"
+            ) {
+
+                const actor =
+                    data.users.find(
+                        user =>
+                            user.id ===
+                            actorId
+                    );
+
+
+                if (
+                    !actor ||
+                    actor.systemRole !==
+                        "superAdmin"
+                ) {
+                    return res.status(403).json({
+                        message:
+                            "Only the Super Administrator can action group deletion requests."
+                    });
+                }
+
+
+                if (
+                    status ===
+                    "approved"
+                ) {
+
+                    const group =
+                        data.groups.find(
+                            currentGroup =>
+                                currentGroup.id ===
+                                request.targetGroupId
+                        );
+
+
+                    if (!group) {
+                        return res.status(404).json({
+                            message:
+                                "Group no longer exists."
+                        });
+                    }
+
+
+                    // Requester must still be an admin
+                    // when deletion is approved.
+                    if (
+                        !group.adminIds.includes(
+                            request.requesterId
+                        )
+                    ) {
+                        return res.status(409).json({
+                            message:
+                                "The requester is no longer a Group Administrator of this group."
+                        });
+                    }
+
+
+                    const roomIds =
+                        [...group.roomIds];
+
+
+                    // Delete the group.
+                    data.groups =
+                        data.groups.filter(
+                            currentGroup =>
+                                currentGroup.id !==
+                                group.id
+                        );
+
+
+                    // Delete rooms belonging to group.
+                    data.rooms =
+                        data.rooms.filter(
+                            room =>
+                                room.groupId !==
+                                group.id
+                        );
+
+
+                    // If messages already exist,
+                    // remove messages from deleted rooms.
+                    if (
+                        Array.isArray(
+                            data.messages
+                        )
+                    ) {
+
+                        data.messages =
+                            data.messages.filter(
+                                message =>
+                                    !roomIds.includes(
+                                        message.roomId
+                                    )
+                            );
+                    }
+                }
+            }
+
+
+
+            // ==========================================
+            // FINISH REQUEST
+            // ==========================================
 
             request.status =
                 status;
@@ -1868,6 +2146,124 @@ router.put(
                     : null;
 
 
+
+            // ==========================================
+            // AUDIT LOG — EVERY REQUEST ACTION
+            // ==========================================
+
+            addAuditLog(
+                data,
+
+                status === "approved"
+                    ? "requestApproved"
+                    : "requestRejected",
+
+                actorId,
+
+                request.targetUserId ||
+                request.targetGroupId ||
+                request.requesterId,
+
+                {
+                    requestId:
+                        request.id,
+
+                    requestType:
+                        request.type,
+
+                    targetGroupId:
+                        request.targetGroupId,
+
+                    rejectionReason:
+                        request.rejectionReason
+                }
+            );
+
+
+
+            // Extra important audit entries.
+
+            if (
+                status === "approved" &&
+                request.type ===
+                    "groupDeletion"
+            ) {
+
+                addAuditLog(
+                    data,
+
+                    "groupDeleted",
+
+                    actorId,
+
+                    request.targetGroupId,
+
+                    {
+                        groupTitle:
+                            request.details?.groupTitle,
+
+                        requestId:
+                            request.id
+                    }
+                );
+            }
+
+
+            if (
+                status === "approved" &&
+                request.type ===
+                    "systemBan"
+            ) {
+
+                addAuditLog(
+                    data,
+
+                    "systemBan",
+
+                    actorId,
+
+                    request.targetUserId,
+
+                    {
+                        reason:
+                            request.reason,
+
+                        requestId:
+                            request.id
+                    }
+                );
+            }
+
+
+            if (
+                status === "approved" &&
+                request.type ===
+                    "groupBan"
+            ) {
+
+                addAuditLog(
+                    data,
+
+                    "groupBan",
+
+                    actorId,
+
+                    request.targetUserId,
+
+                    {
+                        groupId:
+                            request.targetGroupId,
+
+                        reason:
+                            request.reason,
+
+                        requestId:
+                            request.id
+                    }
+                );
+            }
+
+
             writeData(data);
 
 
@@ -1876,8 +2272,7 @@ router.put(
                 message:
                     `Request ${status} successfully.`,
 
-                request:
-                    request
+                request
             });
 
 

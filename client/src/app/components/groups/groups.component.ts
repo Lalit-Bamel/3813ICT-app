@@ -17,21 +17,29 @@ import {
     RouterLink
 } from '@angular/router';
 
+import {
+    AuthService
+} from '../../services/auth.service';
 
-import { AuthService }
-    from '../../services/auth.service';
+import {
+    GroupService
+} from '../../services/group.service';
 
-import { GroupService }
-    from '../../services/group.service';
+import {
+    RequestService
+} from '../../services/request.service';
 
-import { RequestService }
-    from '../../services/request.service';
+import {
+    Group
+} from '../../models/group';
 
-import { Group }
-    from '../../models/group';
+import {
+    Request
+} from '../../models/request';
 
-import { NavbarComponent }
-    from '../navbar/navbar.component';
+import {
+    NavbarComponent
+} from '../navbar/navbar.component';
 
 
 @Component({
@@ -51,8 +59,7 @@ import { NavbarComponent }
         './groups.component.css'
 })
 export class GroupsComponent
-    implements OnInit {
-
+implements OnInit {
 
     private authService =
         inject(AuthService);
@@ -72,6 +79,9 @@ export class GroupsComponent
 
 
     groups: Group[] = [];
+
+    requestHistory: Request[] = [];
+
 
     searchTerm = '';
 
@@ -94,7 +104,10 @@ export class GroupsComponent
 
 
     ngOnInit() {
+
         this.loadGroups();
+
+        this.loadRequestHistory();
     }
 
 
@@ -106,10 +119,10 @@ export class GroupsComponent
 
                 next: groups => {
 
-                    this.groups = groups;
+                    this.groups =
+                        groups;
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -118,30 +131,69 @@ export class GroupsComponent
                         error.error?.message ||
                         'Unable to load groups.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
 
 
-    get filteredGroups(): Group[] {
+    loadRequestHistory() {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user) {
+            return;
+        }
+
+
+        this.requestService
+            .getUserRequestHistory(
+                user.id
+            )
+            .subscribe({
+
+                next: requests => {
+
+                    this.requestHistory =
+                        requests;
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load request history.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    get filteredGroups():
+        Group[] {
 
         const search =
             this.searchTerm
                 .trim()
                 .toLowerCase();
 
+
         if (!search) {
             return this.groups;
         }
+
 
         return this.groups.filter(
             group =>
                 group.title
                     .toLowerCase()
-                    .includes(search) ||
-
+                    .includes(search)
+                ||
                 group.description
                     .toLowerCase()
                     .includes(search)
@@ -149,35 +201,49 @@ export class GroupsComponent
     }
 
 
-    isMember(group: Group): boolean {
+    isMember(
+        group: Group
+    ): boolean {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return false;
         }
+
 
         return group.memberIds
             .includes(user.id);
     }
 
 
-    isAdmin(group: Group): boolean {
+    isAdmin(
+        group: Group
+    ): boolean {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return false;
         }
+
 
         return group.adminIds
             .includes(user.id);
     }
 
 
-    requestJoin(group: Group) {
+    requestJoin(
+        group: Group
+    ) {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (!user) {
             return;
@@ -200,8 +266,9 @@ export class GroupsComponent
                     this.successMessage =
                         `Join request sent for ${group.title}.`;
 
-                    this.cdr
-                        .markForCheck();
+                    this.loadRequestHistory();
+
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -210,8 +277,7 @@ export class GroupsComponent
                         error.error?.message ||
                         'Unable to request membership.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
@@ -219,7 +285,9 @@ export class GroupsComponent
 
     submitGroupRequest() {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (
             !user ||
@@ -270,8 +338,9 @@ export class GroupsComponent
                     this.requestTheme =
                         'default';
 
-                    this.cdr
-                        .markForCheck();
+                    this.loadRequestHistory();
+
+                    this.cdr.markForCheck();
                 },
 
                 error: error => {
@@ -280,9 +349,94 @@ export class GroupsComponent
                         error.error?.message ||
                         'Unable to request group creation.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
+    }
+
+
+    getRequestTypeLabel(
+        request: Request
+    ): string {
+
+        switch (request.type) {
+
+            case 'groupCreation':
+                return 'Group Creation';
+
+            case 'joinGroup':
+                return 'Join Group';
+
+            case 'roomCreation':
+                return 'Room Creation';
+
+            case 'groupBan':
+                return 'Group Ban';
+
+            case 'systemBan':
+                return 'System Ban';
+
+            case 'groupDeletion':
+                return 'Group Deletion';
+
+            default:
+                return request.type;
+        }
+    }
+
+
+    getRequestSubject(
+        request: Request
+    ): string {
+
+        if (
+            request.type ===
+            'groupCreation'
+        ) {
+            return (
+                request.details?.title ||
+                'New Group'
+            );
+        }
+
+
+        if (
+            request.type ===
+            'roomCreation'
+        ) {
+            return (
+                request.details?.roomName ||
+                'New Room'
+            );
+        }
+
+
+        if (
+            request.type ===
+            'groupDeletion'
+        ) {
+            return (
+                request.groupTitle ||
+                request.details?.groupTitle ||
+                'Group'
+            );
+        }
+
+
+        if (
+            request.targetUsername
+        ) {
+            return request.targetUsername;
+        }
+
+
+        if (
+            request.groupTitle
+        ) {
+            return request.groupTitle;
+        }
+
+
+        return '-';
     }
 }
