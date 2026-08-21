@@ -11,6 +11,10 @@ const requestRoutes = require("./routes/requests.routes");
 const roomRoutes =
     require("./routes/rooms.routes");
 
+const adminRoutes =
+    require("./routes/admin.routes");
+
+
 app.use(cors({
     origin: "http://localhost:4200"
 }));
@@ -21,6 +25,10 @@ app.use("/api/users",userRoutes);
 app.use("/api/groups", groupRoutes);
 app.use("/api/requests", requestRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use(
+    "/api/admin",
+    adminRoutes
+);
 app.get("/api/health", function(req, res) {
     const data = readData();
 
