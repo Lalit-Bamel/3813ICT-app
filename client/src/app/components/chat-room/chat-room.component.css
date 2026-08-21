@@ -1,0 +1,142 @@
+.chat-page {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+
+.chat-header {
+    margin-bottom: 25px;
+}
+
+
+.messages {
+    border: 1px solid #cccccc;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+
+.message {
+    border-bottom: 1px solid #dddddd;
+    padding: 15px 0;
+}
+
+
+.message:last-child {
+    border-bottom: none;
+}
+
+
+.message-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+
+.message-header small {
+    margin-left: auto;
+}
+
+
+.admin-label {
+    font-weight: bold;
+}
+
+
+.message-text {
+    white-space: pre-wrap;
+}
+
+
+.chat-image {
+    display: block;
+    max-width: 350px;
+    max-height: 350px;
+    object-fit: contain;
+    margin: 10px 0;
+}
+
+
+.composer {
+    border: 1px solid #cccccc;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+
+.composer textarea {
+    display: block;
+    width: 100%;
+    min-height: 90px;
+    margin: 10px 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+
+.composer input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    box-sizing: border-box;
+}
+
+
+.composer button {
+    margin-right: 10px;
+}
+
+
+.image-preview {
+    margin-top: 15px;
+}
+
+
+.image-preview img {
+    display: block;
+    max-width: 300px;
+    max-height: 300px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+
+.success {
+    color: green;
+}
+
+
+.error {
+    color: red;
+}
+
+
+@media (
+    max-width: 600px
+) {
+
+    .chat-page {
+        margin: 10px;
+        padding: 10px;
+    }
+
+
+    .message-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+
+    .message-header small {
+        margin-left: 0;
+    }
+
+
+    .chat-image,
+    .image-preview img {
+        max-width: 100%;
+    }
+}

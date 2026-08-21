@@ -1,0 +1,269 @@
+<app-navbar></app-navbar>
+
+
+<main class="chat-page">
+
+    <!-- HEADER -->
+
+    <section
+        class="chat-header"
+        *ngIf="group && room"
+    >
+
+        <a
+            [routerLink]="[
+                '/groups',
+                group.id
+            ]"
+        >
+            ← Back to Rooms
+        </a>
+
+
+        <h1>
+            {{ group.title }}
+        </h1>
+
+
+        <h2>
+            # {{ room.name }}
+        </h2>
+
+
+        <p>
+            Showing the most recent
+            5 messages.
+        </p>
+
+    </section>
+
+
+    <!-- ERROR -->
+
+    <p
+        *ngIf="errorMessage"
+        class="error"
+    >
+        {{ errorMessage }}
+    </p>
+
+
+    <!-- SUCCESS -->
+
+    <p
+        *ngIf="successMessage"
+        class="success"
+    >
+        {{ successMessage }}
+    </p>
+
+
+    <!-- MESSAGES -->
+
+    <section class="messages">
+
+        <p
+            *ngIf="
+                messages.length === 0
+            "
+        >
+            No messages yet.
+        </p>
+
+
+        <article
+            class="message"
+            *ngFor="
+                let message of messages
+            "
+        >
+
+            <!-- SENDER -->
+
+            <div class="message-header">
+
+                <strong>
+                    {{ message.senderUsername }}
+                </strong>
+
+
+                <span
+                    class="admin-label"
+                    *ngIf="
+                        message.senderIsAdmin
+                    "
+                >
+                    Group Admin
+                </span>
+
+
+                <small>
+                    {{ message.createdAt }}
+                </small>
+
+            </div>
+
+
+            <!-- TEXT -->
+
+            <p
+                *ngIf="
+                    message.type === 'text'
+                "
+                class="message-text"
+            >
+                {{ message.content }}
+            </p>
+
+
+            <!-- IMAGE -->
+
+            <img
+                *ngIf="
+                    message.type === 'image'
+                "
+                class="chat-image"
+                [src]="message.content"
+                alt="Chat image"
+            >
+
+
+            <!-- GIF -->
+
+            <img
+                *ngIf="
+                    message.type === 'gif'
+                "
+                class="chat-image"
+                [src]="message.content"
+                alt="Chat GIF"
+            >
+
+
+            <!-- DELETE OWN MESSAGE -->
+
+            <button
+                *ngIf="
+                    isOwnMessage(message)
+                "
+                (click)="
+                    deleteMessage(message)
+                "
+            >
+                Delete
+            </button>
+
+        </article>
+
+    </section>
+
+
+    <!-- SEND TEXT -->
+
+    <section
+        class="composer"
+        *ngIf="room"
+    >
+
+        <h3>
+            Send Message
+        </h3>
+
+
+        <textarea
+            [(ngModel)]="textMessage"
+            placeholder="Type a message..."
+        ></textarea>
+
+
+        <button
+            (click)="sendTextMessage()"
+        >
+            Send Text
+        </button>
+
+    </section>
+
+
+    <!-- SEND IMAGE -->
+
+    <section
+        class="composer"
+        *ngIf="room"
+    >
+
+        <h3>
+            Send Image
+        </h3>
+
+
+        <input
+            type="file"
+            accept="image/*"
+            (change)="onImageSelected($event)"
+        >
+
+
+        <div
+            *ngIf="selectedImage"
+            class="image-preview"
+        >
+
+            <p>
+                Selected:
+                {{ selectedImageName }}
+            </p>
+
+
+            <img
+                [src]="selectedImage"
+                alt="Selected image preview"
+            >
+
+
+            <button
+                (click)="sendImage()"
+            >
+                Send Image
+            </button>
+
+
+            <button
+                (click)="cancelImage()"
+            >
+                Cancel
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- SEND GIF -->
+
+    <section
+        class="composer"
+        *ngIf="room"
+    >
+
+        <h3>
+            Send GIF
+        </h3>
+
+
+        <input
+            type="text"
+            [(ngModel)]="gifUrl"
+            placeholder="Paste GIF image URL"
+        >
+
+
+        <button
+            (click)="sendGif()"
+        >
+            Send GIF
+        </button>
+
+    </section>
+
+</main>
