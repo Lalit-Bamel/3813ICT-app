@@ -26,8 +26,16 @@ import {
 } from '../../services/request.service';
 
 import {
+    AdminService
+} from '../../services/admin.service';
+
+import {
     Request
 } from '../../models/request';
+
+import {
+    BannedUser
+} from '../../models/user';
 
 
 @Component({
@@ -46,14 +54,16 @@ import {
         './super-admin.component.css'
 })
 export class SuperAdminComponent
-    implements OnInit {
-
+implements OnInit {
 
     private authService =
         inject(AuthService);
 
     private requestService =
         inject(RequestService);
+
+    private adminService =
+        inject(AdminService);
 
     private cdr =
         inject(ChangeDetectorRef);
@@ -65,11 +75,18 @@ export class SuperAdminComponent
 
     groupRequests: Request[] = [];
 
+    systemBanRequests: Request[] = [];
+
+    bannedUsers: BannedUser[] = [];
+
 
     rejectingRequestId:
         string | null = null;
 
     rejectionReason = '';
+    systemBanTargetId: string | null = null;
+
+    systemBanReason = '';
 
 
     errorMessage = '';
@@ -79,15 +96,17 @@ export class SuperAdminComponent
 
     ngOnInit() {
 
-        this.loadGroupRequests();
+        this.loadRequests();
+
+        this.loadBannedUsers();
     }
 
 
-    // ==================================================
-    // LOAD PENDING GROUP CREATION REQUESTS
-    // ==================================================
+    // ============================================
+    // LOAD SUPER ADMIN REQUESTS
+    // ============================================
 
-    loadGroupRequests() {
+    loadRequests() {
 
         const user =
             this.currentUser();
@@ -107,29 +126,80 @@ export class SuperAdminComponent
                 next: requests => {
 
                     this.groupRequests =
-                        requests;
+                        requests.filter(
+                            request =>
+                                request.type ===
+                                'groupCreation'
+                        );
 
-                    this.cdr
-                        .markForCheck();
+
+                    this.systemBanRequests =
+                        requests.filter(
+                            request =>
+                                request.type ===
+                                'systemBan'
+                        );
+
+
+                    this.cdr.markForCheck();
                 },
-
 
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to load group requests.';
+                        'Unable to load requests.';
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
 
 
-    // ==================================================
-    // APPROVE GROUP REQUEST
-    // ==================================================
+    // ============================================
+    // LOAD PERMANENTLY BANNED USERS
+    // ============================================
+
+    loadBannedUsers() {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user) {
+            return;
+        }
+
+
+        this.adminService
+            .getBannedUsers(
+                user.id
+            )
+            .subscribe({
+
+                next: bannedUsers => {
+
+                    this.bannedUsers =
+                        bannedUsers;
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load banned users.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ============================================
+    // APPROVE REQUEST
+    // ============================================
 
     approveRequest(
         request: Request
@@ -160,34 +230,32 @@ export class SuperAdminComponent
                 next: () => {
 
                     this.successMessage =
-                        'Group request approved successfully.';
+                        'Request approved successfully.';
 
 
-                    this.loadGroupRequests();
+                    this.loadRequests();
+
+                    this.loadBannedUsers();
 
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 },
-
 
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to approve group request.';
+                        'Unable to approve request.';
 
-
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }
 
 
-    // ==================================================
+    // ============================================
     // START REJECTION
-    // ==================================================
+    // ============================================
 
     startReject(
         request: Request
@@ -196,42 +264,36 @@ export class SuperAdminComponent
         this.rejectingRequestId =
             request.id;
 
-
         this.rejectionReason = '';
 
         this.errorMessage = '';
 
         this.successMessage = '';
 
-
-        this.cdr
-            .markForCheck();
+        this.cdr.markForCheck();
     }
 
 
-    // ==================================================
+    // ============================================
     // CANCEL REJECTION
-    // ==================================================
+    // ============================================
 
     cancelReject() {
 
         this.rejectingRequestId =
             null;
 
-
         this.rejectionReason = '';
 
         this.errorMessage = '';
 
-
-        this.cdr
-            .markForCheck();
+        this.cdr.markForCheck();
     }
 
 
-    // ==================================================
+    // ============================================
     // CONFIRM REJECTION
-    // ==================================================
+    // ============================================
 
     confirmReject(
         request: Request
@@ -253,10 +315,7 @@ export class SuperAdminComponent
             this.errorMessage =
                 'Please enter a rejection reason.';
 
-
-            this.cdr
-                .markForCheck();
-
+            this.cdr.markForCheck();
 
             return;
         }
@@ -279,34 +338,29 @@ export class SuperAdminComponent
                 next: () => {
 
                     this.successMessage =
-                        'Group request rejected successfully.';
+                        'Request rejected successfully.';
 
 
                     this.rejectingRequestId =
                         null;
 
-
                     this.rejectionReason =
                         '';
 
 
-                    this.loadGroupRequests();
+                    this.loadRequests();
 
 
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 },
-
 
                 error: error => {
 
                     this.errorMessage =
                         error.error?.message ||
-                        'Unable to reject group request.';
+                        'Unable to reject request.';
 
-
-                    this.cdr
-                        .markForCheck();
+                    this.cdr.markForCheck();
                 }
             });
     }

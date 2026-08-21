@@ -7,248 +7,13 @@
         ← Back to Groups
     </a>
 
-    <section
-    *ngIf="group"
-    class="admin-section"
->
-
-    <h2>Edit Group</h2>
-
-
-    <label>Title</label>
-
-    <input
-        [(ngModel)]="editTitle"
-        maxlength="30"
-    >
-
-    <section
-    *ngIf="group"
-    class="admin-section"
->
-
-    <h2>Members</h2>
-
-
-    <div
-        *ngFor="let member of members"
-        class="member-row"
-    >
-
-        <span>
-
-            {{ member.username }}
-
-            <strong
-                *ngIf="isAdmin(member)"
-            >
-                — Group Admin
-            </strong>
-
-        </span>
-
-
-        <button
-            *ngIf="!isAdmin(member)"
-            (click)="promote(member)"
-        >
-            Promote to Admin
-        </button>
-
-
-        <button
-            *ngIf="
-                isAdmin(member) &&
-                member.id !== currentUser()?.id
-            "
-            (click)="demote(member)"
-        >
-            Demote Admin
-        </button>
-
-    </div>
-
-
-    <button
-        class="resign-button"
-        (click)="resign()"
-    >
-        Resign as Group Administrator
-    </button>
-
-</section>
-
-
-    <label>Description</label>
-
-    <textarea
-        [(ngModel)]="editDescription"
-        maxlength="250"
-    ></textarea>
-
-
-    <label>Minimum Age</label>
-
-    <input
-        type="number"
-        [(ngModel)]="editMinimumAge"
-    >
-
-
-    <label>Theme</label>
-
-    <select
-        [(ngModel)]="editTheme"
-    >
-
-        <option value="default">
-            Default
-        </option>
-
-        <option value="dark">
-            Dark
-        </option>
-
-        <option value="blue">
-            Blue
-        </option>
-
-    </select>
-
-
-    <button
-        (click)="saveGroupChanges()"
-    >
-        Save Group Changes
-    </button>
-
-</section>
-
 
     <h1 *ngIf="group">
-        {{ group.title }} — Admin
+        {{ group.title }} — Group Administration
     </h1>
 
 
-    <h2>Pending Requests</h2>
-
-
-    <p *ngIf="joinRequests.length === 0">
-        No pending requests.
-    </p>
-
-
-    <div
-        class="request-card"
-        *ngFor="let request of joinRequests"
-    >
-
-
-        <!-- JOIN REQUEST -->
-        <ng-container
-            *ngIf="request.type === 'joinGroup'"
-        >
-
-            <h3>
-                Join Request
-            </h3>
-
-            <p>
-                User:
-                {{ request.requesterUsername }}
-            </p>
-
-        </ng-container>
-
-
-
-        <!-- ROOM PROPOSAL -->
-        <ng-container
-            *ngIf="request.type === 'roomCreation'"
-        >
-
-            <h3>
-                Room Proposal
-            </h3>
-
-            <p>
-                Requested by:
-                {{ request.requesterUsername }}
-            </p>
-
-            <p>
-                Proposed room:
-                {{ request.details.roomName }}
-            </p>
-
-        </ng-container>
-
-
-
-        <!-- NORMAL ACTION BUTTONS -->
-        <div
-            *ngIf="
-                rejectingRequestId !== request.id
-            "
-        >
-
-            <button
-                type="button"
-                (click)="approve(request)"
-            >
-                Approve
-            </button>
-
-
-            <button
-                type="button"
-                (click)="startReject(request)"
-            >
-                Reject
-            </button>
-
-        </div>
-
-
-
-        <!-- REJECTION MODE -->
-        <div
-            *ngIf="
-                rejectingRequestId === request.id
-            "
-        >
-
-            <label>
-                Rejection Reason
-            </label>
-
-
-            <input
-                type="text"
-                [(ngModel)]="rejectionReason"
-                placeholder="Enter rejection reason"
-            >
-
-
-            <button
-                type="button"
-                (click)="confirmReject(request)"
-            >
-                Confirm Reject
-            </button>
-
-
-            <button
-                type="button"
-                (click)="cancelReject()"
-            >
-                Cancel
-            </button>
-
-        </div>
-
-    </div>
-
+    <!-- MESSAGES -->
 
     <p
         *ngIf="successMessage"
@@ -264,5 +29,410 @@
     >
         {{ errorMessage }}
     </p>
+
+
+    <!-- ================================= -->
+    <!-- EDIT GROUP -->
+    <!-- ================================= -->
+
+    <section
+        *ngIf="group"
+        class="admin-section"
+    >
+
+        <h2>
+            Edit Group
+        </h2>
+
+
+        <label>
+            Title
+        </label>
+
+        <input
+            [(ngModel)]="editTitle"
+            maxlength="30"
+        >
+
+
+        <label>
+            Description
+        </label>
+
+        <textarea
+            [(ngModel)]="editDescription"
+            maxlength="250"
+        ></textarea>
+
+
+        <label>
+            Minimum Age
+        </label>
+
+        <input
+            type="number"
+            [(ngModel)]="editMinimumAge"
+        >
+
+
+        <label>
+            Theme
+        </label>
+
+        <select
+            [(ngModel)]="editTheme"
+        >
+
+            <option value="default">
+                Default
+            </option>
+
+            <option value="dark">
+                Dark
+            </option>
+
+            <option value="blue">
+                Blue
+            </option>
+
+        </select>
+
+
+        <button
+            (click)="saveGroupChanges()"
+        >
+            Save Group Changes
+        </button>
+
+    </section>
+
+
+    <!-- ================================= -->
+    <!-- MEMBER MANAGEMENT -->
+    <!-- ================================= -->
+
+    <section
+        *ngIf="group"
+        class="admin-section"
+    >
+
+        <h2>
+            Members
+        </h2>
+
+
+        <p *ngIf="members.length === 0">
+            No members found.
+        </p>
+
+
+        <div
+            class="member-row"
+            *ngFor="let member of members"
+        >
+
+            <span>
+
+                {{ member.username }}
+
+
+                <strong
+                    *ngIf="isAdmin(member)"
+                >
+                    — Group Admin
+                </strong>
+
+            </span>
+
+
+            <div>
+
+                <!-- PROMOTE -->
+
+                <button
+                    *ngIf="!isAdmin(member)"
+                    (click)="promote(member)"
+                >
+                    Promote to Admin
+                </button>
+
+
+                <!-- DEMOTE -->
+
+                <button
+                    *ngIf="
+                        isAdmin(member) &&
+                        member.id !==
+                        currentUser()?.id
+                    "
+                    (click)="demote(member)"
+                >
+                    Demote Admin
+                </button>
+
+
+                <!-- SYSTEM BAN START BUTTON -->
+
+                <button
+                    *ngIf="
+                        member.id !==
+                        currentUser()?.id &&
+                        systemBanTargetId !==
+                        member.id
+                    "
+                    (click)="startSystemBan(member)"
+                >
+                    Request System Ban
+                </button>
+
+
+                <!-- SYSTEM BAN REASON FORM -->
+
+                <div
+                    *ngIf="
+                        systemBanTargetId ===
+                        member.id
+                    "
+                >
+
+                    <label>
+                        System Ban Reason
+                    </label>
+
+
+                    <textarea
+                        [(ngModel)]="systemBanReason"
+                        placeholder="Enter reason for permanent system ban"
+                    ></textarea>
+
+
+                    <button
+                        (click)="confirmSystemBan(member)"
+                    >
+                        Submit System Ban Request
+                    </button>
+
+
+                    <button
+                        (click)="cancelSystemBan()"
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="resign-button"
+            (click)="resign()"
+        >
+            Resign as Group Administrator
+        </button>
+
+    </section>
+
+
+    <!-- ================================= -->
+    <!-- PENDING REQUESTS -->
+    <!-- ================================= -->
+
+    <section class="admin-section">
+
+        <h2>
+            Pending Requests
+        </h2>
+
+
+        <p *ngIf="joinRequests.length === 0">
+            No pending requests.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="let request of joinRequests"
+        >
+
+            <!-- JOIN REQUEST -->
+
+            <ng-container
+                *ngIf="
+                    request.type ===
+                    'joinGroup'
+                "
+            >
+
+                <h3>
+                    Join Request
+                </h3>
+
+
+                <p>
+                    <strong>User:</strong>
+
+                    {{ request.requesterUsername }}
+                </p>
+
+            </ng-container>
+
+
+            <!-- ROOM CREATION REQUEST -->
+
+            <ng-container
+                *ngIf="
+                    request.type ===
+                    'roomCreation'
+                "
+            >
+
+                <h3>
+                    Room Proposal
+                </h3>
+
+
+                <p>
+                    <strong>
+                        Requested by:
+                    </strong>
+
+                    {{ request.requesterUsername }}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Proposed Room:
+                    </strong>
+
+                    {{ request.details.roomName }}
+                </p>
+
+            </ng-container>
+
+
+            <!-- GROUP BAN REQUEST -->
+
+            <ng-container
+                *ngIf="
+                    request.type ===
+                    'groupBan'
+                "
+            >
+
+                <h3>
+                    Group Ban Request
+                </h3>
+
+
+                <p>
+                    <strong>
+                        Requested by:
+                    </strong>
+
+                    {{ request.requesterUsername }}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Target User:
+                    </strong>
+
+                    {{ request.targetUsername }}
+                </p>
+
+
+                <p>
+                    <strong>
+                        Reason:
+                    </strong>
+
+                    {{ request.reason }}
+                </p>
+
+            </ng-container>
+
+
+            <!-- APPROVE / START REJECT -->
+
+            <div
+                *ngIf="
+                    canActionRequest(request) &&
+                    rejectingRequestId !==
+                    request.id
+                "
+            >
+
+                <button
+                    (click)="approve(request)"
+                >
+                    Approve
+                </button>
+
+
+                <button
+                    (click)="startReject(request)"
+                >
+                    Reject
+                </button>
+
+            </div>
+
+
+            <!-- REJECTION REASON -->
+
+            <div
+                *ngIf="
+                    canActionRequest(request) &&
+                    rejectingRequestId ===
+                    request.id
+                "
+            >
+
+                <label>
+                    Rejection Reason
+                </label>
+
+
+                <textarea
+                    [(ngModel)]="rejectionReason"
+                    placeholder="Enter reason for rejection"
+                ></textarea>
+
+
+                <button
+                    (click)="confirmReject(request)"
+                >
+                    Confirm Reject
+                </button>
+
+
+                <button
+                    (click)="cancelReject()"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+
+            <!-- SELF-APPROVAL BLOCK -->
+
+            <p
+                *ngIf="
+                    !canActionRequest(request)
+                "
+            >
+                Another Group Administrator
+                must action this request.
+            </p>
+
+        </div>
+
+    </section>
 
 </main>

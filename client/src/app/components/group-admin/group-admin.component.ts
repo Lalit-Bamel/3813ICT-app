@@ -15,8 +15,8 @@ import {
 
 import {
     ActivatedRoute,
-    RouterLink,
-    Router
+    Router,
+    RouterLink
 } from '@angular/router';
 
 import {
@@ -61,10 +61,14 @@ import {
     styleUrl:
         './group-admin.component.css'
 })
-export class GroupAdminComponent implements OnInit {
+export class GroupAdminComponent
+implements OnInit {
 
     private route =
         inject(ActivatedRoute);
+
+    private router =
+        inject(Router);
 
     private authService =
         inject(AuthService);
@@ -82,45 +86,40 @@ export class GroupAdminComponent implements OnInit {
     currentUser =
         this.authService.currentUser;
 
-    
 
     group: Group | null = null;
+
+    members: GroupMember[] = [];
 
     joinRequests: Request[] = [];
 
 
-    rejectingRequestId: string | null = null;
+    editTitle = '';
+
+    editDescription = '';
+
+    editMinimumAge:
+        number | null = null;
+
+    editTheme = 'default';
+
+
+    rejectingRequestId:
+        string | null = null;
 
     rejectionReason = '';
 
 
+    systemBanTargetId:
+        string | null = null;
+
+    systemBanReason = '';
+
+
+    successMessage = '';
 
     errorMessage = '';
 
-    loadMembers(groupId: string) {
-
-    this.groupService
-        .getGroupMembers(groupId)
-        .subscribe({
-
-            next: members => {
-
-                this.members =
-                    members;
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to load members.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
 
     ngOnInit() {
 
@@ -142,222 +141,10 @@ export class GroupAdminComponent implements OnInit {
         this.loadMembers(groupId);
     }
 
-saveGroupChanges() {
 
-    const user =
-        this.currentUser();
-
-
-    if (
-        !user ||
-        !this.group ||
-        this.editMinimumAge === null
-    ) {
-        return;
-    }
-
-
-    this.errorMessage = '';
-    this.successMessage = '';
-
-
-    this.groupService
-        .updateGroup(
-            this.group.id,
-            user.id,
-            {
-                title:
-                    this.editTitle,
-
-                description:
-                    this.editDescription,
-
-                minimumAge:
-                    this.editMinimumAge,
-
-                theme:
-                    this.editTheme
-            }
-        )
-        .subscribe({
-
-            next: () => {
-
-                this.successMessage =
-                    'Group updated successfully.';
-
-                this.loadGroup(
-                    this.group!.id
-                );
-
-                this.loadMembers(
-                    this.group!.id
-                );
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to update group.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
-isAdmin(member: GroupMember): boolean {
-
-    return (
-        this.group?.adminIds
-            .includes(member.id)
-        ?? false
-    );
-}
-
-promote(member: GroupMember) {
-
-    const user =
-        this.currentUser();
-
-
-    if (!user || !this.group) {
-        return;
-    }
-
-
-    this.groupService
-        .promoteAdmin(
-            this.group.id,
-            user.id,
-            member.id
-        )
-        .subscribe({
-
-            next: () => {
-
-                this.successMessage =
-                    `${member.username} promoted to Group Administrator.`;
-
-                this.loadGroup(
-                    this.group!.id
-                );
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to promote member.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
-
-demote(member: GroupMember) {
-
-    const user =
-        this.currentUser();
-
-
-    if (!user || !this.group) {
-        return;
-    }
-
-
-    const confirmed =
-        window.confirm(
-            `Demote ${member.username} from Group Administrator?`
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    this.groupService
-        .demoteAdmin(
-            this.group.id,
-            user.id,
-            member.id
-        )
-        .subscribe({
-
-            next: () => {
-
-                this.successMessage =
-                    `${member.username} is no longer a Group Administrator.`;
-
-                this.loadGroup(
-                    this.group!.id
-                );
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to demote administrator.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
-
-resign() {
-
-    const user =
-        this.currentUser();
-
-
-    if (!user || !this.group) {
-        return;
-    }
-
-
-    const confirmed =
-        window.confirm(
-            'Resign as Group Administrator?'
-        );
-
-
-    if (!confirmed) {
-        return;
-    }
-
-
-    this.groupService
-        .resignAdmin(
-            this.group.id,
-            user.id
-        )
-        .subscribe({
-
-            next: () => {
-
-                this.router.navigate([
-                    '/groups',
-                    this.group!.id
-                ]);
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to resign.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
+    // ==========================================
+    // LOAD GROUP
+    // ==========================================
 
     loadGroup(groupId: string) {
 
@@ -365,24 +152,24 @@ resign() {
             .getGroup(groupId)
             .subscribe({
 
-        next: group => {
-        
-            this.group = group;
-        
-            this.editTitle =
-                group.title;
-        
-            this.editDescription =
-                group.description;
-        
-            this.editMinimumAge =
-                group.minimumAge;
-        
-            this.editTheme =
-                group.theme;
-        
-            this.cdr.markForCheck();
-        },
+                next: group => {
+
+                    this.group = group;
+
+                    this.editTitle =
+                        group.title;
+
+                    this.editDescription =
+                        group.description;
+
+                    this.editMinimumAge =
+                        group.minimumAge;
+
+                    this.editTheme =
+                        group.theme;
+
+                    this.cdr.markForCheck();
+                },
 
                 error: error => {
 
@@ -395,6 +182,40 @@ resign() {
             });
     }
 
+
+    // ==========================================
+    // LOAD MEMBERS
+    // ==========================================
+
+    loadMembers(groupId: string) {
+
+        this.groupService
+            .getGroupMembers(groupId)
+            .subscribe({
+
+                next: members => {
+
+                    this.members =
+                        members;
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load members.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // LOAD REQUESTS
+    // ==========================================
 
     loadRequests(groupId: string) {
 
@@ -434,6 +255,390 @@ resign() {
     }
 
 
+    // ==========================================
+    // EDIT GROUP
+    // ==========================================
+
+    saveGroupChanges() {
+
+        const user =
+            this.currentUser();
+
+
+        if (
+            !user ||
+            !this.group ||
+            this.editMinimumAge === null
+        ) {
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
+        this.groupService
+            .updateGroup(
+                this.group.id,
+                user.id,
+                {
+                    title:
+                        this.editTitle,
+
+                    description:
+                        this.editDescription,
+
+                    minimumAge:
+                        this.editMinimumAge,
+
+                    theme:
+                        this.editTheme
+                }
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        'Group updated successfully.';
+
+                    this.loadGroup(
+                        this.group!.id
+                    );
+
+                    this.loadMembers(
+                        this.group!.id
+                    );
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to update group.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // CHECK ADMIN
+    // ==========================================
+
+    isAdmin(
+        member: GroupMember
+    ): boolean {
+
+        return (
+            this.group?.adminIds
+                .includes(member.id)
+            ?? false
+        );
+    }
+
+
+    // ==========================================
+    // PROMOTE ADMIN
+    // ==========================================
+
+    promote(member: GroupMember) {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user || !this.group) {
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
+        this.groupService
+            .promoteAdmin(
+                this.group.id,
+                user.id,
+                member.id
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        `${member.username} promoted to Group Administrator.`;
+
+                    this.loadGroup(
+                        this.group!.id
+                    );
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to promote member.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // DEMOTE ADMIN
+    // ==========================================
+
+    demote(member: GroupMember) {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user || !this.group) {
+            return;
+        }
+
+
+        const confirmed =
+            window.confirm(
+                `Demote ${member.username} from Group Administrator?`
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
+        this.groupService
+            .demoteAdmin(
+                this.group.id,
+                user.id,
+                member.id
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        `${member.username} is no longer a Group Administrator.`;
+
+                    this.loadGroup(
+                        this.group!.id
+                    );
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to demote administrator.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // RESIGN ADMIN
+    // ==========================================
+
+    resign() {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user || !this.group) {
+            return;
+        }
+
+
+        const confirmed =
+            window.confirm(
+                'Resign as Group Administrator?'
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        this.groupService
+            .resignAdmin(
+                this.group.id,
+                user.id
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.router.navigate([
+                        '/groups',
+                        this.group!.id
+                    ]);
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to resign.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // SYSTEM BAN REQUEST
+    // ==========================================
+
+    startSystemBan(
+        member: GroupMember
+    ) {
+
+        this.systemBanTargetId =
+            member.id;
+
+        this.systemBanReason = '';
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    cancelSystemBan() {
+
+        this.systemBanTargetId =
+            null;
+
+        this.systemBanReason = '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    confirmSystemBan(
+        member: GroupMember
+    ) {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user || !this.group) {
+            return;
+        }
+
+
+        if (!this.systemBanReason.trim()) {
+
+            this.errorMessage =
+                'Please enter a reason for the system ban request.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
+        this.requestService
+            .createSystemBanRequest(
+                user.id,
+                this.group.id,
+                member.id,
+                this.systemBanReason
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        'System ban request submitted to the Super Administrator.';
+
+                    this.systemBanTargetId =
+                        null;
+
+                    this.systemBanReason = '';
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to submit system ban request.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // REQUEST ACTION PERMISSION
+    // ==========================================
+
+    canActionRequest(
+        request: Request
+    ): boolean {
+
+        const user =
+            this.currentUser();
+
+
+        if (!user) {
+            return false;
+        }
+
+
+        if (
+            request.type === 'groupBan' &&
+            request.requesterId === user.id
+        ) {
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    // ==========================================
+    // APPROVE REQUEST
+    // ==========================================
+
     approve(request: Request) {
 
         const user =
@@ -471,6 +676,10 @@ resign() {
                         this.group!.id
                     );
 
+                    this.loadMembers(
+                        this.group!.id
+                    );
+
                     this.cdr.markForCheck();
                 },
 
@@ -486,7 +695,13 @@ resign() {
     }
 
 
-    startReject(request: Request) {
+    // ==========================================
+    // START REJECT
+    // ==========================================
+
+    startReject(
+        request: Request
+    ) {
 
         this.rejectingRequestId =
             request.id;
@@ -496,18 +711,33 @@ resign() {
         this.errorMessage = '';
 
         this.successMessage = '';
+
+        this.cdr.markForCheck();
     }
 
+
+    // ==========================================
+    // CANCEL REJECT
+    // ==========================================
 
     cancelReject() {
 
-        this.rejectingRequestId = null;
+        this.rejectingRequestId =
+            null;
 
         this.rejectionReason = '';
+
+        this.cdr.markForCheck();
     }
 
 
-    confirmReject(request: Request) {
+    // ==========================================
+    // CONFIRM REJECT
+    // ==========================================
+
+    confirmReject(
+        request: Request
+    ) {
 
         const user =
             this.currentUser();
@@ -515,7 +745,13 @@ resign() {
 
         if (
             !user ||
-            !this.group ||
+            !this.group
+        ) {
+            return;
+        }
+
+
+        if (
             !this.rejectionReason.trim()
         ) {
 
@@ -552,11 +788,9 @@ resign() {
 
                     this.rejectionReason = '';
 
-
                     this.loadRequests(
                         this.group!.id
                     );
-
 
                     this.cdr.markForCheck();
                 },
@@ -571,22 +805,4 @@ resign() {
                 }
             });
     }
-    private router =
-    inject(Router);
-
-
-members: GroupMember[] = [];
-
-
-editTitle = '';
-
-editDescription = '';
-
-editMinimumAge:
-    number | null = null;
-
-editTheme = 'default';
-
-
-successMessage = '';
 }

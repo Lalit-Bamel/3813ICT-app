@@ -8,6 +8,8 @@ export interface Request {
 
     requesterUsername?: string;
 
+    targetUsername?: string | null;
+
     targetGroupId: string | null;
 
     targetUserId: string | null;

@@ -36,6 +36,7 @@
     <hr>
 
 
+    <!-- ROOMS -->
     <h2>Rooms</h2>
 
 
@@ -49,42 +50,12 @@
         *ngFor="let room of rooms"
     >
 
-        <!-- NORMAL ROOM DISPLAY -->
-        <div *ngIf="editingRoomId !== room.id">
-
-            <strong>
-                # {{ room.name }}
-            </strong>
-
-        </div>
+        <strong>
+            # {{ room.name }}
+        </strong>
 
 
-        <!-- RENAME MODE -->
-        <div *ngIf="editingRoomId === room.id">
-
-            <input
-                type="text"
-                [(ngModel)]="editedRoomName"
-            >
-
-            <button
-                type="button"
-                (click)="saveRoomName(room)"
-            >
-                Save
-            </button>
-
-            <button
-                type="button"
-                (click)="cancelRename()"
-            >
-                Cancel
-            </button>
-
-        </div>
-
-
-        <div class="room-actions">
+        <span>
 
             <a
                 [routerLink]="[
@@ -99,11 +70,7 @@
 
 
             <button
-                type="button"
-                *ngIf="
-                    isAdmin &&
-                    editingRoomId !== room.id
-                "
+                *ngIf="isAdmin"
                 (click)="renameRoom(room)"
             >
                 Rename
@@ -111,31 +78,30 @@
 
 
             <button
-                type="button"
                 *ngIf="isAdmin"
                 (click)="deleteRoom(room)"
             >
                 Delete
             </button>
 
-        </div>
+        </span>
 
     </div>
 
 
-    <!-- GROUP ADMIN -->
+    <!-- ADMIN CREATES ROOM -->
     <section *ngIf="isAdmin">
 
         <h2>Create Room</h2>
 
+
         <input
-            type="text"
             [(ngModel)]="newRoomName"
             placeholder="Room name"
         >
 
+
         <button
-            type="button"
             (click)="createRoom()"
         >
             Create Room
@@ -144,19 +110,19 @@
     </section>
 
 
-    <!-- NORMAL MEMBER -->
+    <!-- NORMAL MEMBER PROPOSES ROOM -->
     <section *ngIf="!isAdmin">
 
         <h2>Propose New Room</h2>
 
+
         <input
-            type="text"
             [(ngModel)]="proposedRoomName"
             placeholder="Proposed room name"
         >
 
+
         <button
-            type="button"
             (click)="proposeRoom()"
         >
             Submit Proposal
@@ -165,6 +131,59 @@
     </section>
 
 
+    <hr>
+
+
+    <!-- O14: MEMBERS / BAN REQUEST -->
+    <section>
+
+        <h2>Members</h2>
+
+
+        <p *ngIf="members.length === 0">
+            No members found.
+        </p>
+
+
+        <div
+            class="member-row"
+            *ngFor="let member of members"
+        >
+
+            <span>
+
+                {{ member.username }}
+
+
+                <strong
+                    *ngIf="
+                        group.adminIds.includes(
+                            member.id
+                        )
+                    "
+                >
+                    — Admin
+                </strong>
+
+            </span>
+
+
+            <button
+                *ngIf="
+                    member.id !==
+                    currentUser()?.id
+                "
+                (click)="requestGroupBan(member)"
+            >
+                Report / Request Ban
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- SUCCESS MESSAGE -->
     <p
         class="success"
         *ngIf="successMessage"
@@ -173,6 +192,7 @@
     </p>
 
 
+    <!-- ERROR MESSAGE -->
     <p
         class="error"
         *ngIf="errorMessage"

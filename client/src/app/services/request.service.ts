@@ -43,6 +43,42 @@ export class RequestService {
         );
     }
 
+            createGroupBanRequest(
+            requesterId: string,
+            groupId: string,
+            targetUserId: string,
+            reason: string
+        ) {
+        
+            return this.http.post(
+                `${this.apiUrl}/group-ban`,
+                {
+                    requesterId,
+                    groupId,
+                    targetUserId,
+                    reason
+                }
+            );
+        }
+        
+        
+        createSystemBanRequest(
+            requesterId: string,
+            groupId: string,
+            targetUserId: string,
+            reason: string
+        ) {
+        
+            return this.http.post(
+                `${this.apiUrl}/system-ban`,
+                {
+                    requesterId,
+                    groupId,
+                    targetUserId,
+                    reason
+                }
+            );
+        }
 
     requestJoin(
         requesterId: string,

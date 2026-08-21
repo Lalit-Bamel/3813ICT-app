@@ -9,3 +9,22 @@ export interface User {
     systemRole: 'user' | 'superAdmin';
     createdAt: string;
 }
+
+export interface BannedUser {
+
+    id: string;
+
+    originalUserId: string;
+
+    firstName: string;
+
+    lastName: string;
+
+    email: string;
+
+    reason: string;
+
+    bannedBy: string;
+
+    bannedAt: string;
+}

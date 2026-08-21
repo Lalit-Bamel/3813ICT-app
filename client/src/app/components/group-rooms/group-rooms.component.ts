@@ -14,7 +14,8 @@ import { GroupService } from '../../services/group.service';
 import { RoomService } from '../../services/room.service';
 import { RequestService } from '../../services/request.service';
 
-import { Group } from '../../models/group';
+import { Group,
+         GroupMember} from '../../models/group';
 import { Room } from '../../models/room';
 
 import { NavbarComponent } from '../navbar/navbar.component';
@@ -64,6 +65,32 @@ export class GroupRoomsComponent implements OnInit {
 
     errorMessage = '';
 
+    members: GroupMember[] = [];
+
+loadMembers(groupId: string) {
+
+    this.groupService
+        .getGroupMembers(groupId)
+        .subscribe({
+
+            next: members => {
+
+                this.members =
+                    members;
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to load members.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
 
     ngOnInit() {
 
@@ -76,8 +103,59 @@ export class GroupRoomsComponent implements OnInit {
 
         this.loadGroup(groupId);
         this.loadRooms(groupId);
+        this.loadMembers(groupId);
     }
 
+    requestGroupBan(
+    member: GroupMember
+) {
+
+    const user =
+        this.currentUser();
+
+
+    if (!user || !this.group) {
+        return;
+    }
+
+
+    const reason = window.prompt(
+        `Why should ${member.username} be banned from this group?`
+    );
+
+
+    if (!reason?.trim()) {
+        return;
+    }
+
+
+    this.requestService
+        .createGroupBanRequest(
+            user.id,
+            this.group.id,
+            member.id,
+            reason
+        )
+        .subscribe({
+
+            next: () => {
+
+                this.successMessage =
+                    'Group ban request submitted.';
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to submit ban request.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
 
     loadGroup(groupId: string) {
 

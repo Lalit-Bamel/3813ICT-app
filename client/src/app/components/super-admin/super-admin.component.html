@@ -8,9 +8,7 @@
     </h1>
 
 
-    <!-- ========================================= -->
-    <!-- SUCCESS / ERROR MESSAGES -->
-    <!-- ========================================= -->
+    <!-- MESSAGES -->
 
     <p
         class="success"
@@ -28,9 +26,10 @@
     </p>
 
 
-    <!-- ========================================= -->
+
+    <!-- ====================================== -->
     <!-- GROUP CREATION REQUESTS -->
-    <!-- ========================================= -->
+    <!-- ====================================== -->
 
     <section>
 
@@ -40,9 +39,7 @@
 
 
         <p
-            *ngIf="
-                groupRequests.length === 0
-            "
+            *ngIf="groupRequests.length === 0"
         >
             No pending group requests.
         </p>
@@ -50,91 +47,60 @@
 
         <div
             class="request-card"
-            *ngFor="
-                let request
-                of groupRequests
-            "
+            *ngFor="let request of groupRequests"
         >
 
             <p>
-                <strong>
-                    Requested by:
-                </strong>
+                <strong>Requested by:</strong>
 
-                {{
-                    request.requesterUsername
-                }}
+                {{ request.requesterUsername }}
             </p>
 
 
             <p>
-                <strong>
-                    Group Title:
-                </strong>
+                <strong>Group Title:</strong>
 
-                {{
-                    request.details.title
-                }}
+                {{ request.details.title }}
             </p>
 
 
             <p>
-                <strong>
-                    Description:
-                </strong>
+                <strong>Description:</strong>
 
-                {{
-                    request.details.description
-                }}
+                {{ request.details.description }}
             </p>
 
 
             <p>
-                <strong>
-                    Minimum Age:
-                </strong>
+                <strong>Minimum Age:</strong>
 
-                {{
-                    request.details.minimumAge
-                }}+
+                {{ request.details.minimumAge }}+
             </p>
 
 
             <p>
-                <strong>
-                    Theme:
-                </strong>
+                <strong>Theme:</strong>
 
-                {{
-                    request.details.theme
-                }}
+                {{ request.details.theme }}
             </p>
 
-
-            <!-- ================================= -->
-            <!-- NORMAL APPROVE / REJECT BUTTONS -->
-            <!-- ================================= -->
 
             <div
                 *ngIf="
-                    rejectingRequestId
-                    !== request.id
+                    rejectingRequestId !==
+                    request.id
                 "
             >
 
                 <button
-                    (click)="
-                        approveRequest(request)
-                    "
+                    (click)="approveRequest(request)"
                 >
                     Approve
                 </button>
 
 
                 <button
-                    (click)="
-                        startReject(request)
-                    "
+                    (click)="startReject(request)"
                 >
                     Reject
                 </button>
@@ -142,14 +108,10 @@
             </div>
 
 
-            <!-- ================================= -->
-            <!-- REJECTION FORM -->
-            <!-- ================================= -->
-
             <div
                 *ngIf="
-                    rejectingRequestId
-                    === request.id
+                    rejectingRequestId ===
+                    request.id
                 "
             >
 
@@ -160,28 +122,20 @@
 
                 <input
                     type="text"
-                    [(ngModel)]="
-                        rejectionReason
-                    "
-                    placeholder="
-                        Enter rejection reason
-                    "
+                    [(ngModel)]="rejectionReason"
+                    placeholder="Enter rejection reason"
                 >
 
 
                 <button
-                    (click)="
-                        confirmReject(request)
-                    "
+                    (click)="confirmReject(request)"
                 >
                     Confirm Reject
                 </button>
 
 
                 <button
-                    (click)="
-                        cancelReject()
-                    "
+                    (click)="cancelReject()"
                 >
                     Cancel
                 </button>
@@ -193,12 +147,190 @@
     </section>
 
 
+
     <hr>
 
 
-    <!-- ========================================= -->
-    <!-- OTHER SUPER ADMIN FUNCTIONS -->
-    <!-- ========================================= -->
+
+    <!-- ====================================== -->
+    <!-- SYSTEM BAN REQUESTS -->
+    <!-- ====================================== -->
+
+    <section>
+
+        <h2>
+            Pending System Ban Requests
+        </h2>
+
+
+        <p
+            *ngIf="
+                systemBanRequests.length === 0
+            "
+        >
+            No pending system ban requests.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="
+                let request of systemBanRequests
+            "
+        >
+
+            <p>
+                <strong>Requested by:</strong>
+
+                {{ request.requesterUsername }}
+            </p>
+
+
+            <p>
+                <strong>Target:</strong>
+
+                {{ request.targetUsername }}
+            </p>
+
+
+            <p>
+                <strong>Reason:</strong>
+
+                {{ request.reason }}
+            </p>
+
+
+            <div
+                *ngIf="
+                    rejectingRequestId !==
+                    request.id
+                "
+            >
+
+                <button
+                    (click)="approveRequest(request)"
+                >
+                    Approve Permanent Ban
+                </button>
+
+
+                <button
+                    (click)="startReject(request)"
+                >
+                    Reject
+                </button>
+
+            </div>
+
+
+            <div
+                *ngIf="
+                    rejectingRequestId ===
+                    request.id
+                "
+            >
+
+                <label>
+                    Rejection Reason
+                </label>
+
+
+                <input
+                    type="text"
+                    [(ngModel)]="rejectionReason"
+                    placeholder="Enter rejection reason"
+                >
+
+
+                <button
+                    (click)="confirmReject(request)"
+                >
+                    Confirm Reject
+                </button>
+
+
+                <button
+                    (click)="cancelReject()"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <hr>
+
+
+
+    <!-- ====================================== -->
+    <!-- PERMANENTLY BANNED USERS -->
+    <!-- ====================================== -->
+
+    <section>
+
+        <h2>
+            Permanently Banned Users
+        </h2>
+
+
+        <p
+            *ngIf="bannedUsers.length === 0"
+        >
+            No permanently banned users.
+        </p>
+
+
+        <div
+            class="request-card"
+            *ngFor="let user of bannedUsers"
+        >
+
+            <p>
+                <strong>Name:</strong>
+
+                {{ user.firstName }}
+                {{ user.lastName }}
+            </p>
+
+
+            <p>
+                <strong>Email:</strong>
+
+                {{ user.email }}
+            </p>
+
+
+            <p>
+                <strong>Reason:</strong>
+
+                {{ user.reason }}
+            </p>
+
+
+            <p>
+                <strong>Banned At:</strong>
+
+                {{ user.bannedAt }}
+            </p>
+
+        </div>
+
+    </section>
+
+
+
+    <hr>
+
+
+
+    <!-- ====================================== -->
+    <!-- REMAINING ADMIN FUNCTIONS -->
+    <!-- ====================================== -->
 
     <section>
 
@@ -210,22 +342,12 @@
         <div class="admin-options">
 
             <button>
-                Ban Requests
-            </button>
-
-
-            <button>
                 Delete Group Requests
             </button>
 
 
             <button>
                 Users
-            </button>
-
-
-            <button>
-                Banned Users
             </button>
 
 
