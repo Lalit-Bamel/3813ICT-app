@@ -41,10 +41,10 @@
   "groups": [
     {
       "id": "034ad819-4a7d-4a8c-af14-9f45f3ef95db",
-      "title": "Tech club",
-      "description": "tech",
+      "title": "Updated Technology Club",
+      "description": "New description",
       "minimumAge": 18,
-      "theme": "blue",
+      "theme": "dark",
       "adminIds": [
         "0b5decde-7589-4cff-ba71-dcf6a108c307"
       ],
