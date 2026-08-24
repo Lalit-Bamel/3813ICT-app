@@ -5,20 +5,47 @@ import {
     OnInit
 } from '@angular/core';
 
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import {
+    CommonModule
+} from '@angular/common';
 
-import { AuthService } from '../../services/auth.service';
-import { GroupService } from '../../services/group.service';
-import { RoomService } from '../../services/room.service';
-import { RequestService } from '../../services/request.service';
+import {
+    FormsModule
+} from '@angular/forms';
 
-import { Group,
-         GroupMember} from '../../models/group';
-import { Room } from '../../models/room';
+import {
+    ActivatedRoute,
+    RouterLink
+} from '@angular/router';
 
-import { NavbarComponent } from '../navbar/navbar.component';
+import {
+    AuthService
+} from '../../services/auth.service';
+
+import {
+    GroupService
+} from '../../services/group.service';
+
+import {
+    RoomService
+} from '../../services/room.service';
+
+import {
+    RequestService
+} from '../../services/request.service';
+
+import {
+    Group,
+    GroupMember
+} from '../../models/group';
+
+import {
+    Room
+} from '../../models/room';
+
+import {
+    NavbarComponent
+} from '../navbar/navbar.component';
 
 
 @Component({
@@ -31,141 +58,121 @@ import { NavbarComponent } from '../navbar/navbar.component';
         NavbarComponent
     ],
 
-    templateUrl: './group-rooms.component.html',
-    styleUrl: './group-rooms.component.css'
+    templateUrl:
+        './group-rooms.component.html',
+
+    styleUrl:
+        './group-rooms.component.css'
 })
-export class GroupRoomsComponent implements OnInit {
+export class GroupRoomsComponent
+implements OnInit {
 
-    private route = inject(ActivatedRoute);
-    private authService = inject(AuthService);
-    private groupService = inject(GroupService);
-    private roomService = inject(RoomService);
-    private requestService = inject(RequestService);
-    private cdr = inject(ChangeDetectorRef);
+    private route =
+        inject(ActivatedRoute);
+
+    private authService =
+        inject(AuthService);
+
+    private groupService =
+        inject(GroupService);
+
+    private roomService =
+        inject(RoomService);
+
+    private requestService =
+        inject(RequestService);
+
+    private cdr =
+        inject(ChangeDetectorRef);
 
 
-    currentUser = this.authService.currentUser;
+    currentUser =
+        this.authService.currentUser;
+
 
     group: Group | null = null;
 
     rooms: Room[] = [];
 
+    members: GroupMember[] = [];
+
+
+    // DIRECT ROOM CREATION
 
     newRoomName = '';
+
+
+    // ROOM PROPOSAL
 
     proposedRoomName = '';
 
 
-    editingRoomId: string | null = null;
+    // ROOM RENAME
 
-    editedRoomName = '';
+    renamingRoomId:
+        string | null = null;
+
+    renameRoomName = '';
+
+
+    // GROUP BAN REQUEST
+
+    groupBanTargetId:
+        string | null = null;
+
+    groupBanReason = '';
 
 
     successMessage = '';
 
     errorMessage = '';
 
-    members: GroupMember[] = [];
-
-loadMembers(groupId: string) {
-
-    this.groupService
-        .getGroupMembers(groupId)
-        .subscribe({
-
-            next: members => {
-
-                this.members =
-                    members;
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to load members.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
 
     ngOnInit() {
 
         const groupId =
-            this.route.snapshot.paramMap.get('groupId');
+            this.route.snapshot
+                .paramMap
+                .get('groupId');
+
 
         if (!groupId) {
             return;
         }
 
-        this.loadGroup(groupId);
-        this.loadRooms(groupId);
-        this.loadMembers(groupId);
-    }
 
-    requestGroupBan(
-    member: GroupMember
-) {
+        this.loadGroup(
+            groupId
+        );
 
-    const user =
-        this.currentUser();
+        this.loadRooms(
+            groupId
+        );
 
-
-    if (!user || !this.group) {
-        return;
+        this.loadMembers(
+            groupId
+        );
     }
 
 
-    const reason = window.prompt(
-        `Why should ${member.username} be banned from this group?`
-    );
+    // ==========================================
+    // LOAD GROUP
+    // ==========================================
 
-
-    if (!reason?.trim()) {
-        return;
-    }
-
-
-    this.requestService
-        .createGroupBanRequest(
-            user.id,
-            this.group.id,
-            member.id,
-            reason
-        )
-        .subscribe({
-
-            next: () => {
-
-                this.successMessage =
-                    'Group ban request submitted.';
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to submit ban request.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
-
-    loadGroup(groupId: string) {
+    loadGroup(
+        groupId: string
+    ) {
 
         this.groupService
-            .getGroup(groupId)
+            .getGroup(
+                groupId
+            )
             .subscribe({
 
                 next: group => {
 
-                    this.group = group;
+                    this.group =
+                        group;
 
                     this.cdr.markForCheck();
                 },
@@ -182,15 +189,24 @@ loadMembers(groupId: string) {
     }
 
 
-    loadRooms(groupId: string) {
+    // ==========================================
+    // LOAD ROOMS
+    // ==========================================
+
+    loadRooms(
+        groupId: string
+    ) {
 
         this.roomService
-            .getRooms(groupId)
+            .getRooms(
+                groupId
+            )
             .subscribe({
 
                 next: rooms => {
 
-                    this.rooms = rooms;
+                    this.rooms =
+                        rooms;
 
                     this.cdr.markForCheck();
                 },
@@ -207,21 +223,89 @@ loadMembers(groupId: string) {
     }
 
 
-    get isAdmin(): boolean {
+    // ==========================================
+    // LOAD MEMBERS
+    // ==========================================
 
-        const user = this.currentUser();
+    loadMembers(
+        groupId: string
+    ) {
 
-        if (!user || !this.group) {
-            return false;
-        }
+        this.groupService
+            .getGroupMembers(
+                groupId
+            )
+            .subscribe({
 
-        return this.group.adminIds.includes(user.id);
+                next: members => {
+
+                    this.members =
+                        members;
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to load group members.';
+
+                    this.cdr.markForCheck();
+                }
+            });
     }
 
 
+    // ==========================================
+    // CHECK GROUP ADMIN
+    // ==========================================
+
+    isGroupAdmin(): boolean {
+
+        const user =
+            this.currentUser();
+
+
+        if (
+            !user ||
+            !this.group
+        ) {
+            return false;
+        }
+
+
+        return this.group
+            .adminIds
+            .includes(
+                user.id
+            );
+    }
+
+
+    isMemberAdmin(
+        member: GroupMember
+    ): boolean {
+
+        return (
+            this.group?.adminIds
+                .includes(
+                    member.id
+                )
+            ?? false
+        );
+    }
+
+
+    // ==========================================
+    // ADMIN DIRECT CREATE ROOM
+    // ==========================================
+
     createRoom() {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (
             !user ||
@@ -233,6 +317,7 @@ loadMembers(groupId: string) {
 
 
         this.errorMessage = '';
+
         this.successMessage = '';
 
 
@@ -246,12 +331,15 @@ loadMembers(groupId: string) {
 
                 next: () => {
 
-                    this.newRoomName = '';
-
                     this.successMessage =
                         'Room created successfully.';
 
-                    this.loadRooms(this.group!.id);
+                    this.newRoomName =
+                        '';
+
+                    this.loadRooms(
+                        this.group!.id
+                    );
 
                     this.cdr.markForCheck();
                 },
@@ -268,9 +356,15 @@ loadMembers(groupId: string) {
     }
 
 
+    // ==========================================
+    // MEMBER PROPOSE ROOM
+    // ==========================================
+
     proposeRoom() {
 
-        const user = this.currentUser();
+        const user =
+            this.currentUser();
+
 
         if (
             !user ||
@@ -282,6 +376,7 @@ loadMembers(groupId: string) {
 
 
         this.errorMessage = '';
+
         this.successMessage = '';
 
 
@@ -295,10 +390,11 @@ loadMembers(groupId: string) {
 
                 next: () => {
 
-                    this.proposedRoomName = '';
-
                     this.successMessage =
-                        'Room proposal submitted.';
+                        'Room proposal submitted to the Group Administrator.';
+
+                    this.proposedRoomName =
+                        '';
 
                     this.cdr.markForCheck();
                 },
@@ -315,38 +411,62 @@ loadMembers(groupId: string) {
     }
 
 
-    renameRoom(room: Room) {
+    // ==========================================
+    // START ROOM RENAME
+    // ==========================================
+
+    startRename(
+        room: Room
+    ) {
+
+        this.renamingRoomId =
+            room.id;
+
+        this.renameRoomName =
+            room.name;
 
         this.errorMessage = '';
+
         this.successMessage = '';
 
-        this.editingRoomId = room.id;
-
-        this.editedRoomName = room.name;
+        this.cdr.markForCheck();
     }
 
 
     cancelRename() {
 
-        this.editingRoomId = null;
+        this.renamingRoomId =
+            null;
 
-        this.editedRoomName = '';
+        this.renameRoomName =
+            '';
+
+        this.cdr.markForCheck();
     }
 
 
-    saveRoomName(room: Room) {
+    // ==========================================
+    // CONFIRM ROOM RENAME
+    // ==========================================
 
-        const user = this.currentUser();
+    confirmRename(
+        room: Room
+    ) {
+
+        const user =
+            this.currentUser();
+
 
         if (
             !user ||
-            !this.editedRoomName.trim()
+            !this.renameRoomName.trim()
         ) {
             return;
         }
 
 
         this.errorMessage = '';
+
         this.successMessage = '';
 
 
@@ -354,20 +474,28 @@ loadMembers(groupId: string) {
             .renameRoom(
                 room.id,
                 user.id,
-                this.editedRoomName
+                this.renameRoomName
             )
             .subscribe({
 
                 next: () => {
 
-                    this.editingRoomId = null;
-
-                    this.editedRoomName = '';
-
                     this.successMessage =
                         'Room renamed successfully.';
 
-                    this.loadRooms(room.groupId);
+                    this.renamingRoomId =
+                        null;
+
+                    this.renameRoomName =
+                        '';
+
+                    if (this.group) {
+
+                        this.loadRooms(
+                            this.group.id
+                        );
+                    }
+
 
                     this.cdr.markForCheck();
                 },
@@ -384,11 +512,22 @@ loadMembers(groupId: string) {
     }
 
 
-    deleteRoom(room: Room) {
+    // ==========================================
+    // DELETE ROOM
+    // ==========================================
 
-        const user = this.currentUser();
+    deleteRoom(
+        room: Room
+    ) {
 
-        if (!user) {
+        const user =
+            this.currentUser();
+
+
+        if (
+            !user ||
+            !this.group
+        ) {
             return;
         }
 
@@ -405,6 +544,7 @@ loadMembers(groupId: string) {
 
 
         this.errorMessage = '';
+
         this.successMessage = '';
 
 
@@ -420,7 +560,9 @@ loadMembers(groupId: string) {
                     this.successMessage =
                         'Room deleted successfully.';
 
-                    this.loadRooms(room.groupId);
+                    this.loadRooms(
+                        this.group!.id
+                    );
 
                     this.cdr.markForCheck();
                 },
@@ -430,6 +572,122 @@ loadMembers(groupId: string) {
                     this.errorMessage =
                         error.error?.message ||
                         'Unable to delete room.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // START GROUP BAN REQUEST
+    // ==========================================
+
+    startGroupBan(
+        member: GroupMember
+    ) {
+
+        this.groupBanTargetId =
+            member.id;
+
+        this.groupBanReason =
+            '';
+
+        this.errorMessage =
+            '';
+
+        this.successMessage =
+            '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    // ==========================================
+    // CANCEL GROUP BAN REQUEST
+    // ==========================================
+
+    cancelGroupBan() {
+
+        this.groupBanTargetId =
+            null;
+
+        this.groupBanReason =
+            '';
+
+        this.cdr.markForCheck();
+    }
+
+
+    // ==========================================
+    // SUBMIT GROUP BAN REQUEST
+    // ==========================================
+
+    confirmGroupBan(
+        member: GroupMember
+    ) {
+
+        const user =
+            this.currentUser();
+
+
+        if (
+            !user ||
+            !this.group
+        ) {
+            return;
+        }
+
+
+        if (
+            !this.groupBanReason
+                .trim()
+        ) {
+
+            this.errorMessage =
+                'Please enter a reason for the ban request.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.errorMessage =
+            '';
+
+        this.successMessage =
+            '';
+
+
+        this.requestService
+            .createGroupBanRequest(
+                user.id,
+                this.group.id,
+                member.id,
+                this.groupBanReason
+            )
+            .subscribe({
+
+                next: () => {
+
+                    this.successMessage =
+                        'Group ban request submitted to the Group Administrator.';
+
+                    this.groupBanTargetId =
+                        null;
+
+                    this.groupBanReason =
+                        '';
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to submit group ban request.';
 
                     this.cdr.markForCheck();
                 }

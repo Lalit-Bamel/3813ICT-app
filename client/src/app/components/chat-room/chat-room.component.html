@@ -97,9 +97,9 @@
                 </span>
 
 
-                <small>
-                    {{ message.createdAt }}
-                </small>
+            <small class="message-time">
+                {{ message.createdAt | date:'dd MMM, h:mm a' }}
+            </small>
 
             </div>
 
@@ -185,10 +185,14 @@
     </section>
 
 
+<!-- IMAGE + GIF ROW -->
+
+<div class="media-row">
+
     <!-- SEND IMAGE -->
 
     <section
-        class="composer"
+        class="composer media-composer"
         *ngIf="room"
     >
 
@@ -242,7 +246,7 @@
     <!-- SEND GIF -->
 
     <section
-        class="composer"
+        class="composer media-composer"
         *ngIf="room"
     >
 
@@ -265,5 +269,7 @@
         </button>
 
     </section>
+
+</div>
 
 </main>

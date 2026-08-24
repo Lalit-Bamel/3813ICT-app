@@ -1,1 +1,841 @@
 /* You can add global styles to this file, and also import other style files */
+/* =========================================================
+   GLOBAL RESET
+   ========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html {
+    min-height: 100%;
+}
+
+
+body {
+    margin: 0;
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        #f4f6f8;
+
+    color:
+        #1f2937;
+
+    line-height:
+        1.5;
+}
+
+
+/* =========================================================
+   GENERAL PAGE LAYOUT
+   ========================================================= */
+
+main {
+    width: min(
+        1100px,
+        calc(100% - 40px)
+    );
+
+    margin:
+        32px auto;
+
+    padding:
+        28px;
+
+    background:
+        white;
+
+    border-radius:
+        12px;
+
+    box-shadow:
+        0 3px 14px
+        rgba(
+            0,
+            0,
+            0,
+            0.08
+        );
+}
+
+
+h1 {
+    margin-top: 0;
+
+    color:
+        #111827;
+
+    font-size:
+        2rem;
+}
+
+
+h2 {
+    margin-top:
+        28px;
+
+    color:
+        #1f2937;
+}
+
+
+h3 {
+    color:
+        #374151;
+}
+
+
+hr {
+    border: none;
+
+    border-top:
+        1px solid #e5e7eb;
+
+    margin:
+        32px 0;
+}
+
+
+section {
+    margin-bottom:
+        28px;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+a {
+    color:
+        #2563eb;
+
+    text-decoration:
+        none;
+
+    font-weight:
+        600;
+}
+
+
+a:hover {
+    text-decoration:
+        underline;
+}
+
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+
+app-navbar {
+    display:
+        block;
+
+    width:
+        100%;
+}
+
+
+app-navbar nav {
+    width:
+        100%;
+
+    min-height:
+        64px;
+
+    padding:
+        14px 28px;
+
+    background:
+        #9dabca;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        22px;
+
+    flex-wrap:
+        wrap;
+
+    box-shadow:
+        0 2px 8px
+        rgba(
+            0,
+            0,
+            0,
+            0.15
+        );
+}
+
+
+app-navbar nav a {
+    color:
+        white;
+
+    text-decoration:
+        none;
+
+    font-weight:
+        600;
+}
+
+
+app-navbar nav a:hover {
+    color:
+        #93c5fd;
+}
+
+
+/* =========================================================
+   FORMS
+   ========================================================= */
+
+form {
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        12px;
+}
+
+
+label {
+    display:
+        block;
+
+    margin-top:
+        10px;
+
+    margin-bottom:
+        5px;
+
+    font-weight:
+        600;
+
+    color:
+        #374151;
+}
+
+
+input,
+textarea,
+select {
+    width:
+        100%;
+
+    padding:
+        11px 12px;
+
+    border:
+        1px solid #d1d5db;
+
+    border-radius:
+        7px;
+
+    background:
+        white;
+
+    color:
+        #111827;
+
+    font-size:
+        1rem;
+
+    font-family:
+        inherit;
+
+    outline:
+        none;
+}
+
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color:
+        #2563eb;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            37,
+            99,
+            235,
+            0.12
+        );
+}
+
+
+textarea {
+    min-height:
+        95px;
+
+    resize:
+        vertical;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button {
+    display:
+        inline-block;
+
+    width:
+        auto;
+
+    margin:
+        6px 8px 6px 0;
+
+    padding:
+        10px 16px;
+
+    border:
+        none;
+
+    border-radius:
+        7px;
+
+    background:
+        #2563eb;
+
+    color:
+        white;
+
+    font-size:
+        0.95rem;
+
+    font-weight:
+        600;
+
+    font-family:
+        inherit;
+
+    cursor:
+        pointer;
+
+    transition:
+        transform 0.1s ease,
+        background 0.15s ease;
+}
+
+
+button:hover {
+    background:
+        #1d4ed8;
+}
+
+
+button:active {
+    transform:
+        scale(0.98);
+}
+
+
+button:disabled {
+    opacity:
+        0.55;
+
+    cursor:
+        not-allowed;
+}
+
+
+/* =========================================================
+   SUCCESS / ERROR
+   ========================================================= */
+
+.success {
+    padding:
+        12px 14px;
+
+    border:
+        1px solid #86efac;
+
+    border-radius:
+        7px;
+
+    background:
+        #f0fdf4;
+
+    color:
+        #166534;
+
+    font-weight:
+        600;
+}
+
+
+.error {
+    padding:
+        12px 14px;
+
+    border:
+        1px solid #fca5a5;
+
+    border-radius:
+        7px;
+
+    background:
+        #fef2f2;
+
+    color:
+        #991b1b;
+
+    font-weight:
+        600;
+}
+
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+
+.group-card,
+.request-card,
+.admin-section,
+.member-row,
+.composer {
+    padding:
+        20px;
+
+    margin:
+        16px 0;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius:
+        10px;
+
+    background:
+        #ffffff;
+
+    box-shadow:
+        0 2px 8px
+        rgba(
+            0,
+            0,
+            0,
+            0.05
+        );
+}
+
+
+.group-card:hover,
+.request-card:hover {
+    border-color:
+        #bfdbfe;
+}
+
+
+/* =========================================================
+   GROUPS
+   ========================================================= */
+
+.groups-page {
+    max-width:
+        1100px;
+}
+
+
+.search {
+    margin-bottom:
+        20px;
+}
+
+
+.group-request-form {
+    max-width:
+        650px;
+
+    margin-top:
+        20px;
+
+    padding:
+        22px;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius:
+        10px;
+
+    background:
+        #f9fafb;
+}
+
+
+/* =========================================================
+   ADMIN
+   ========================================================= */
+
+.admin-page {
+    max-width:
+        1100px;
+}
+
+
+.admin-options {
+    display:
+        flex;
+
+    flex-wrap:
+        wrap;
+
+    gap:
+        10px;
+}
+
+
+.member-row {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    gap:
+        20px;
+}
+
+
+.member-row > div {
+    text-align:
+        right;
+}
+
+
+/* =========================================================
+   CHAT
+   ========================================================= */
+
+.chat-page {
+    max-width:
+        900px;
+}
+
+
+.chat-header {
+    margin-bottom:
+        25px;
+}
+
+
+.messages {
+    padding:
+        18px;
+
+    margin-bottom:
+        25px;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius:
+        10px;
+
+    background:
+        #f9fafb;
+}
+
+
+.message {
+    padding:
+        16px;
+
+    margin-bottom:
+        12px;
+
+    border:
+        1px solid #e5e7eb;
+
+    border-radius:
+        9px;
+
+    background:
+        white;
+}
+
+
+.message:last-child {
+    margin-bottom:
+        0;
+}
+
+
+.message-header {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    margin-bottom:
+        8px;
+}
+
+
+.message-header strong {
+    color:
+        #111827;
+}
+
+
+.message-header small {
+    margin-left:
+        auto;
+
+    color:
+        #6b7280;
+}
+
+
+.admin-label {
+    padding:
+        3px 7px;
+
+    border-radius:
+        5px;
+
+    background:
+        #dbeafe;
+
+    color:
+        #1d4ed8;
+
+    font-size:
+        0.8rem;
+
+    font-weight:
+        700;
+}
+
+
+.message-text {
+    margin:
+        8px 0;
+
+    white-space:
+        pre-wrap;
+
+    word-break:
+        break-word;
+}
+
+
+.chat-image {
+    display:
+        block;
+
+    max-width:
+        350px;
+
+    max-height:
+        350px;
+
+    margin:
+        12px 0;
+
+    border-radius:
+        8px;
+
+    object-fit:
+        contain;
+}
+
+
+.image-preview img {
+    display:
+        block;
+
+    max-width:
+        300px;
+
+    max-height:
+        300px;
+
+    margin:
+        12px 0;
+
+    border-radius:
+        8px;
+
+    object-fit:
+        contain;
+}
+
+
+/* =========================================================
+   TABLES — IF USED
+   ========================================================= */
+
+table {
+    width:
+        100%;
+
+    border-collapse:
+        collapse;
+
+    margin:
+        20px 0;
+}
+
+
+th,
+td {
+    padding:
+        12px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
+    text-align:
+        left;
+}
+
+
+th {
+    background:
+        #f9fafb;
+}
+
+
+/* =========================================================
+   AUTH PAGES
+   ========================================================= */
+
+.login-page,
+.register-page,
+.profile-page {
+    max-width:
+        600px;
+}
+
+
+/* =========================================================
+   SMALL UTILITY STYLING
+   ========================================================= */
+
+small {
+    color:
+        #6b7280;
+}
+
+
+strong {
+    color:
+        #111827;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+    max-width: 700px
+) {
+
+    main {
+        width:
+            calc(100% - 20px);
+
+        margin:
+            18px auto;
+
+        padding:
+            18px;
+    }
+
+
+    h1 {
+        font-size:
+            1.65rem;
+    }
+
+
+    h2 {
+        font-size:
+            1.3rem;
+    }
+
+
+    app-navbar nav {
+        padding:
+            12px 16px;
+
+        gap:
+            14px;
+    }
+
+
+    .member-row {
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+    }
+
+
+    .member-row > div {
+        width:
+            100%;
+
+        text-align:
+            left;
+    }
+
+
+    .message-header {
+        flex-direction:
+            column;
+
+        align-items:
+            flex-start;
+    }
+
+
+    .message-header small {
+        margin-left:
+            0;
+    }
+
+
+    .chat-image,
+    .image-preview img {
+        max-width:
+            100%;
+    }
+
+
+    button {
+        max-width:
+            100%;
+    }
+
+}

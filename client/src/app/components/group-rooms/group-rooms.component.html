@@ -1,203 +1,374 @@
 <app-navbar></app-navbar>
 
 
-<main
-    class="rooms-page"
-    *ngIf="group"
->
+<main>
 
     <a routerLink="/groups">
         ← Back to Groups
     </a>
 
 
-    <h1>
-        {{ group.title }}
-    </h1>
+    <ng-container *ngIf="group">
+
+        <h1>
+            {{ group.title }}
+        </h1>
 
 
-    <p>
-        {{ group.description }}
-    </p>
-
-
-    <p>
-        Minimum Age:
-        {{ group.minimumAge }}+
-    </p>
-
-
-    <p>
-        Theme:
-        {{ group.theme }}
-    </p>
-
-
-    <hr>
-
-
-    <!-- ROOMS -->
-    <h2>Rooms</h2>
-
-
-    <p *ngIf="rooms.length === 0">
-        This group currently has no rooms.
-    </p>
-
-
-    <div
-        class="room-card"
-        *ngFor="let room of rooms"
-    >
-
-        <strong>
-            # {{ room.name }}
-        </strong>
-
-
-        <span>
-
-            <a
-                [routerLink]="[
-                    '/groups',
-                    group.id,
-                    'rooms',
-                    room.id
-                ]"
-            >
-                Enter
-            </a>
-
-
-            <button
-                *ngIf="isAdmin"
-                (click)="renameRoom(room)"
-            >
-                Rename
-            </button>
-
-
-            <button
-                *ngIf="isAdmin"
-                (click)="deleteRoom(room)"
-            >
-                Delete
-            </button>
-
-        </span>
-
-    </div>
-
-
-    <!-- ADMIN CREATES ROOM -->
-    <section *ngIf="isAdmin">
-
-        <h2>Create Room</h2>
-
-
-        <input
-            [(ngModel)]="newRoomName"
-            placeholder="Room name"
-        >
-
-
-        <button
-            (click)="createRoom()"
-        >
-            Create Room
-        </button>
-
-    </section>
-
-
-    <!-- NORMAL MEMBER PROPOSES ROOM -->
-    <section *ngIf="!isAdmin">
-
-        <h2>Propose New Room</h2>
-
-
-        <input
-            [(ngModel)]="proposedRoomName"
-            placeholder="Proposed room name"
-        >
-
-
-        <button
-            (click)="proposeRoom()"
-        >
-            Submit Proposal
-        </button>
-
-    </section>
-
-
-    <hr>
-
-
-    <!-- O14: MEMBERS / BAN REQUEST -->
-    <section>
-
-        <h2>Members</h2>
-
-
-        <p *ngIf="members.length === 0">
-            No members found.
+        <p>
+            {{ group.description }}
         </p>
 
 
-        <div
-            class="member-row"
-            *ngFor="let member of members"
+        <p>
+            <strong>
+                Minimum Age:
+            </strong>
+
+            {{ group.minimumAge }}+
+        </p>
+
+
+        <p
+            class="success"
+            *ngIf="successMessage"
         >
-
-            <span>
-
-                {{ member.username }}
+            {{ successMessage }}
+        </p>
 
 
-                <strong
+        <p
+            class="error"
+            *ngIf="errorMessage"
+        >
+            {{ errorMessage }}
+        </p>
+
+
+
+        <!-- ===================================== -->
+        <!-- ROOMS -->
+        <!-- ===================================== -->
+
+        <section>
+
+            <h2>
+                Rooms
+            </h2>
+
+
+            <p
+                *ngIf="
+                    rooms.length === 0
+                "
+            >
+                This group does not have
+                any rooms yet.
+            </p>
+
+
+            <div
+                class="group-card"
+                *ngFor="let room of rooms"
+            >
+
+                <!-- NORMAL ROOM DISPLAY -->
+
+                <ng-container
                     *ngIf="
-                        group.adminIds.includes(
-                            member.id
-                        )
+                        renamingRoomId !== room.id
                     "
                 >
-                    — Admin
-                </strong>
 
-            </span>
+                    <h3>
+                        # {{ room.name }}
+                    </h3>
+
+
+                    <a
+                        [routerLink]="[
+                            '/groups',
+                            group.id,
+                            'rooms',
+                            room.id
+                        ]"
+                    >
+                        Enter Room
+                    </a>
+
+
+                    <div
+                        *ngIf="
+                            isGroupAdmin()
+                        "
+                    >
+
+                        <button
+                            (click)="
+                                startRename(room)
+                            "
+                        >
+                            Rename
+                        </button>
+
+
+                        <button
+                            (click)="
+                                deleteRoom(room)
+                            "
+                        >
+                            Delete
+                        </button>
+
+                    </div>
+
+                </ng-container>
+
+
+                <!-- RENAME ROOM FORM -->
+
+                <div
+                    *ngIf="
+                        renamingRoomId === room.id
+                    "
+                >
+
+                    <label>
+                        Room Name
+                    </label>
+
+
+                    <input
+                        type="text"
+                        [(ngModel)]="
+                            renameRoomName
+                        "
+                    >
+
+
+                    <button
+                        (click)="
+                            confirmRename(room)
+                        "
+                    >
+                        Save
+                    </button>
+
+
+                    <button
+                        (click)="
+                            cancelRename()
+                        "
+                    >
+                        Cancel
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ===================================== -->
+        <!-- ADMIN CREATE ROOM -->
+        <!-- ===================================== -->
+
+        <section
+            *ngIf="
+                isGroupAdmin()
+            "
+        >
+
+            <h2>
+                Create Room
+            </h2>
+
+
+            <label>
+                Room Name
+            </label>
+
+
+            <input
+                type="text"
+                [(ngModel)]="newRoomName"
+                placeholder="Enter room name"
+            >
 
 
             <button
-                *ngIf="
-                    member.id !==
-                    currentUser()?.id
-                "
-                (click)="requestGroupBan(member)"
+                (click)="createRoom()"
             >
-                Report / Request Ban
+                Create Room
             </button>
 
-        </div>
-
-    </section>
+        </section>
 
 
-    <!-- SUCCESS MESSAGE -->
-    <p
-        class="success"
-        *ngIf="successMessage"
-    >
-        {{ successMessage }}
-    </p>
+
+        <!-- ===================================== -->
+        <!-- MEMBER PROPOSE ROOM -->
+        <!-- ===================================== -->
+
+        <section
+            *ngIf="
+                !isGroupAdmin()
+            "
+        >
+
+            <h2>
+                Propose New Room
+            </h2>
 
 
-    <!-- ERROR MESSAGE -->
-    <p
-        class="error"
-        *ngIf="errorMessage"
-    >
-        {{ errorMessage }}
-    </p>
+            <p>
+                Your proposal must be
+                approved by a Group Administrator.
+            </p>
+
+
+            <label>
+                Proposed Room Name
+            </label>
+
+
+            <input
+                type="text"
+                [(ngModel)]="
+                    proposedRoomName
+                "
+                placeholder="Enter room name"
+            >
+
+
+            <button
+                (click)="proposeRoom()"
+            >
+                Submit Room Proposal
+            </button>
+
+        </section>
+
+
+
+        <!-- ===================================== -->
+        <!-- MEMBERS -->
+        <!-- ===================================== -->
+
+        <section>
+
+            <h2>
+                Members
+            </h2>
+
+
+            <p
+                *ngIf="
+                    members.length === 0
+                "
+            >
+                No members found.
+            </p>
+
+
+            <div
+                class="member-row"
+                *ngFor="
+                    let member of members
+                "
+            >
+
+                <div>
+
+                    <strong>
+                        {{ member.username }}
+                    </strong>
+
+
+                    <span
+                        *ngIf="
+                            isMemberAdmin(member)
+                        "
+                    >
+                        — Group Admin
+                    </span>
+
+                </div>
+
+
+                <!-- DON'T REPORT YOURSELF -->
+
+                <div
+                    *ngIf="
+                        member.id !==
+                        currentUser()?.id
+                    "
+                >
+
+                    <!-- NORMAL BUTTON -->
+
+                    <button
+                        *ngIf="
+                            groupBanTargetId !==
+                            member.id
+                        "
+                        (click)="
+                            startGroupBan(member)
+                        "
+                    >
+                        Report / Request Ban
+                    </button>
+
+
+                    <!-- INLINE BAN FORM -->
+
+                    <div
+                        *ngIf="
+                            groupBanTargetId ===
+                            member.id
+                        "
+                    >
+
+                        <label>
+                            Reason for report
+                        </label>
+
+
+                        <textarea
+                            [(ngModel)]="
+                                groupBanReason
+                            "
+                            placeholder="Enter reason for requesting this user to be banned from the group"
+                        ></textarea>
+
+
+                        <button
+                            (click)="
+                                confirmGroupBan(member)
+                            "
+                        >
+                            Submit Ban Request
+                        </button>
+
+
+                        <button
+                            (click)="
+                                cancelGroupBan()
+                            "
+                        >
+                            Cancel
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </ng-container>
 
 </main>
