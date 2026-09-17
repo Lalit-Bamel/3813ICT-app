@@ -1,49 +1,98 @@
-require("dotenv").config();
-
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const { readData, writeData } = require("./utils/fileStore");
 
+const { getDb } = require("./db/mongo");
+
+/**
+ * Ensures that exactly one Super Administrator exists.
+ * The bootstrap process can only create the initial Super Administrator once.
+ */
 async function bootstrapSuperAdmin() {
-    const data = readData();
 
-    const existingSuperAdmins = data.users.filter(
-        user => user.systemRole === "superAdmin"
-    );
+    const db = getDb();
+
+    const usersCollection =
+        db.collection("users");
+
+    const appStateCollection =
+        db.collection("appState");
+
+    const existingSuperAdmins =
+        await usersCollection
+            .find({ systemRole: "superAdmin" })
+            .toArray();
 
     // The system must never contain more than one Super Admin.
     if (existingSuperAdmins.length > 1) {
-        throw new Error("More than one Super Administrator exists.");
+        throw new Error(
+            "More than one Super Administrator exists."
+        );
     }
 
-    // Bootstrap has already happened.
-    if (data.bootstrapCompleted) {
+    const bootstrapState =
+        await appStateCollection.findOne({
+            key: "bootstrap"
+        });
+
+    const bootstrapCompleted =
+        Boolean(bootstrapState?.completed);
+
+    // Bootstrap has already been completed.
+    if (bootstrapCompleted) {
+
         if (existingSuperAdmins.length !== 1) {
             throw new Error(
                 "Bootstrap is marked complete but exactly one Super Administrator was not found."
             );
         }
 
-        console.log("Super Administrator bootstrap already completed.");
+        console.log(
+            "Super Administrator bootstrap already completed."
+        );
+
         return;
     }
 
-    // If an administrator already exists but the flag is false,
-    // mark bootstrap as complete instead of creating a duplicate.
+    // If a Super Admin already exists but bootstrap is not marked complete,
+    // repair the application state instead of creating a duplicate account.
     if (existingSuperAdmins.length === 1) {
-        data.bootstrapCompleted = true;
-        writeData(data);
 
-        console.log("Existing Super Administrator found. Bootstrap disabled.");
+        await appStateCollection.updateOne(
+            { key: "bootstrap" },
+            {
+                $set: {
+                    completed: true
+                }
+            },
+            {
+                upsert: true
+            }
+        );
+
+        console.log(
+            "Existing Super Administrator found. Bootstrap disabled."
+        );
+
         return;
     }
 
-    const firstName = process.env.BOOTSTRAP_ADMIN_FIRST_NAME;
-    const lastName = process.env.BOOTSTRAP_ADMIN_LAST_NAME;
-    const username = process.env.BOOTSTRAP_ADMIN_USERNAME;
-    const email = process.env.BOOTSTRAP_ADMIN_EMAIL;
-    const age = Number(process.env.BOOTSTRAP_ADMIN_AGE);
-    const password = process.env.BOOTSTRAP_ADMIN_PASSWORD;
+    const firstName =
+        process.env.BOOTSTRAP_ADMIN_FIRST_NAME;
+
+    const lastName =
+        process.env.BOOTSTRAP_ADMIN_LAST_NAME;
+
+    const username =
+        process.env.BOOTSTRAP_ADMIN_USERNAME;
+
+    const email =
+        process.env.BOOTSTRAP_ADMIN_EMAIL;
+
+    const age =
+        Number(process.env.BOOTSTRAP_ADMIN_AGE);
+
+    const password =
+        process.env.BOOTSTRAP_ADMIN_PASSWORD;
 
     if (
         !firstName ||
@@ -58,13 +107,31 @@ async function bootstrapSuperAdmin() {
         );
     }
 
-    if (password.length < 8 || !/[A-Z]/.test(password)) {
+    if (
+        password.length < 8 ||
+        !/[A-Z]/.test(password)
+    ) {
         throw new Error(
             "Bootstrap password must contain at least 8 characters and one uppercase letter."
         );
     }
 
-    const passwordHash = await bcrypt.hash(password, 10);
+    const existingAccount =
+        await usersCollection.findOne({
+            $or: [
+                { username: username },
+                { email: email.toLowerCase() }
+            ]
+        });
+
+    if (existingAccount) {
+        throw new Error(
+            "Bootstrap username or email is already in use."
+        );
+    }
+
+    const passwordHash =
+        await bcrypt.hash(password, 10);
 
     const superAdmin = {
         id: crypto.randomUUID(),
@@ -79,13 +146,25 @@ async function bootstrapSuperAdmin() {
         createdAt: new Date().toISOString()
     };
 
-    data.users.push(superAdmin);
+    await usersCollection.insertOne(
+        superAdmin
+    );
 
-    data.bootstrapCompleted = true;
+    await appStateCollection.updateOne(
+        { key: "bootstrap" },
+        {
+            $set: {
+                completed: true
+            }
+        },
+        {
+            upsert: true
+        }
+    );
 
-    writeData(data);
-
-    console.log("Initial Super Administrator created.");
+    console.log(
+        "Initial Super Administrator created."
+    );
 }
 
 module.exports = {
