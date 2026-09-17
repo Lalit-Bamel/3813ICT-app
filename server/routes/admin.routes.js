@@ -1,29 +1,22 @@
 const express = require("express");
 
-const {
-    readData
-} = require("../utils/fileStore");
+const { getDb } = require("../db/mongo");
 
 const router = express.Router();
 
-
-// ==================================================
-// CHECK SUPER ADMIN
-// ==================================================
-
-function getSuperAdmin(
-    data,
+/**
+ * Finds a Super Administrator by application user ID.
+ */
+async function getSuperAdmin(
+    usersCollection,
     userId
 ) {
 
-    return data.users.find(
-        user =>
-            user.id === userId &&
-            user.systemRole ===
-                "superAdmin"
-    );
+    return usersCollection.findOne({
+        id: userId,
+        systemRole: "superAdmin"
+    });
 }
-
 
 
 // ==================================================
@@ -32,20 +25,24 @@ function getSuperAdmin(
 
 router.get(
     "/banned-users/:userId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
-            const data =
-                readData();
+            const db =
+                getDb();
 
+            const usersCollection =
+                db.collection("users");
+
+            const bannedUsersCollection =
+                db.collection("bannedUsers");
 
             const superAdmin =
-                getSuperAdmin(
-                    data,
+                await getSuperAdmin(
+                    usersCollection,
                     req.params.userId
                 );
-
 
             if (!superAdmin) {
                 return res.status(403).json({
@@ -54,11 +51,21 @@ router.get(
                 });
             }
 
+            const bannedUsers =
+                await bannedUsersCollection
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0
+                            }
+                        }
+                    )
+                    .toArray();
 
             return res.json(
-                data.bannedUsers || []
+                bannedUsers
             );
-
 
         } catch (error) {
 
@@ -66,7 +73,6 @@ router.get(
                 "Banned user retrieval error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -77,27 +83,33 @@ router.get(
 );
 
 
-
 // ==================================================
-// STAGE P — AUDIT LOGS
+// AUDIT LOGS
 // ==================================================
 
 router.get(
     "/audit-logs/:userId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
-            const data =
-                readData();
+            const db =
+                getDb();
 
+            const usersCollection =
+                db.collection("users");
+
+            const bannedUsersCollection =
+                db.collection("bannedUsers");
+
+            const auditLogsCollection =
+                db.collection("auditLogs");
 
             const superAdmin =
-                getSuperAdmin(
-                    data,
+                await getSuperAdmin(
+                    usersCollection,
                     req.params.userId
                 );
-
 
             if (!superAdmin) {
                 return res.status(403).json({
@@ -106,62 +118,104 @@ router.get(
                 });
             }
 
-
             const logs =
-                (data.auditLogs || [])
-                    .map(log => {
-
-                        const actor =
-                            data.users.find(
-                                user =>
-                                    user.id ===
-                                    log.actorId
-                            );
-
-
-                        const targetUser =
-                            data.users.find(
-                                user =>
-                                    user.id ===
-                                    log.targetId
-                            );
-
-
-                        const bannedTarget =
-                            (data.bannedUsers || [])
-                                .find(
-                                    user =>
-                                        user.originalUserId ===
-                                        log.targetId
-                                );
-
-
-                        return {
-
-                            ...log,
-
-                            actorUsername:
-                                actor?.username ||
-                                "Unknown User",
-
-                            targetUsername:
-                                targetUser?.username ||
-                                (
-                                    bannedTarget
-                                        ? `${bannedTarget.firstName} ${bannedTarget.lastName}`
-                                        : null
-                                )
-                        };
+                await auditLogsCollection
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0
+                            }
+                        }
+                    )
+                    .sort({
+                        createdAt: -1
                     })
-                    .sort(
-                        (a, b) =>
-                            new Date(b.createdAt) -
-                            new Date(a.createdAt)
-                    );
+                    .toArray();
 
+            const users =
+                await usersCollection
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0,
+                                id: 1,
+                                username: 1
+                            }
+                        }
+                    )
+                    .toArray();
 
-            return res.json(logs);
+            const bannedUsers =
+                await bannedUsersCollection
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0,
+                                originalUserId: 1,
+                                firstName: 1,
+                                lastName: 1
+                            }
+                        }
+                    )
+                    .toArray();
 
+            const userMap =
+                new Map(
+                    users.map(user => [
+                        user.id,
+                        user
+                    ])
+                );
+
+            const bannedUserMap =
+                new Map(
+                    bannedUsers.map(user => [
+                        user.originalUserId,
+                        user
+                    ])
+                );
+
+            const enrichedLogs =
+                logs.map(log => {
+
+                    const actor =
+                        userMap.get(
+                            log.actorId
+                        );
+
+                    const targetUser =
+                        userMap.get(
+                            log.targetId
+                        );
+
+                    const bannedTarget =
+                        bannedUserMap.get(
+                            log.targetId
+                        );
+
+                    return {
+                        ...log,
+
+                        actorUsername:
+                            actor?.username ||
+                            "Unknown User",
+
+                        targetUsername:
+                            targetUser?.username ||
+                            (
+                                bannedTarget
+                                    ? `${bannedTarget.firstName} ${bannedTarget.lastName}`
+                                    : null
+                            )
+                    };
+                });
+
+            return res.json(
+                enrichedLogs
+            );
 
         } catch (error) {
 
@@ -170,7 +224,6 @@ router.get(
                 error
             );
 
-
             return res.status(500).json({
                 message:
                     "Unable to retrieve audit logs."
@@ -178,6 +231,5 @@ router.get(
         }
     }
 );
-
 
 module.exports = router;

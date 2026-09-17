@@ -1,11 +1,7 @@
 const express = require("express");
-
-const {
-    readData,
-    writeData
-} = require("../utils/fileStore");
-
 const crypto = require("crypto");
+
+const { getDb } = require("../db/mongo");
 
 const router = express.Router();
 
@@ -14,15 +10,17 @@ const router = express.Router();
 // HELPER — FIND ROOM
 // ==================================================
 
-function findRoom(
-    data,
+/**
+ * Finds a room using its application UUID.
+ */
+async function findRoom(
+    roomsCollection,
     roomId
 ) {
 
-    return data.rooms.find(
-        room =>
-            room.id === roomId
-    );
+    return roomsCollection.findOne({
+        id: roomId
+    });
 }
 
 
@@ -30,66 +28,49 @@ function findRoom(
 // HELPER — FIND PARENT GROUP
 // ==================================================
 
-function findGroupForRoom(
-    data,
+/**
+ * Finds the group that owns a room.
+ */
+async function findGroupForRoom(
+    groupsCollection,
     room
 ) {
 
-    return data.groups.find(
-        group =>
-            group.id === room.groupId
-    );
+    return groupsCollection.findOne({
+        id: room.groupId
+    });
 }
 
 
 // ==================================================
-// HELPER — CHECK ROOM ACCESS
-// ==================================================
-
-function canAccessRoom(
-    data,
-    room,
-    userId
-) {
-
-    const group =
-        findGroupForRoom(
-            data,
-            room
-        );
-
-
-    if (!group) {
-        return false;
-    }
-
-
-    return group.memberIds.includes(
-        userId
-    );
-}
-
-
-// ==================================================
-// Q — GET LAST MESSAGES
+// GET LAST MESSAGES
 // ==================================================
 
 router.get(
     "/:roomId/messages",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
-            const data =
-                readData();
+            const db = getDb();
 
+            const roomsCollection =
+                db.collection("rooms");
+
+            const groupsCollection =
+                db.collection("groups");
+
+            const usersCollection =
+                db.collection("users");
+
+            const messagesCollection =
+                db.collection("messages");
 
             const room =
-                findRoom(
-                    data,
+                await findRoom(
+                    roomsCollection,
                     req.params.roomId
                 );
-
 
             if (!room) {
                 return res.status(404).json({
@@ -98,10 +79,8 @@ router.get(
                 });
             }
 
-
             const userId =
                 req.query.userId;
-
 
             if (!userId) {
                 return res.status(400).json({
@@ -110,14 +89,10 @@ router.get(
                 });
             }
 
-
             const user =
-                data.users.find(
-                    currentUser =>
-                        currentUser.id ===
-                        userId
-                );
-
+                await usersCollection.findOne({
+                    id: userId
+                });
 
             if (!user) {
                 return res.status(404).json({
@@ -125,7 +100,6 @@ router.get(
                         "User not found."
                 });
             }
-
 
             if (
                 user.systemRole ===
@@ -137,11 +111,21 @@ router.get(
                 });
             }
 
+            const group =
+                await findGroupForRoom(
+                    groupsCollection,
+                    room
+                );
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Parent group not found."
+                });
+            }
 
             if (
-                !canAccessRoom(
-                    data,
-                    room,
+                !group.memberIds.includes(
                     user.id
                 )
             ) {
@@ -151,19 +135,10 @@ router.get(
                 });
             }
 
-
-            const group =
-                findGroupForRoom(
-                    data,
-                    room
-                );
-
-
             let limit =
                 Number(
                     req.query.limit
                 );
-
 
             if (
                 !Number.isInteger(limit) ||
@@ -172,49 +147,82 @@ router.get(
                 limit = 5;
             }
 
-
             if (limit > 50) {
                 limit = 50;
             }
 
-
             const messages =
-                (data.messages || [])
-                    .filter(
-                        message =>
-                            message.roomId ===
-                                room.id
-                            &&
-                            message.deleted !==
-                                true
+                await messagesCollection
+                    .find(
+                        {
+                            roomId:
+                                room.id,
+                            deleted: {
+                                $ne: true
+                            }
+                        },
+                        {
+                            projection: {
+                                _id: 0
+                            }
+                        }
                     )
-                    .sort(
-                        (a, b) =>
-                            new Date(a.createdAt) -
-                            new Date(b.createdAt)
-                    );
+                    .sort({
+                        createdAt: -1
+                    })
+                    .limit(limit)
+                    .toArray();
 
+            messages.reverse();
 
-            const lastMessages =
-                messages.slice(
-                    -limit
+            const senderIds = [
+                ...new Set(
+                    messages.map(
+                        message =>
+                            message.senderId
+                    )
+                )
+            ];
+
+            const senders =
+                await usersCollection
+                    .find(
+                        {
+                            id: {
+                                $in:
+                                    senderIds
+                            }
+                        },
+                        {
+                            projection: {
+                                _id: 0,
+                                id: 1,
+                                username: 1
+                            }
+                        }
+                    )
+                    .toArray();
+
+            const senderMap =
+                new Map(
+                    senders.map(
+                        sender => [
+                            sender.id,
+                            sender
+                        ]
+                    )
                 );
 
-
             const enrichedMessages =
-                lastMessages.map(
+                messages.map(
                     message => {
 
                         const sender =
-                            data.users.find(
-                                user =>
-                                    user.id ===
-                                    message.senderId
+                            senderMap.get(
+                                message.senderId
                             );
 
-
                         return {
-
                             ...message,
 
                             senderUsername:
@@ -222,20 +230,17 @@ router.get(
                                 "Unknown User",
 
                             senderIsAdmin:
-                                group?.adminIds
+                                group.adminIds
                                     .includes(
                                         message.senderId
                                     )
-                                || false
                         };
                     }
                 );
 
-
             return res.json(
                 enrichedMessages
             );
-
 
         } catch (error) {
 
@@ -243,7 +248,6 @@ router.get(
                 "Message retrieval error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -255,12 +259,12 @@ router.get(
 
 
 // ==================================================
-// Q — SEND MESSAGE
+// SEND MESSAGE
 // ==================================================
 
 router.post(
     "/:roomId/messages",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
@@ -269,7 +273,6 @@ router.post(
                 type,
                 content
             } = req.body;
-
 
             if (
                 !senderId ||
@@ -282,13 +285,11 @@ router.post(
                 });
             }
 
-
             const allowedTypes = [
                 "text",
                 "image",
                 "gif"
             ];
-
 
             if (
                 !allowedTypes.includes(
@@ -301,17 +302,25 @@ router.post(
                 });
             }
 
+            const db = getDb();
 
-            const data =
-                readData();
+            const roomsCollection =
+                db.collection("rooms");
 
+            const groupsCollection =
+                db.collection("groups");
+
+            const usersCollection =
+                db.collection("users");
+
+            const messagesCollection =
+                db.collection("messages");
 
             const room =
-                findRoom(
-                    data,
+                await findRoom(
+                    roomsCollection,
                     req.params.roomId
                 );
-
 
             if (!room) {
                 return res.status(404).json({
@@ -320,14 +329,10 @@ router.post(
                 });
             }
 
-
             const sender =
-                data.users.find(
-                    user =>
-                        user.id ===
-                        senderId
-                );
-
+                await usersCollection.findOne({
+                    id: senderId
+                });
 
             if (!sender) {
                 return res.status(404).json({
@@ -335,7 +340,6 @@ router.post(
                         "Sender not found."
                 });
             }
-
 
             if (
                 sender.systemRole ===
@@ -347,11 +351,21 @@ router.post(
                 });
             }
 
+            const group =
+                await findGroupForRoom(
+                    groupsCollection,
+                    room
+                );
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Parent group not found."
+                });
+            }
 
             if (
-                !canAccessRoom(
-                    data,
-                    room,
+                !group.memberIds.includes(
                     sender.id
                 )
             ) {
@@ -361,76 +375,45 @@ router.post(
                 });
             }
 
-
-            if (
-                !Array.isArray(
-                    data.messages
-                )
-            ) {
-                data.messages = [];
-            }
-
-
             const message = {
-
-                id:
-                    crypto.randomUUID(),
-
-                roomId:
-                    room.id,
-
-                senderId:
-                    sender.id,
-
+                id: crypto.randomUUID(),
+                roomId: room.id,
+                senderId: sender.id,
                 type,
-
                 content:
                     content.trim(),
-
                 createdAt:
                     new Date().toISOString(),
-
                 deleted:
                     false
             };
 
-
-            data.messages.push(
+            await messagesCollection.insertOne(
                 message
             );
 
-
-            writeData(data);
-
-
-            const group =
-                findGroupForRoom(
-                    data,
-                    room
-                );
-
+            const {
+                _id,
+                ...safeMessage
+            } = message;
 
             return res.status(201).json({
-
                 message:
                     "Message sent.",
 
                 chatMessage: {
-
-                    ...message,
+                    ...safeMessage,
 
                     senderUsername:
                         sender.username,
 
                     senderIsAdmin:
-                        group?.adminIds
+                        group.adminIds
                             .includes(
                                 sender.id
                             )
-                        || false
                 }
             });
-
 
         } catch (error) {
 
@@ -438,7 +421,6 @@ router.post(
                 "Message creation error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -450,19 +432,18 @@ router.post(
 
 
 // ==================================================
-// Q — DELETE OWN MESSAGE
+// DELETE OWN MESSAGE
 // ==================================================
 
 router.delete(
     "/:roomId/messages/:messageId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
             const {
                 actorId
             } = req.body;
-
 
             if (!actorId) {
                 return res.status(400).json({
@@ -471,17 +452,19 @@ router.delete(
                 });
             }
 
+            const db = getDb();
 
-            const data =
-                readData();
+            const roomsCollection =
+                db.collection("rooms");
 
+            const messagesCollection =
+                db.collection("messages");
 
             const room =
-                findRoom(
-                    data,
+                await findRoom(
+                    roomsCollection,
                     req.params.roomId
                 );
-
 
             if (!room) {
                 return res.status(404).json({
@@ -490,18 +473,13 @@ router.delete(
                 });
             }
 
-
             const message =
-                (data.messages || [])
-                    .find(
-                        currentMessage =>
-                            currentMessage.id ===
-                                req.params.messageId
-                            &&
-                            currentMessage.roomId ===
-                                room.id
-                    );
-
+                await messagesCollection.findOne({
+                    id:
+                        req.params.messageId,
+                    roomId:
+                        room.id
+                });
 
             if (!message) {
                 return res.status(404).json({
@@ -509,7 +487,6 @@ router.delete(
                         "Message not found."
                 });
             }
-
 
             if (
                 message.senderId !==
@@ -521,19 +498,23 @@ router.delete(
                 });
             }
 
-
-            message.deleted =
-                true;
-
-
-            writeData(data);
-
+            await messagesCollection.updateOne(
+                {
+                    id:
+                        message.id
+                },
+                {
+                    $set: {
+                        deleted:
+                            true
+                    }
+                }
+            );
 
             return res.json({
                 message:
                     "Message deleted successfully."
             });
-
 
         } catch (error) {
 
@@ -541,7 +522,6 @@ router.delete(
                 "Message deletion error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -558,20 +538,25 @@ router.delete(
 
 router.get(
     "/:roomId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
-            const data =
-                readData();
-
+            const db = getDb();
 
             const room =
-                findRoom(
-                    data,
-                    req.params.roomId
-                );
-
+                await db.collection("rooms")
+                    .findOne(
+                        {
+                            id:
+                                req.params.roomId
+                        },
+                        {
+                            projection: {
+                                _id: 0
+                            }
+                        }
+                    );
 
             if (!room) {
                 return res.status(404).json({
@@ -580,11 +565,7 @@ router.get(
                 });
             }
 
-
-            return res.json(
-                room
-            );
-
+            return res.json(room);
 
         } catch (error) {
 
@@ -592,7 +573,6 @@ router.get(
                 "Room retrieval error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -609,7 +589,7 @@ router.get(
 
 router.put(
     "/:roomId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
@@ -617,7 +597,6 @@ router.put(
                 actorId,
                 name
             } = req.body;
-
 
             if (
                 !actorId ||
@@ -629,17 +608,19 @@ router.put(
                 });
             }
 
+            const db = getDb();
 
-            const data =
-                readData();
+            const roomsCollection =
+                db.collection("rooms");
 
+            const groupsCollection =
+                db.collection("groups");
 
             const room =
-                findRoom(
-                    data,
+                await findRoom(
+                    roomsCollection,
                     req.params.roomId
                 );
-
 
             if (!room) {
                 return res.status(404).json({
@@ -648,13 +629,11 @@ router.put(
                 });
             }
 
-
             const group =
-                findGroupForRoom(
-                    data,
+                await findGroupForRoom(
+                    groupsCollection,
                     room
                 );
-
 
             if (!group) {
                 return res.status(404).json({
@@ -662,7 +641,6 @@ router.put(
                         "Parent group not found."
                 });
             }
-
 
             if (
                 !group.adminIds.includes(
@@ -675,22 +653,32 @@ router.put(
                 });
             }
 
-
-            room.name =
+            const cleanName =
                 name.trim();
 
+            await roomsCollection.updateOne(
+                {
+                    id:
+                        room.id
+                },
+                {
+                    $set: {
+                        name:
+                            cleanName
+                    }
+                }
+            );
 
-            writeData(data);
+            room.name =
+                cleanName;
 
+            delete room._id;
 
             return res.json({
-
                 message:
                     "Room updated successfully.",
-
                 room
             });
-
 
         } catch (error) {
 
@@ -698,7 +686,6 @@ router.put(
                 "Room update error:",
                 error
             );
-
 
             return res.status(500).json({
                 message:
@@ -715,14 +702,13 @@ router.put(
 
 router.delete(
     "/:roomId",
-    function(req, res) {
+    async function (req, res) {
 
         try {
 
             const {
                 actorId
             } = req.body;
-
 
             if (!actorId) {
                 return res.status(400).json({
@@ -731,39 +717,35 @@ router.delete(
                 });
             }
 
+            const db = getDb();
 
-            const data =
-                readData();
+            const roomsCollection =
+                db.collection("rooms");
 
+            const groupsCollection =
+                db.collection("groups");
 
-            const roomIndex =
-                data.rooms.findIndex(
-                    room =>
-                        room.id ===
-                        req.params.roomId
+            const messagesCollection =
+                db.collection("messages");
+
+            const room =
+                await findRoom(
+                    roomsCollection,
+                    req.params.roomId
                 );
 
-
-            if (roomIndex === -1) {
+            if (!room) {
                 return res.status(404).json({
                     message:
                         "Room not found."
                 });
             }
 
-
-            const room =
-                data.rooms[
-                    roomIndex
-                ];
-
-
             const group =
-                findGroupForRoom(
-                    data,
+                await findGroupForRoom(
+                    groupsCollection,
                     room
                 );
-
 
             if (!group) {
                 return res.status(404).json({
@@ -771,7 +753,6 @@ router.delete(
                         "Parent group not found."
                 });
             }
-
 
             if (
                 !group.adminIds.includes(
@@ -784,44 +765,33 @@ router.delete(
                 });
             }
 
+            await roomsCollection.deleteOne({
+                id:
+                    room.id
+            });
 
-            data.rooms.splice(
-                roomIndex,
-                1
+            await groupsCollection.updateOne(
+                {
+                    id:
+                        group.id
+                },
+                {
+                    $pull: {
+                        roomIds:
+                            room.id
+                    }
+                }
             );
 
-
-            group.roomIds =
-                group.roomIds.filter(
-                    roomId =>
-                        roomId !==
-                        room.id
-                );
-
-
-            if (
-                Array.isArray(
-                    data.messages
-                )
-            ) {
-
-                data.messages =
-                    data.messages.filter(
-                        message =>
-                            message.roomId !==
-                            room.id
-                    );
-            }
-
-
-            writeData(data);
-
+            await messagesCollection.deleteMany({
+                roomId:
+                    room.id
+            });
 
             return res.json({
                 message:
                     "Room deleted successfully."
             });
-
 
         } catch (error) {
 
@@ -830,7 +800,6 @@ router.delete(
                 error
             );
 
-
             return res.status(500).json({
                 message:
                     "Unable to delete room."
@@ -838,6 +807,5 @@ router.delete(
         }
     }
 );
-
 
 module.exports = router;

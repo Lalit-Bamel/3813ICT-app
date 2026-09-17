@@ -1,47 +1,85 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 
-const { readData, writeData } = require("../utils/fileStore");
+const { getDb } = require("../db/mongo");
 
 const router = express.Router();
 
-
+/**
+ * Removes sensitive and database-only fields before returning a user.
+ */
 function getSafeUser(user) {
-    const { passwordHash, ...safeUser } = user;
+
+    const {
+        passwordHash,
+        _id,
+        ...safeUser
+    } = user;
+
     return safeUser;
 }
 
+/**
+ * Escapes special RegExp characters in user input.
+ */
+function escapeRegex(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
+
+// ==================================================
 // GET OWN PROFILE
-router.get("/:userId", function(req, res) {
-    try {
-        const data = readData();
+// ==================================================
 
-        const user = data.users.find(
-            currentUser => currentUser.id === req.params.userId
-        );
+router.get("/:userId", async function (req, res) {
+
+    try {
+
+        const db =
+            getDb();
+
+        const usersCollection =
+            db.collection("users");
+
+        const user =
+            await usersCollection.findOne({
+                id: req.params.userId
+            });
 
         if (!user) {
             return res.status(404).json({
-                message: "User not found."
+                message:
+                    "User not found."
             });
         }
 
-        return res.json(getSafeUser(user));
+        return res.json(
+            getSafeUser(user)
+        );
 
     } catch (error) {
-        console.error("Profile retrieval error:", error);
+
+        console.error(
+            "Profile retrieval error:",
+            error
+        );
 
         return res.status(500).json({
-            message: "Unable to retrieve profile."
+            message:
+                "Unable to retrieve profile."
         });
     }
 });
 
 
+// ==================================================
 // UPDATE PROFILE
-router.put("/:userId", async function(req, res) {
+// ==================================================
+
+router.put("/:userId", async function (req, res) {
+
     try {
+
         const {
             firstName,
             lastName,
@@ -58,14 +96,22 @@ router.put("/:userId", async function(req, res) {
             age === undefined
         ) {
             return res.status(400).json({
-                message: "Required profile fields are missing."
+                message:
+                    "Required profile fields are missing."
             });
         }
 
-        const cleanFirstName = firstName.trim();
-        const cleanLastName = lastName.trim();
-        const cleanUsername = username.trim();
-        const numericAge = Number(age);
+        const cleanFirstName =
+            firstName.trim();
+
+        const cleanLastName =
+            lastName.trim();
+
+        const cleanUsername =
+            username.trim();
+
+        const numericAge =
+            Number(age);
 
         if (
             !cleanFirstName ||
@@ -73,7 +119,8 @@ router.put("/:userId", async function(req, res) {
             !cleanUsername
         ) {
             return res.status(400).json({
-                message: "Profile fields cannot be empty."
+                message:
+                    "Profile fields cannot be empty."
             });
         }
 
@@ -82,54 +129,74 @@ router.put("/:userId", async function(req, res) {
             numericAge < 0
         ) {
             return res.status(400).json({
-                message: "A valid age is required."
+                message:
+                    "A valid age is required."
             });
         }
 
-        const data = readData();
+        const db =
+            getDb();
 
-        const userIndex = data.users.findIndex(
-            user => user.id === req.params.userId
-        );
+        const usersCollection =
+            db.collection("users");
 
-        if (userIndex === -1) {
+        const user =
+            await usersCollection.findOne({
+                id: req.params.userId
+            });
+
+        if (!user) {
             return res.status(404).json({
-                message: "User not found."
+                message:
+                    "User not found."
             });
         }
 
-        const user = data.users[userIndex];
-
-        // Email must never be changed.
+        // Email cannot be changed.
         if (
             req.body.email !== undefined &&
-            req.body.email.toLowerCase() !== user.email.toLowerCase()
+            req.body.email.toLowerCase() !==
+                user.email.toLowerCase()
         ) {
             return res.status(400).json({
-                message: "Email address cannot be changed."
+                message:
+                    "Email address cannot be changed."
             });
         }
 
-        const usernameExists = data.users.some(
-            existingUser =>
-                existingUser.id !== user.id &&
-                existingUser.username.toLowerCase() ===
-                cleanUsername.toLowerCase()
-        );
+        const usernameExists =
+            await usersCollection.findOne({
+                id: {
+                    $ne: user.id
+                },
+                username: {
+                    $regex:
+                        `^${escapeRegex(cleanUsername)}$`,
+                    $options: "i"
+                }
+            });
 
         if (usernameExists) {
             return res.status(409).json({
-                message: "Username is already in use."
+                message:
+                    "Username is already in use."
             });
         }
 
-        user.firstName = cleanFirstName;
-        user.lastName = cleanLastName;
-        user.username = cleanUsername;
-        user.age = numericAge;
+        const updateFields = {
+            firstName:
+                cleanFirstName,
+            lastName:
+                cleanLastName,
+            username:
+                cleanUsername,
+            age:
+                numericAge
+        };
 
         if (profilePicture !== undefined) {
-            user.profilePicture = profilePicture;
+            updateFields.profilePicture =
+                profilePicture;
         }
 
         if (newPassword) {
@@ -144,27 +211,47 @@ router.put("/:userId", async function(req, res) {
                 });
             }
 
-            user.passwordHash =
-                await bcrypt.hash(newPassword, 10);
+            updateFields.passwordHash =
+                await bcrypt.hash(
+                    newPassword,
+                    10
+                );
         }
 
-        data.users[userIndex] = user;
+        await usersCollection.updateOne(
+            {
+                id: user.id
+            },
+            {
+                $set:
+                    updateFields
+            }
+        );
 
-        writeData(data);
+        const updatedUser = {
+            ...user,
+            ...updateFields
+        };
 
         return res.json({
-            message: "Profile updated successfully.",
-            user: getSafeUser(user)
+            message:
+                "Profile updated successfully.",
+            user:
+                getSafeUser(updatedUser)
         });
 
     } catch (error) {
-        console.error("Profile update error:", error);
+
+        console.error(
+            "Profile update error:",
+            error
+        );
 
         return res.status(500).json({
-            message: "Unable to update profile."
+            message:
+                "Unable to update profile."
         });
     }
 });
-
 
 module.exports = router;
