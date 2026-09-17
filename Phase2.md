@@ -9,7 +9,22 @@
 
 ## 1. Specifications and Requirements
 
----
+### MongoDB Data Collections
+
+Phase 2 replaces the Phase 1 JSON file persistence with MongoDB using the native Node.js MongoDB driver.
+
+The application will use the following collections:
+
+- `users` – registered user accounts and profile information
+- `groups` – group details, membership and administration information
+- `rooms` – chat rooms belonging to groups
+- `requests` – group, room, join, ban and deletion requests
+- `messages` – persistent chat messages
+- `auditLogs` – administrative activity records
+- `bannedUsers` – permanently banned user records
+- `appState` – application-level state such as the Super Administrator bootstrap status
+
+Existing application UUID identifiers will initially be retained during the MongoDB migration so that the Phase 1 Angular routes and relationships remain compatible.
 
 ## 2. Server API Documentation
 
