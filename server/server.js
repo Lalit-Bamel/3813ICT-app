@@ -1,3 +1,8 @@
+const http = require("http");
+
+const {
+    initialiseChatSocket
+} = require("./sockets/chat.socket");
 require("dotenv").config();
 
 const express = require("express");
@@ -31,6 +36,12 @@ const adminRoutes =
     require("./routes/admin.routes");
 
 const app = express();
+const httpServer =
+    http.createServer(app);
+
+initialiseChatSocket(
+    httpServer
+);
 
 const PORT = 3000;
 
@@ -165,7 +176,7 @@ async function startServer() {
 
         await bootstrapSuperAdmin();
 
-        app.listen(
+        httpServer.listen(
             PORT,
             function () {
 

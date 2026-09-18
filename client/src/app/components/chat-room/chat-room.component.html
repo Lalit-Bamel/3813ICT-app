@@ -56,7 +56,12 @@
     >
         {{ successMessage }}
     </p>
-
+<p
+    *ngIf="presenceMessage"
+    class="success"
+>
+    {{ presenceMessage }}
+</p>
 
     <!-- MESSAGES -->
 

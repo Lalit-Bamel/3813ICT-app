@@ -2,6 +2,7 @@ import {
     ChangeDetectorRef,
     Component,
     inject,
+    OnDestroy,
     OnInit
 } from '@angular/core';
 
@@ -20,6 +21,10 @@ import {
 } from '@angular/router';
 
 import {
+    Subscription
+} from 'rxjs';
+
+import {
     AuthService
 } from '../../services/auth.service';
 
@@ -30,6 +35,11 @@ import {
 import {
     GroupService
 } from '../../services/group.service';
+
+import {
+    SocketService,
+    SocketChatMessage
+} from '../../services/socket.service';
 
 import {
     Room
@@ -65,7 +75,7 @@ import {
         './chat-room.component.css'
 })
 export class ChatRoomComponent
-implements OnInit {
+implements OnInit, OnDestroy {
 
     private route =
         inject(ActivatedRoute);
@@ -82,8 +92,15 @@ implements OnInit {
     private groupService =
         inject(GroupService);
 
+    private socketService =
+        inject(SocketService);
+
     private cdr =
         inject(ChangeDetectorRef);
+
+
+    private socketSubscriptions:
+        Subscription[] = [];
 
 
     currentUser =
@@ -111,6 +128,12 @@ implements OnInit {
 
     errorMessage = '';
 
+    presenceMessage = '';
+
+
+    // ==========================================
+    // INITIALISE
+    // ==========================================
 
     ngOnInit() {
 
@@ -118,7 +141,6 @@ implements OnInit {
             this.route.snapshot
                 .paramMap
                 .get('groupId');
-
 
         const roomId =
             this.route.snapshot
@@ -130,12 +152,18 @@ implements OnInit {
             !groupId ||
             !roomId
         ) {
+
             this.router.navigate([
                 '/groups'
             ]);
 
             return;
         }
+
+
+        this.socketService.connect();
+
+        this.listenForSocketEvents();
 
 
         this.loadGroup(
@@ -149,6 +177,131 @@ implements OnInit {
 
         this.loadMessages(
             roomId
+        );
+    }
+
+
+    // ==========================================
+    // CLEAN UP
+    // ==========================================
+
+    ngOnDestroy() {
+
+        if (this.room) {
+
+            this.socketService
+                .leaveRoom(
+                    this.room.id
+                )
+                .catch(() => {
+                    // Component is closing,
+                    // so no UI action is required.
+                });
+        }
+
+
+        for (
+            const subscription
+            of this.socketSubscriptions
+        ) {
+
+            subscription.unsubscribe();
+        }
+
+
+        this.socketService.disconnect();
+    }
+
+
+    // ==========================================
+    // SOCKET LISTENERS
+    // ==========================================
+
+    private listenForSocketEvents() {
+
+        const messageSubscription =
+            this.socketService
+                .onNewMessage()
+                .subscribe(
+                    socketMessage => {
+
+                        if (
+                            !this.room ||
+                            socketMessage.roomId !==
+                                this.room.id
+                        ) {
+                            return;
+                        }
+
+
+                        const message:
+                            Message =
+                            socketMessage;
+
+
+                        this.messages = [
+                            ...this.messages,
+                            message
+                        ].slice(-5);
+
+
+                        this.cdr.markForCheck();
+                    }
+                );
+
+
+        const joinedSubscription =
+            this.socketService
+                .onUserJoined()
+                .subscribe(
+                    event => {
+
+                        if (
+                            !this.room ||
+                            event.roomId !==
+                                this.room.id
+                        ) {
+                            return;
+                        }
+
+
+                        this.presenceMessage =
+                            `${event.username} joined the room.`;
+
+
+                        this.cdr.markForCheck();
+                    }
+                );
+
+
+        const leftSubscription =
+            this.socketService
+                .onUserLeft()
+                .subscribe(
+                    event => {
+
+                        if (
+                            !this.room ||
+                            event.roomId !==
+                                this.room.id
+                        ) {
+                            return;
+                        }
+
+
+                        this.presenceMessage =
+                            `${event.username} left the room.`;
+
+
+                        this.cdr.markForCheck();
+                    }
+                );
+
+
+        this.socketSubscriptions.push(
+            messageSubscription,
+            joinedSubscription,
+            leftSubscription
         );
     }
 
@@ -188,7 +341,7 @@ implements OnInit {
 
 
     // ==========================================
-    // LOAD ROOM
+    // LOAD ROOM + JOIN SOCKET ROOM
     // ==========================================
 
     loadRoom(
@@ -202,10 +355,8 @@ implements OnInit {
             )
             .subscribe({
 
-                next: room => {
+                next: async room => {
 
-                    // Prevent mismatched URLs such as
-                    // Group A URL with Group B room.
                     if (
                         room.groupId !==
                         groupId
@@ -221,6 +372,36 @@ implements OnInit {
 
                     this.room =
                         room;
+
+
+                    const user =
+                        this.currentUser();
+
+
+                    if (!user) {
+                        return;
+                    }
+
+
+                    const result =
+                        await this.socketService
+                            .joinRoom(
+                                room.id,
+                                user.id
+                            );
+
+
+                    if (!result.success) {
+
+                        this.errorMessage =
+                            result.message;
+
+                    } else {
+
+                        this.errorMessage =
+                            '';
+                    }
+
 
                     this.cdr.markForCheck();
                 },
@@ -290,10 +471,10 @@ implements OnInit {
 
 
     // ==========================================
-    // SEND TEXT MESSAGE
+    // SEND TEXT MESSAGE USING SOCKET.IO
     // ==========================================
 
-    sendTextMessage() {
+    async sendTextMessage() {
 
         const user =
             this.currentUser();
@@ -307,9 +488,11 @@ implements OnInit {
         }
 
 
-        if (
-            !this.textMessage.trim()
-        ) {
+        const content =
+            this.textMessage.trim();
+
+
+        if (!content) {
             return;
         }
 
@@ -319,34 +502,37 @@ implements OnInit {
         this.successMessage = '';
 
 
-        this.roomService
-            .sendMessage(
-                this.room.id,
-                user.id,
-                'text',
-                this.textMessage
-            )
-            .subscribe({
+        const result =
+            await this.socketService
+                .sendMessage(
+                    this.room.id,
+                    user.id,
+                    'text',
+                    content
+                );
 
-                next: () => {
 
-                    this.textMessage =
-                        '';
+        if (!result.success) {
 
-                    this.loadMessages();
+            this.errorMessage =
+                result.message;
 
-                    this.cdr.markForCheck();
-                },
+            this.cdr.markForCheck();
 
-                error: error => {
+            return;
+        }
 
-                    this.errorMessage =
-                        error.error?.message ||
-                        'Unable to send message.';
 
-                    this.cdr.markForCheck();
-                }
-            });
+        /*
+         * Do NOT manually add the message here.
+         *
+         * The server broadcasts newMessage back
+         * to everyone in the Socket.IO room,
+         * including the sender.
+         */
+        this.textMessage = '';
+
+        this.cdr.markForCheck();
     }
 
 
@@ -360,7 +546,7 @@ implements OnInit {
 
         const input =
             event.target as
-            HTMLInputElement;
+                HTMLInputElement;
 
 
         const file =
@@ -388,6 +574,17 @@ implements OnInit {
             return;
         }
 
+
+        /*
+         * Temporary preview only.
+         *
+         * We are NOT sending this Base64 string
+         * to MongoDB.
+         *
+         * The next Phase 2 step will upload the
+         * actual file to Node and store only its
+         * metadata/path in MongoDB.
+         */
 
         const reader =
             new FileReader();
@@ -425,60 +622,23 @@ implements OnInit {
 
 
     // ==========================================
-    // SEND IMAGE
+    // IMAGE SEND — TEMPORARILY BLOCKED
     // ==========================================
 
     sendImage() {
 
-        const user =
-            this.currentUser();
+        /*
+         * Do not send Base64 image data to MongoDB.
+         *
+         * Allan confirmed that image files should
+         * be stored separately and MongoDB should
+         * contain metadata/reference information.
+         */
 
+        this.errorMessage =
+            'Image file upload is being migrated to external file storage.';
 
-        if (
-            !user ||
-            !this.room ||
-            !this.selectedImage
-        ) {
-            return;
-        }
-
-
-        this.errorMessage = '';
-
-        this.successMessage = '';
-
-
-        this.roomService
-            .sendMessage(
-                this.room.id,
-                user.id,
-                'image',
-                this.selectedImage
-            )
-            .subscribe({
-
-                next: () => {
-
-                    this.selectedImage =
-                        '';
-
-                    this.selectedImageName =
-                        '';
-
-                    this.loadMessages();
-
-                    this.cdr.markForCheck();
-                },
-
-                error: error => {
-
-                    this.errorMessage =
-                        error.error?.message ||
-                        'Unable to send image.';
-
-                    this.cdr.markForCheck();
-                }
-            });
+        this.cdr.markForCheck();
     }
 
 
@@ -495,10 +655,10 @@ implements OnInit {
 
 
     // ==========================================
-    // SEND GIF
+    // SEND GIF USING SOCKET.IO
     // ==========================================
 
-    sendGif() {
+    async sendGif() {
 
         const user =
             this.currentUser();
@@ -518,34 +678,30 @@ implements OnInit {
         this.successMessage = '';
 
 
-        this.roomService
-            .sendMessage(
-                this.room.id,
-                user.id,
-                'gif',
-                this.gifUrl
-            )
-            .subscribe({
+        const result =
+            await this.socketService
+                .sendMessage(
+                    this.room.id,
+                    user.id,
+                    'gif',
+                    this.gifUrl.trim()
+                );
 
-                next: () => {
 
-                    this.gifUrl =
-                        '';
+        if (!result.success) {
 
-                    this.loadMessages();
+            this.errorMessage =
+                result.message;
 
-                    this.cdr.markForCheck();
-                },
+            this.cdr.markForCheck();
 
-                error: error => {
+            return;
+        }
 
-                    this.errorMessage =
-                        error.error?.message ||
-                        'Unable to send GIF.';
 
-                    this.cdr.markForCheck();
-                }
-            });
+        this.gifUrl = '';
+
+        this.cdr.markForCheck();
     }
 
 
