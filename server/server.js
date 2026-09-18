@@ -1,4 +1,3 @@
-const http = require("http");
 
 const {
     initialiseChatSocket
@@ -11,6 +10,14 @@ const cors = require("cors");
 const {
     bootstrapSuperAdmin
 } = require("./bootstrap");
+
+const http = require("http");
+
+const path = require("path");
+
+const uploadRoutes =
+    require("./routes/uploads.routes");
+
 
 const {
     connectToMongo,
@@ -39,8 +46,14 @@ const app = express();
 const httpServer =
     http.createServer(app);
 
-initialiseChatSocket(
-    httpServer
+const io =
+    initialiseChatSocket(
+        httpServer
+    );
+
+app.set(
+    "io",
+    io
 );
 
 const PORT = 3000;
@@ -58,6 +71,15 @@ app.use(
 
 app.use(express.json());
 
+app.use(
+    "/uploads",
+    express.static(
+        path.join(
+            __dirname,
+            "uploads"
+        )
+    )
+);
 
 // ==================================================
 // ROUTES
@@ -93,6 +115,10 @@ app.use(
     adminRoutes
 );
 
+app.use(
+    "/api/uploads",
+    uploadRoutes
+);
 
 // ==================================================
 // HEALTH CHECK

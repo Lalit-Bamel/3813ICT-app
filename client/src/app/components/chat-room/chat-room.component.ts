@@ -123,6 +123,8 @@ implements OnInit, OnDestroy {
 
     selectedImageName = '';
 
+    selectedImageFile:
+        File | null = null ;
 
     successMessage = '';
 
@@ -540,109 +542,98 @@ implements OnInit, OnDestroy {
     // IMAGE SELECTION
     // ==========================================
 
-    onImageSelected(
-        event: Event
+onImageSelected(
+    event: Event
+) {
+
+    const input =
+        event.target as
+            HTMLInputElement;
+
+
+    const file =
+        input.files?.[0];
+
+
+    if (!file) {
+        return;
+    }
+
+
+    const allowedTypes = [
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp'
+    ];
+
+
+    if (
+        !allowedTypes.includes(
+            file.type
+        )
     ) {
 
-        const input =
-            event.target as
-                HTMLInputElement;
-
-
-        const file =
-            input.files?.[0];
-
-
-        if (!file) {
-            return;
-        }
-
-
-        if (
-            !file.type.startsWith(
-                'image/'
-            )
-        ) {
-
-            this.errorMessage =
-                'Please select an image file.';
-
-            input.value = '';
-
-            this.cdr.markForCheck();
-
-            return;
-        }
-
-
-        /*
-         * Temporary preview only.
-         *
-         * We are NOT sending this Base64 string
-         * to MongoDB.
-         *
-         * The next Phase 2 step will upload the
-         * actual file to Node and store only its
-         * metadata/path in MongoDB.
-         */
-
-        const reader =
-            new FileReader();
-
-
-        reader.onload = () => {
-
-            this.selectedImage =
-                reader.result as string;
-
-            this.selectedImageName =
-                file.name;
-
-            input.value = '';
-
-            this.cdr.markForCheck();
-        };
-
-
-        reader.onerror = () => {
-
-            this.errorMessage =
-                'Unable to read image file.';
-
-            input.value = '';
-
-            this.cdr.markForCheck();
-        };
-
-
-        reader.readAsDataURL(
-            file
-        );
-    }
-
-
-    // ==========================================
-    // IMAGE SEND — TEMPORARILY BLOCKED
-    // ==========================================
-
-    sendImage() {
-
-        /*
-         * Do not send Base64 image data to MongoDB.
-         *
-         * Allan confirmed that image files should
-         * be stored separately and MongoDB should
-         * contain metadata/reference information.
-         */
-
         this.errorMessage =
-            'Image file upload is being migrated to external file storage.';
+            'Please select a JPG, PNG, GIF or WEBP image.';
+
+        input.value = '';
 
         this.cdr.markForCheck();
+
+        return;
     }
 
 
-    cancelImage() {
+    if (
+        file.size >
+        5 * 1024 * 1024
+    ) {
+
+        this.errorMessage =
+            'Image must be 5 MB or smaller.';
+
+        input.value = '';
+
+        this.cdr.markForCheck();
+
+        return;
+    }
+
+
+    this.selectedImageFile =
+        file;
+
+    this.selectedImageName =
+        file.name;
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload = () => {
+
+        /*
+         * Base64 is ONLY being used locally
+         * for the preview.
+         *
+         * It is NOT sent to MongoDB.
+         */
+        this.selectedImage =
+            reader.result as string;
+
+        this.cdr.markForCheck();
+    };
+
+
+    reader.onerror = () => {
+
+        this.errorMessage =
+            'Unable to preview image.';
+
+        this.selectedImageFile =
+            null;
 
         this.selectedImage =
             '';
@@ -651,8 +642,94 @@ implements OnInit, OnDestroy {
             '';
 
         this.cdr.markForCheck();
+    };
+
+
+    reader.readAsDataURL(
+        file
+    );
+
+
+    input.value = '';
+}
+
+
+    // ==========================================
+    // IMAGE SEND — TEMPORARILY BLOCKED
+    // ==========================================
+sendImage() {
+
+    const user =
+        this.currentUser();
+
+
+    if (
+        !user ||
+        !this.room ||
+        !this.selectedImageFile
+    ) {
+        return;
     }
 
+
+    this.errorMessage = '';
+
+    this.successMessage = '';
+
+
+    this.roomService
+        .uploadChatImage(
+            this.room.id,
+            user.id,
+            this.selectedImageFile
+        )
+        .subscribe({
+
+            next: () => {
+
+                /*
+                 * Do NOT manually add the image.
+                 *
+                 * Backend emits newMessage through
+                 * Socket.IO after saving the image.
+                 */
+
+                this.selectedImageFile =
+                    null;
+
+                this.selectedImage =
+                    '';
+
+                this.selectedImageName =
+                    '';
+
+                this.cdr.markForCheck();
+            },
+
+            error: error => {
+
+                this.errorMessage =
+                    error.error?.message ||
+                    'Unable to upload image.';
+
+                this.cdr.markForCheck();
+            }
+        });
+}
+
+cancelImage() {
+
+    this.selectedImageFile =
+        null;
+
+    this.selectedImage =
+        '';
+
+    this.selectedImageName =
+        '';
+
+    this.cdr.markForCheck();
+}
 
     // ==========================================
     // SEND GIF USING SOCKET.IO
@@ -727,6 +804,35 @@ implements OnInit, OnDestroy {
             user.id
         );
     }
+
+
+getImageUrl(
+    content: string
+): string {
+
+    if (
+        content.startsWith(
+            'http://'
+        ) ||
+        content.startsWith(
+            'https://'
+        ) ||
+        content.startsWith(
+            'data:'
+        )
+    ) {
+        return content;
+    }
+
+
+    return (
+        'http://localhost:3000' +
+        content
+    );
+}
+
+
+
 
 
     // ==========================================

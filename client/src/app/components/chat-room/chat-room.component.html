@@ -85,11 +85,20 @@
 
             <!-- SENDER -->
 
-            <div class="message-header">
+        <div class="message-header">
 
-                <strong>
-                    {{ message.senderUsername }}
-                </strong>
+    <img
+        *ngIf="message.senderProfilePicture"
+        class="message-avatar"
+        [src]="getImageUrl(
+            message.senderProfilePicture
+        )"
+        alt="Sender profile picture"
+    >
+
+    <strong>
+        {{ message.senderUsername }}
+    </strong>
 
 
                 <span
@@ -106,19 +115,19 @@
                 {{ message.createdAt | date:'dd MMM, h:mm a' }}
             </small>
 
-            </div>
-
-
-            <!-- TEXT -->
-
-            <p
-                *ngIf="
-                    message.type === 'text'
-                "
-                class="message-text"
-            >
-                {{ message.content }}
-            </p>
+                    </div>
+                
+                
+                    <!-- TEXT -->
+                
+                    <p
+                        *ngIf="
+                            message.type === 'text'
+                        "
+                        class="message-text"
+                    >
+                        {{ message.content }}
+                    </p>
 
 
             <!-- IMAGE -->
@@ -128,7 +137,7 @@
                     message.type === 'image'
                 "
                 class="chat-image"
-                [src]="message.content"
+                [src]="getImageUrl(message.content)"
                 alt="Chat image"
             >
 

@@ -46,4 +46,32 @@ export class UserService {
             profile
         );
     }
+    uploadProfilePicture(
+    userId: string,
+    file: File
+) {
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        'userId',
+        userId
+    );
+
+    formData.append(
+        'image',
+        file
+    );
+
+
+    return this.http.post<{
+        message: string;
+        user: User;
+    }>(
+        'http://localhost:3000/api/uploads/profile-image',
+        formData
+    );
+}
 }

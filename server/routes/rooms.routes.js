@@ -197,7 +197,8 @@ router.get(
                             projection: {
                                 _id: 0,
                                 id: 1,
-                                username: 1
+                                username: 1,
+                                profilePicture: 1
                             }
                         }
                     )
@@ -229,6 +230,9 @@ router.get(
                                 sender?.username ||
                                 "Unknown User",
 
+                            senderProfilePicture:
+                                sender?.profilePicture ||
+                                "",
                             senderIsAdmin:
                                 group.adminIds
                                     .includes(

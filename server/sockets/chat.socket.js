@@ -570,6 +570,9 @@ function initialiseChatSocket(httpServer) {
 
                             senderUsername:
                                 sender.username,
+                            senderProfilePicture:
+                                sender.profilePicture ||
+                                "",
 
                             senderIsAdmin:
                                 group.adminIds

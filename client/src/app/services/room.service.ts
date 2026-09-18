@@ -31,6 +31,9 @@ export class RoomService {
     private roomApi =
         'http://localhost:3000/api/rooms';
 
+    private uploadApi =
+        'http://localhost:3000/api/uploads';
+
 
     // ==========================================
     // GET GROUP ROOMS
@@ -142,7 +145,7 @@ export class RoomService {
 
 
     // ==========================================
-    // SEND MESSAGE
+    // LEGACY REST SEND MESSAGE
     // ==========================================
 
     sendMessage(
@@ -165,6 +168,46 @@ export class RoomService {
                 type,
                 content
             }
+        );
+    }
+
+
+    // ==========================================
+    // UPLOAD CHAT IMAGE
+    // ==========================================
+
+    uploadChatImage(
+        roomId: string,
+        senderId: string,
+        file: File
+    ) {
+
+        const formData =
+            new FormData();
+
+
+        formData.append(
+            'roomId',
+            roomId
+        );
+
+        formData.append(
+            'senderId',
+            senderId
+        );
+
+        formData.append(
+            'image',
+            file
+        );
+
+
+        return this.http.post<{
+            message: string;
+            chatMessage: Message;
+        }>(
+            `${this.uploadApi}/chat-image`,
+            formData
         );
     }
 

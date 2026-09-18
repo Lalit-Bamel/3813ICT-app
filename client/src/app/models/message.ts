@@ -13,6 +13,8 @@ export interface Message {
 
     content: string;
 
+    senderProfilePicture?: string;
+
     createdAt: string;
 
     deleted: boolean;
