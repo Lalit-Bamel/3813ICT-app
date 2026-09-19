@@ -195,6 +195,37 @@ router.post("/register", async function (req, res) {
         });
 
     } catch (error) {
+        if (
+    error.code === 11000
+) {
+
+    if (
+        error.keyPattern?.email
+    ) {
+
+        return res.status(409).json({
+            message:
+                "Email address is already registered."
+        });
+    }
+
+
+    if (
+        error.keyPattern?.username
+    ) {
+
+        return res.status(409).json({
+            message:
+                "Username is already in use."
+        });
+    }
+
+
+    return res.status(409).json({
+        message:
+            "Account information is already in use."
+    });
+}
 
         console.error(
             "Registration error:",

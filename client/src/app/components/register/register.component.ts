@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject,ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -13,12 +13,14 @@ import { AuthService } from '../../services/auth.service';
         RouterLink
     ],
     templateUrl: './register.component.html',
-    styleUrl: './register.component.css'
+    styleUrl: './register.component.css',
+
 })
 export class RegisterComponent {
 
     private authService = inject(AuthService);
     private router = inject(Router);
+    private cdr = inject(ChangeDetectorRef);
 
     firstName = '';
     lastName = '';
@@ -47,12 +49,14 @@ export class RegisterComponent {
         }).subscribe({
             next: () => {
                 this.router.navigate(['/login']);
+                this.cdr.markForCheck();
             },
 
             error: error => {
                 this.errorMessage =
                     error.error?.message ||
                     'Unable to create account.';
+                this.cdr.markForCheck();
             }
         });
     }

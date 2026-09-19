@@ -241,6 +241,26 @@ router.put("/:userId", async function (req, res) {
         });
 
     } catch (error) {
+        if (
+    error.code === 11000
+) {
+
+    if (
+        error.keyPattern?.username
+    ) {
+
+        return res.status(409).json({
+            message:
+                "Username is already in use."
+        });
+    }
+
+
+    return res.status(409).json({
+        message:
+            "Profile information conflicts with an existing account."
+    });
+}
 
         console.error(
             "Profile update error:",

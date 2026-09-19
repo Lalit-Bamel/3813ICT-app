@@ -24,6 +24,10 @@ const {
     getDb
 } = require("./db/mongo");
 
+const {
+    createIndexes
+} = require("./db/indexes");
+
 const authRoutes =
     require("./routes/auth.routes");
 
@@ -191,15 +195,69 @@ app.get(
 
 
 // ==================================================
+// UNKNOWN API ROUTE
+// ==================================================
+
+app.use(
+    "/api",
+    function (
+        req,
+        res
+    ) {
+
+        return res.status(404).json({
+            message:
+                "API route not found."
+        });
+    }
+);
+
+
+// ==================================================
+// GLOBAL ERROR HANDLER
+// ==================================================
+
+app.use(
+    function (
+        error,
+        req,
+        res,
+        next
+    ) {
+
+        console.error(
+            "Unhandled server error:",
+            error
+        );
+
+
+        if (
+            res.headersSent
+        ) {
+
+            return next(
+                error
+            );
+        }
+
+
+        return res.status(500).json({
+            message:
+                "An unexpected server error occurred."
+        });
+    }
+);
+
+// ==================================================
 // START SERVER
 // ==================================================
 
 async function startServer() {
 
     try {
-
+        const db =
         await connectToMongo();
-
+        await createIndexes(db);
         await bootstrapSuperAdmin();
 
         httpServer.listen(
