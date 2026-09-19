@@ -4,6 +4,12 @@ const crypto = require("crypto");
 
 const { getDb } = require("../db/mongo");
 
+const {
+    validateRegistrationInput
+} = require(
+    "../utils/authValidation"
+);
+
 const router = express.Router();
 
 /**
@@ -35,85 +41,43 @@ router.post("/register", async function (req, res) {
 
     try {
 
-        const {
-            firstName,
-            lastName,
-            username,
-            email,
-            age,
-            password
-        } = req.body;
+const validation =
+    validateRegistrationInput(
+        req.body
+    );
 
-        if (
-            !firstName ||
-            !lastName ||
-            !username ||
-            !email ||
-            age === undefined ||
-            !password
-        ) {
-            return res.status(400).json({
-                message:
-                    "All required fields must be provided."
-            });
-        }
 
-        const cleanFirstName =
-            firstName.trim();
+if (!validation.valid) {
 
-        const cleanLastName =
-            lastName.trim();
+    return res
+        .status(
+            validation.status
+        )
+        .json({
+            message:
+                validation.message
+        });
+}
 
-        const cleanUsername =
-            username.trim();
 
-        const cleanEmail =
-            email.trim().toLowerCase();
+const {
+    firstName:
+        cleanFirstName,
 
-        const numericAge =
-            Number(age);
+    lastName:
+        cleanLastName,
 
-        if (
-            !cleanFirstName ||
-            !cleanLastName ||
-            !cleanUsername
-        ) {
-            return res.status(400).json({
-                message:
-                    "Name and username cannot be empty."
-            });
-        }
+    username:
+        cleanUsername,
 
-        const emailPattern =
-            /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    email:
+        cleanEmail,
 
-        if (!emailPattern.test(cleanEmail)) {
-            return res.status(400).json({
-                message:
-                    "A valid email address is required."
-            });
-        }
+    age:
+        numericAge,
 
-        if (
-            !Number.isInteger(numericAge) ||
-            numericAge < 0
-        ) {
-            return res.status(400).json({
-                message:
-                    "A valid age is required."
-            });
-        }
-
-        if (
-            password.length < 8 ||
-            !/[A-Z]/.test(password)
-        ) {
-            return res.status(400).json({
-                message:
-                    "Password must contain at least 8 characters and one uppercase letter."
-            });
-        }
-
+    password
+} = validation.value;
         const db =
             getDb();
 
