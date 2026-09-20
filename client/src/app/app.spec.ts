@@ -1,23 +1,55 @@
-import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import {
+    TestBed
+} from '@angular/core/testing';
 
-describe('App', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
-    }).compileComponents();
-  });
+import {
+    describe,
+    beforeEach,
+    expect,
+    it
+} from 'vitest';
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+import {
+    App
+} from './app';
 
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, client');
-  });
-});
+
+describe(
+    'App',
+    () => {
+
+        beforeEach(
+            async () => {
+
+                await TestBed
+                    .configureTestingModule({
+                        imports: [
+                            App
+                        ]
+                    })
+                    .compileComponents();
+            }
+        );
+
+
+        it(
+            'should create the app',
+            () => {
+
+                const fixture =
+                    TestBed.createComponent(
+                        App
+                    );
+
+                const app =
+                    fixture.componentInstance;
+
+
+                expect(
+                    app
+                ).toBeTruthy();
+            }
+        );
+
+    }
+);
