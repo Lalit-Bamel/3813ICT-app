@@ -446,61 +446,100 @@ router.delete(
         try {
 
             const {
+                roomId,
+                messageId
+            } = req.params;
+
+
+            const {
                 actorId
             } = req.body;
 
+
             if (!actorId) {
+
                 return res.status(400).json({
                     message:
                         "User is required."
                 });
             }
 
-            const db = getDb();
+
+            const db =
+                getDb();
+
 
             const roomsCollection =
                 db.collection("rooms");
 
+
             const messagesCollection =
                 db.collection("messages");
+
+
+            // ======================================
+            // FIND ROOM
+            // ======================================
 
             const room =
                 await findRoom(
                     roomsCollection,
-                    req.params.roomId
+                    roomId
                 );
 
+
             if (!room) {
+
                 return res.status(404).json({
                     message:
                         "Room not found."
                 });
             }
 
+
+            // ======================================
+            // FIND MESSAGE
+            // ======================================
+
             const message =
                 await messagesCollection.findOne({
+
                     id:
-                        req.params.messageId,
+                        messageId,
+
                     roomId:
                         room.id
                 });
 
+
             if (!message) {
+
                 return res.status(404).json({
                     message:
                         "Message not found."
                 });
             }
 
+
+            // ======================================
+            // VERIFY OWNERSHIP
+            // ======================================
+
             if (
                 message.senderId !==
                 actorId
             ) {
+
                 return res.status(403).json({
                     message:
                         "You can only delete your own messages."
                 });
             }
+
+
+            // ======================================
+            // SOFT DELETE MESSAGE
+            // ======================================
 
             await messagesCollection.updateOne(
                 {
@@ -515,10 +554,34 @@ router.delete(
                 }
             );
 
+
+            // ======================================
+            // BROADCAST REAL-TIME DELETION
+            // ======================================
+
+            const io =
+                req.app.get("io");
+
+
+            if (io) {
+
+                io.to(
+                    roomId
+                ).emit(
+                    "messageDeleted",
+                    {
+                        roomId,
+                        messageId
+                    }
+                );
+            }
+
+
             return res.json({
                 message:
                     "Message deleted successfully."
             });
+
 
         } catch (error) {
 
@@ -527,6 +590,7 @@ router.delete(
                 error
             );
 
+
             return res.status(500).json({
                 message:
                     "Unable to delete message."
@@ -534,7 +598,6 @@ router.delete(
         }
     }
 );
-
 
 // ==================================================
 // GET ONE ROOM

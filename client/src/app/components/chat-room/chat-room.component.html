@@ -8,6 +8,7 @@
     <section
         class="chat-header"
         *ngIf="group && room"
+        aria-labelledby="chat-room-title"
     >
 
         <a
@@ -20,7 +21,7 @@
         </a>
 
 
-        <h1>
+        <h1 id="chat-room-title">
             {{ group.title }}
         </h1>
 
@@ -38,34 +39,49 @@
     </section>
 
 
-    <!-- ERROR -->
+    <!-- ERROR MESSAGE -->
 
     <p
         *ngIf="errorMessage"
         class="error"
+        role="alert"
+        aria-live="assertive"
     >
         {{ errorMessage }}
     </p>
 
 
-    <!-- SUCCESS -->
+    <!-- SUCCESS MESSAGE -->
 
     <p
         *ngIf="successMessage"
         class="success"
+        role="status"
+        aria-live="polite"
     >
         {{ successMessage }}
     </p>
-<p
-    *ngIf="presenceMessage"
-    class="success"
->
-    {{ presenceMessage }}
-</p>
+
+
+    <!-- PRESENCE MESSAGE -->
+
+    <p
+        *ngIf="presenceMessage"
+        class="success"
+        role="status"
+        aria-live="polite"
+    >
+        {{ presenceMessage }}
+    </p>
+
 
     <!-- MESSAGES -->
 
-    <section class="messages">
+    <section
+        class="messages"
+        aria-label="Chat messages"
+        aria-live="polite"
+    >
 
         <p
             *ngIf="
@@ -85,20 +101,28 @@
 
             <!-- SENDER -->
 
-        <div class="message-header">
+            <div class="message-header">
 
-    <img
-        *ngIf="message.senderProfilePicture"
-        class="message-avatar"
-        [src]="getImageUrl(
-            message.senderProfilePicture
-        )"
-        alt="Sender profile picture"
-    >
+                <img
+                    *ngIf="
+                        message.senderProfilePicture
+                    "
+                    class="message-avatar"
+                    [src]="
+                        getImageUrl(
+                            message.senderProfilePicture
+                        )
+                    "
+                    [alt]="
+                        message.senderUsername
+                        + ' profile picture'
+                    "
+                >
 
-    <strong>
-        {{ message.senderUsername }}
-    </strong>
+
+                <strong>
+                    {{ message.senderUsername }}
+                </strong>
 
 
                 <span
@@ -111,38 +135,48 @@
                 </span>
 
 
-            <small class="message-time">
-                {{ message.createdAt | date:'dd MMM, h:mm a' }}
-            </small>
+                <small class="message-time">
+                    {{
+                        message.createdAt
+                        | date:'dd MMM, h:mm a'
+                    }}
+                </small>
 
-                    </div>
-                
-                
-                    <!-- TEXT -->
-                
-                    <p
-                        *ngIf="
-                            message.type === 'text'
-                        "
-                        class="message-text"
-                    >
-                        {{ message.content }}
-                    </p>
+            </div>
 
 
-            <!-- IMAGE -->
+            <!-- TEXT MESSAGE -->
+
+            <p
+                *ngIf="
+                    message.type === 'text'
+                "
+                class="message-text"
+            >
+                {{ message.content }}
+            </p>
+
+
+            <!-- IMAGE MESSAGE -->
 
             <img
                 *ngIf="
                     message.type === 'image'
                 "
                 class="chat-image"
-                [src]="getImageUrl(message.content)"
-                alt="Chat image"
+                [src]="
+                    getImageUrl(
+                        message.content
+                    )
+                "
+                [alt]="
+                    'Image shared by '
+                    + message.senderUsername
+                "
             >
 
 
-            <!-- GIF -->
+            <!-- GIF MESSAGE -->
 
             <img
                 *ngIf="
@@ -150,18 +184,26 @@
                 "
                 class="chat-image"
                 [src]="message.content"
-                alt="Chat GIF"
+                [alt]="
+                    'GIF shared by '
+                    + message.senderUsername
+                "
             >
 
 
             <!-- DELETE OWN MESSAGE -->
 
             <button
+                type="button"
                 *ngIf="
                     isOwnMessage(message)
                 "
                 (click)="
                     deleteMessage(message)
+                "
+                [attr.aria-label]="
+                    'Delete message from '
+                    + message.senderUsername
                 "
             >
                 Delete
@@ -177,20 +219,30 @@
     <section
         class="composer"
         *ngIf="room"
+        aria-labelledby="text-message-heading"
     >
 
-        <h3>
+        <h3 id="text-message-heading">
             Send Message
         </h3>
 
 
+        <label for="textMessage">
+            Message
+        </label>
+
+
         <textarea
+            id="textMessage"
+            name="textMessage"
             [(ngModel)]="textMessage"
             placeholder="Type a message..."
+            rows="4"
         ></textarea>
 
 
         <button
+            type="button"
             (click)="sendTextMessage()"
         >
             Send Text
@@ -199,91 +251,127 @@
     </section>
 
 
-<!-- IMAGE + GIF ROW -->
+    <!-- IMAGE + GIF ROW -->
 
-<div class="media-row">
-
-    <!-- SEND IMAGE -->
-
-    <section
-        class="composer media-composer"
-        *ngIf="room"
-    >
-
-        <h3>
-            Send Image
-        </h3>
+    <div class="media-row">
 
 
-        <input
-            type="file"
-            accept="image/*"
-            (change)="onImageSelected($event)"
+        <!-- SEND IMAGE -->
+
+        <section
+            class="composer media-composer"
+            *ngIf="room"
+            aria-labelledby="image-message-heading"
         >
 
-
-        <div
-            *ngIf="selectedImage"
-            class="image-preview"
-        >
-
-            <p>
-                Selected:
-                {{ selectedImageName }}
-            </p>
-
-
-            <img
-                [src]="selectedImage"
-                alt="Selected image preview"
-            >
-
-
-            <button
-                (click)="sendImage()"
-            >
+            <h3 id="image-message-heading">
                 Send Image
-            </button>
+            </h3>
+
+
+            <label for="chatImage">
+                Choose image
+            </label>
+
+
+            <input
+                id="chatImage"
+                name="chatImage"
+                type="file"
+                accept="
+                    image/jpeg,
+                    image/png,
+                    image/gif,
+                    image/webp
+                "
+                (change)="
+                    onImageSelected($event)
+                "
+            >
+
+
+            <small>
+                JPG, PNG, GIF or WEBP.
+                Maximum file size: 5 MB.
+            </small>
+
+
+            <div
+                *ngIf="selectedImage"
+                class="image-preview"
+            >
+
+                <p>
+                    Selected:
+                    {{ selectedImageName }}
+                </p>
+
+
+                <img
+                    [src]="selectedImage"
+                    [alt]="
+                        'Preview of '
+                        + selectedImageName
+                    "
+                >
+
+
+                <button
+                    type="button"
+                    (click)="sendImage()"
+                >
+                    Send Image
+                </button>
+
+
+                <button
+                    type="button"
+                    (click)="cancelImage()"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- SEND GIF -->
+
+        <section
+            class="composer media-composer"
+            *ngIf="room"
+            aria-labelledby="gif-message-heading"
+        >
+
+            <h3 id="gif-message-heading">
+                Send GIF
+            </h3>
+
+
+            <label for="gifUrl">
+                GIF image URL
+            </label>
+
+
+            <input
+                id="gifUrl"
+                name="gifUrl"
+                type="url"
+                [(ngModel)]="gifUrl"
+                placeholder="Paste GIF image URL"
+            >
 
 
             <button
-                (click)="cancelImage()"
+                type="button"
+                (click)="sendGif()"
             >
-                Cancel
+                Send GIF
             </button>
 
-        </div>
+        </section>
 
-    </section>
-
-
-    <!-- SEND GIF -->
-
-    <section
-        class="composer media-composer"
-        *ngIf="room"
-    >
-
-        <h3>
-            Send GIF
-        </h3>
-
-
-        <input
-            type="text"
-            [(ngModel)]="gifUrl"
-            placeholder="Paste GIF image URL"
-        >
-
-
-        <button
-            (click)="sendGif()"
-        >
-            Send GIF
-        </button>
-
-    </section>
-
-</div>
+    </div>
 
 </main>

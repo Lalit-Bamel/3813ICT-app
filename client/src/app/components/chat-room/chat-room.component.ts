@@ -37,8 +37,7 @@ import {
 } from '../../services/group.service';
 
 import {
-    SocketService,
-    SocketChatMessage
+    SocketService
 } from '../../services/socket.service';
 
 import {
@@ -124,7 +123,8 @@ implements OnInit, OnDestroy {
     selectedImageName = '';
 
     selectedImageFile:
-        File | null = null ;
+        File | null = null;
+
 
     successMessage = '';
 
@@ -143,6 +143,7 @@ implements OnInit, OnDestroy {
             this.route.snapshot
                 .paramMap
                 .get('groupId');
+
 
         const roomId =
             this.route.snapshot
@@ -163,8 +164,17 @@ implements OnInit, OnDestroy {
         }
 
 
+        /*
+         * Connect to the Socket.IO server
+         * when the chat room component opens.
+         */
         this.socketService.connect();
 
+
+        /*
+         * Start listening for live Socket.IO
+         * events before joining the room.
+         */
         this.listenForSocketEvents();
 
 
@@ -172,11 +182,20 @@ implements OnInit, OnDestroy {
             groupId
         );
 
+
         this.loadRoom(
             roomId,
             groupId
         );
 
+
+        /*
+         * Initial message history is loaded
+         * through REST.
+         *
+         * New messages are received live
+         * through Socket.IO.
+         */
         this.loadMessages(
             roomId
         );
@@ -189,6 +208,10 @@ implements OnInit, OnDestroy {
 
     ngOnDestroy() {
 
+        /*
+         * Tell the Socket.IO server that this
+         * user is leaving the current room.
+         */
         if (this.room) {
 
             this.socketService
@@ -196,12 +219,19 @@ implements OnInit, OnDestroy {
                     this.room.id
                 )
                 .catch(() => {
-                    // Component is closing,
-                    // so no UI action is required.
+
+                    /*
+                     * Component is closing,
+                     * so no UI action is required.
+                     */
                 });
         }
 
 
+        /*
+         * Remove all RxJS Socket.IO
+         * subscriptions.
+         */
         for (
             const subscription
             of this.socketSubscriptions
@@ -211,6 +241,10 @@ implements OnInit, OnDestroy {
         }
 
 
+        /*
+         * Disconnect this client from
+         * Socket.IO.
+         */
         this.socketService.disconnect();
     }
 
@@ -220,6 +254,10 @@ implements OnInit, OnDestroy {
     // ==========================================
 
     private listenForSocketEvents() {
+
+        // ------------------------------------------
+        // NEW MESSAGE
+        // ------------------------------------------
 
         const messageSubscription =
             this.socketService
@@ -241,6 +279,11 @@ implements OnInit, OnDestroy {
                             socketMessage;
 
 
+                        /*
+                         * Add the new live message
+                         * and keep only the newest
+                         * five messages.
+                         */
                         this.messages = [
                             ...this.messages,
                             message
@@ -251,6 +294,10 @@ implements OnInit, OnDestroy {
                     }
                 );
 
+
+        // ------------------------------------------
+        // USER JOINED
+        // ------------------------------------------
 
         const joinedSubscription =
             this.socketService
@@ -276,6 +323,10 @@ implements OnInit, OnDestroy {
                 );
 
 
+        // ------------------------------------------
+        // USER LEFT
+        // ------------------------------------------
+
         const leftSubscription =
             this.socketService
                 .onUserLeft()
@@ -300,10 +351,60 @@ implements OnInit, OnDestroy {
                 );
 
 
+        // ------------------------------------------
+        // MESSAGE DELETED
+        // ------------------------------------------
+
+        const deletedSubscription =
+            this.socketService
+                .onMessageDeleted()
+                .subscribe(
+                    event => {
+
+                        /*
+                         * Ignore deletion events
+                         * belonging to another room.
+                         */
+                        if (
+                            !this.room ||
+                            event.roomId !==
+                                this.room.id
+                        ) {
+                            return;
+                        }
+
+
+                        /*
+                         * Remove the deleted message
+                         * from this client's local
+                         * message array immediately.
+                         *
+                         * Every connected client in
+                         * the room receives this same
+                         * Socket.IO event.
+                         */
+                        this.messages =
+                            this.messages.filter(
+                                message =>
+                                    message.id !==
+                                    event.messageId
+                            );
+
+
+                        this.cdr.markForCheck();
+                    }
+                );
+
+
+        /*
+         * Store every subscription so they
+         * can be cleaned up in ngOnDestroy().
+         */
         this.socketSubscriptions.push(
             messageSubscription,
             joinedSubscription,
-            leftSubscription
+            leftSubscription,
+            deletedSubscription
         );
     }
 
@@ -327,6 +428,7 @@ implements OnInit, OnDestroy {
                     this.group =
                         group;
 
+
                     this.cdr.markForCheck();
                 },
 
@@ -335,6 +437,7 @@ implements OnInit, OnDestroy {
                     this.errorMessage =
                         error.error?.message ||
                         'Unable to load group.';
+
 
                     this.cdr.markForCheck();
                 }
@@ -359,6 +462,10 @@ implements OnInit, OnDestroy {
 
                 next: async room => {
 
+                    /*
+                     * Protect against a room URL
+                     * containing the wrong group ID.
+                     */
                     if (
                         room.groupId !==
                         groupId
@@ -385,6 +492,14 @@ implements OnInit, OnDestroy {
                     }
 
 
+                    /*
+                     * Ask the Socket.IO server
+                     * to join this room.
+                     *
+                     * The server performs its own
+                     * membership/authorization
+                     * validation.
+                     */
                     const result =
                         await this.socketService
                             .joinRoom(
@@ -413,6 +528,7 @@ implements OnInit, OnDestroy {
                     this.errorMessage =
                         error.error?.message ||
                         'Unable to load room.';
+
 
                     this.cdr.markForCheck();
                 }
@@ -457,6 +573,7 @@ implements OnInit, OnDestroy {
                     this.messages =
                         messages;
 
+
                     this.cdr.markForCheck();
                 },
 
@@ -465,6 +582,7 @@ implements OnInit, OnDestroy {
                     this.errorMessage =
                         error.error?.message ||
                         'Unable to load messages.';
+
 
                     this.cdr.markForCheck();
                 }
@@ -519,6 +637,7 @@ implements OnInit, OnDestroy {
             this.errorMessage =
                 result.message;
 
+
             this.cdr.markForCheck();
 
             return;
@@ -528,11 +647,13 @@ implements OnInit, OnDestroy {
         /*
          * Do NOT manually add the message here.
          *
-         * The server broadcasts newMessage back
-         * to everyone in the Socket.IO room,
-         * including the sender.
+         * The server saves it to MongoDB and
+         * broadcasts newMessage back to everyone
+         * in this Socket.IO room, including
+         * the sender.
          */
         this.textMessage = '';
+
 
         this.cdr.markForCheck();
     }
@@ -542,194 +663,232 @@ implements OnInit, OnDestroy {
     // IMAGE SELECTION
     // ==========================================
 
-onImageSelected(
-    event: Event
-) {
-
-    const input =
-        event.target as
-            HTMLInputElement;
-
-
-    const file =
-        input.files?.[0];
-
-
-    if (!file) {
-        return;
-    }
-
-
-    const allowedTypes = [
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'image/webp'
-    ];
-
-
-    if (
-        !allowedTypes.includes(
-            file.type
-        )
+    onImageSelected(
+        event: Event
     ) {
 
-        this.errorMessage =
-            'Please select a JPG, PNG, GIF or WEBP image.';
-
-        input.value = '';
-
-        this.cdr.markForCheck();
-
-        return;
-    }
+        const input =
+            event.target as
+                HTMLInputElement;
 
 
-    if (
-        file.size >
-        5 * 1024 * 1024
-    ) {
-
-        this.errorMessage =
-            'Image must be 5 MB or smaller.';
-
-        input.value = '';
-
-        this.cdr.markForCheck();
-
-        return;
-    }
+        const file =
+            input.files?.[0];
 
 
-    this.selectedImageFile =
-        file;
-
-    this.selectedImageName =
-        file.name;
+        if (!file) {
+            return;
+        }
 
 
-    const reader =
-        new FileReader();
+        const allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/gif',
+            'image/webp'
+        ];
 
 
-    reader.onload = () => {
+        if (
+            !allowedTypes.includes(
+                file.type
+            )
+        ) {
+
+            this.errorMessage =
+                'Please select a JPG, PNG, GIF or WEBP image.';
+
+
+            input.value = '';
+
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
+
+            this.errorMessage =
+                'Image must be 5 MB or smaller.';
+
+
+            input.value = '';
+
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.selectedImageFile =
+            file;
+
+
+        this.selectedImageName =
+            file.name;
+
+
+        const reader =
+            new FileReader();
+
+
+        reader.onload = () => {
+
+            /*
+             * Base64 is used ONLY for the
+             * browser preview.
+             *
+             * The Base64 string is never sent
+             * to MongoDB.
+             */
+            this.selectedImage =
+                reader.result as string;
+
+
+            this.cdr.markForCheck();
+        };
+
+
+        reader.onerror = () => {
+
+            this.errorMessage =
+                'Unable to preview image.';
+
+
+            this.selectedImageFile =
+                null;
+
+
+            this.selectedImage =
+                '';
+
+
+            this.selectedImageName =
+                '';
+
+
+            this.cdr.markForCheck();
+        };
+
+
+        reader.readAsDataURL(
+            file
+        );
+
 
         /*
-         * Base64 is ONLY being used locally
-         * for the preview.
-         *
-         * It is NOT sent to MongoDB.
+         * Clear the file input so the same
+         * file could be selected again later.
          */
-        this.selectedImage =
-            reader.result as string;
-
-        this.cdr.markForCheck();
-    };
+        input.value = '';
+    }
 
 
-    reader.onerror = () => {
+    // ==========================================
+    // SEND IMAGE
+    // ==========================================
 
-        this.errorMessage =
-            'Unable to preview image.';
+    sendImage() {
+
+        const user =
+            this.currentUser();
+
+
+        if (
+            !user ||
+            !this.room ||
+            !this.selectedImageFile
+        ) {
+            return;
+        }
+
+
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
+        /*
+         * Image binary is uploaded through HTTP.
+         *
+         * The backend stores the actual file on
+         * disk, stores its reference/metadata in
+         * MongoDB, then broadcasts newMessage
+         * through Socket.IO.
+         */
+        this.roomService
+            .uploadChatImage(
+                this.room.id,
+                user.id,
+                this.selectedImageFile
+            )
+            .subscribe({
+
+                next: () => {
+
+                    /*
+                     * Do NOT manually add the image
+                     * to messages.
+                     *
+                     * Backend broadcasts newMessage
+                     * after the image message has
+                     * been persisted.
+                     */
+                    this.selectedImageFile =
+                        null;
+
+
+                    this.selectedImage =
+                        '';
+
+
+                    this.selectedImageName =
+                        '';
+
+
+                    this.cdr.markForCheck();
+                },
+
+                error: error => {
+
+                    this.errorMessage =
+                        error.error?.message ||
+                        'Unable to upload image.';
+
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // CANCEL IMAGE
+    // ==========================================
+
+    cancelImage() {
 
         this.selectedImageFile =
             null;
 
+
         this.selectedImage =
             '';
+
 
         this.selectedImageName =
             '';
 
+
         this.cdr.markForCheck();
-    };
-
-
-    reader.readAsDataURL(
-        file
-    );
-
-
-    input.value = '';
-}
-
-
-    // ==========================================
-    // IMAGE SEND — TEMPORARILY BLOCKED
-    // ==========================================
-sendImage() {
-
-    const user =
-        this.currentUser();
-
-
-    if (
-        !user ||
-        !this.room ||
-        !this.selectedImageFile
-    ) {
-        return;
     }
 
-
-    this.errorMessage = '';
-
-    this.successMessage = '';
-
-
-    this.roomService
-        .uploadChatImage(
-            this.room.id,
-            user.id,
-            this.selectedImageFile
-        )
-        .subscribe({
-
-            next: () => {
-
-                /*
-                 * Do NOT manually add the image.
-                 *
-                 * Backend emits newMessage through
-                 * Socket.IO after saving the image.
-                 */
-
-                this.selectedImageFile =
-                    null;
-
-                this.selectedImage =
-                    '';
-
-                this.selectedImageName =
-                    '';
-
-                this.cdr.markForCheck();
-            },
-
-            error: error => {
-
-                this.errorMessage =
-                    error.error?.message ||
-                    'Unable to upload image.';
-
-                this.cdr.markForCheck();
-            }
-        });
-}
-
-cancelImage() {
-
-    this.selectedImageFile =
-        null;
-
-    this.selectedImage =
-        '';
-
-    this.selectedImageName =
-        '';
-
-    this.cdr.markForCheck();
-}
 
     // ==========================================
     // SEND GIF USING SOCKET.IO
@@ -770,13 +929,20 @@ cancelImage() {
             this.errorMessage =
                 result.message;
 
+
             this.cdr.markForCheck();
 
             return;
         }
 
 
+        /*
+         * Like text messages, the server
+         * broadcasts the saved GIF message
+         * back through newMessage.
+         */
         this.gifUrl = '';
+
 
         this.cdr.markForCheck();
     }
@@ -806,33 +972,47 @@ cancelImage() {
     }
 
 
-getImageUrl(
-    content: string
-): string {
+    // ==========================================
+    // BUILD IMAGE URL
+    // ==========================================
 
-    if (
-        content.startsWith(
-            'http://'
-        ) ||
-        content.startsWith(
-            'https://'
-        ) ||
-        content.startsWith(
-            'data:'
-        )
-    ) {
-        return content;
+    getImageUrl(
+        content: string
+    ): string {
+
+        /*
+         * Existing HTTP URLs, HTTPS URLs and
+         * old/local Base64 previews can be used
+         * directly.
+         */
+        if (
+            content.startsWith(
+                'http://'
+            ) ||
+            content.startsWith(
+                'https://'
+            ) ||
+            content.startsWith(
+                'data:'
+            )
+        ) {
+            return content;
+        }
+
+
+        /*
+         * Stored server paths such as:
+         *
+         * /uploads/chat/abc.jpg
+         * /uploads/profiles/xyz.png
+         *
+         * are served by the Node server.
+         */
+        return (
+            'http://localhost:3000' +
+            content
+        );
     }
-
-
-    return (
-        'http://localhost:3000' +
-        content
-    );
-}
-
-
-
 
 
     // ==========================================
@@ -855,6 +1035,12 @@ getImageUrl(
         }
 
 
+        /*
+         * Client-side ownership check.
+         *
+         * Backend must still perform its own
+         * authorization check.
+         */
         if (
             !this.isOwnMessage(
                 message
@@ -875,6 +1061,11 @@ getImageUrl(
         }
 
 
+        this.errorMessage = '';
+
+        this.successMessage = '';
+
+
         this.roomService
             .deleteMessage(
                 this.room.id,
@@ -885,7 +1076,25 @@ getImageUrl(
 
                 next: () => {
 
-                    this.loadMessages();
+                    /*
+                     * IMPORTANT:
+                     *
+                     * Do NOT call loadMessages()
+                     * here anymore.
+                     *
+                     * The backend emits the
+                     * messageDeleted Socket.IO
+                     * event after MongoDB has
+                     * marked the message deleted.
+                     *
+                     * Every user in the room,
+                     * including this sender,
+                     * receives that event and
+                     * removes the message locally.
+                     */
+                    this.successMessage =
+                        'Message deleted successfully.';
+
 
                     this.cdr.markForCheck();
                 },
@@ -895,6 +1104,7 @@ getImageUrl(
                     this.errorMessage =
                         error.error?.message ||
                         'Unable to delete message.';
+
 
                     this.cdr.markForCheck();
                 }

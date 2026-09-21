@@ -37,6 +37,10 @@ export interface SocketChatMessage {
     senderIsAdmin: boolean;
 }
 
+export interface SocketMessageDeletedEvent {
+    roomId: string;
+    messageId: string;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -293,4 +297,38 @@ export class SocketService {
             }
         );
     }
+    onMessageDeleted() {
+
+    return new Observable<
+        SocketMessageDeletedEvent
+    >(
+        subscriber => {
+
+            const handler = (
+                event:
+                    SocketMessageDeletedEvent
+            ) => {
+
+                subscriber.next(
+                    event
+                );
+            };
+
+
+            this.socket.on(
+                'messageDeleted',
+                handler
+            );
+
+
+            return () => {
+
+                this.socket.off(
+                    'messageDeleted',
+                    handler
+                );
+            };
+        }
+    );
+  }
 }
