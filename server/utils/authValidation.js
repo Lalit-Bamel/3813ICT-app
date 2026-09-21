@@ -88,7 +88,7 @@ function validateRegistrationInput(data) {
         !Number.isInteger(
             numericAge
         ) ||
-        numericAge < 0
+        numericAge < 1
     ) {
 
         return {

@@ -75,6 +75,13 @@ implements OnInit {
     age:
         number | null = null;
 
+    dateOfBirth = '';
+
+    dateOfBirthIsEstimated = false;
+
+    maxDateOfBirth =
+        this.getLatestDateOfBirth();
+
 
     profilePicture = '';
 
@@ -165,8 +172,19 @@ implements OnInit {
         this.email =
             user.email;
 
+        this.dateOfBirthIsEstimated =
+            !user.dateOfBirth;
+
+        this.dateOfBirth =
+            user.dateOfBirth ||
+            this.inferDateOfBirth(
+                user.age
+            );
+
         this.age =
-            user.age;
+            this.calculateAge(
+                this.dateOfBirth
+            );
 
         this.profilePicture =
             user.profilePicture || '';
@@ -323,6 +341,115 @@ implements OnInit {
     // SAVE PROFILE
     // ==========================================
 
+    onDateOfBirthChanged() {
+
+        this.dateOfBirthIsEstimated =
+            false;
+
+        this.age =
+            this.calculateAge(
+                this.dateOfBirth
+            );
+    }
+
+
+    private calculateAge(
+        dateOfBirth: string
+    ): number | null {
+
+        if (!dateOfBirth) {
+            return null;
+        }
+
+        const birthDate =
+            new Date(
+                `${dateOfBirth}T00:00:00`
+            );
+
+        const today = new Date();
+
+        if (
+            Number.isNaN(
+                birthDate.getTime()
+            ) ||
+            birthDate > today
+        ) {
+            return null;
+        }
+
+        let age =
+            today.getFullYear() -
+            birthDate.getFullYear();
+
+        const monthDifference =
+            today.getMonth() -
+            birthDate.getMonth();
+
+        if (
+            monthDifference < 0 ||
+            (
+                monthDifference === 0 &&
+                today.getDate() <
+                    birthDate.getDate()
+            )
+        ) {
+            age -= 1;
+        }
+
+        return age >= 1 && age <= 120
+            ? age
+            : null;
+    }
+
+
+    private inferDateOfBirth(
+        age: number
+    ): string {
+
+        const inferred = new Date();
+
+        inferred.setFullYear(
+            inferred.getFullYear() - age
+        );
+
+        return this.toDateInputValue(
+            inferred
+        );
+    }
+
+
+    private toDateInputValue(
+        date: Date
+    ): string {
+
+        const year =
+            date.getFullYear();
+
+        const month = String(
+            date.getMonth() + 1
+        ).padStart(2, '0');
+
+        const day = String(
+            date.getDate()
+        ).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    }
+
+
+    private getLatestDateOfBirth(): string {
+
+        const latestDate = new Date();
+
+        latestDate.setDate(
+            latestDate.getDate() - 1
+        );
+
+        return this.toDateInputValue(
+            latestDate
+        );
+    }
+
     onSubmit() {
 
         this.errorMessage = '';
@@ -332,8 +459,15 @@ implements OnInit {
 
         if (
             !this.currentUser ||
-            this.age === null
+            this.age === null ||
+            !this.dateOfBirth
         ) {
+
+            this.errorMessage =
+                'Please select a valid date of birth. Age must be at least 1.';
+
+            this.cdr.markForCheck();
+
             return;
         }
 
@@ -353,6 +487,9 @@ implements OnInit {
 
                     age:
                         this.age,
+
+                    dateOfBirth:
+                        this.dateOfBirth,
 
                     /*
                      * Do not send the local Base64

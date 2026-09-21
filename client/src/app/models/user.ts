@@ -5,6 +5,7 @@ export interface User {
     username: string;
     email: string;
     age: number;
+    dateOfBirth?: string;
     profilePicture: string;
     systemRole: 'user' | 'superAdmin';
     createdAt: string;

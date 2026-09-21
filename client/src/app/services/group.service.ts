@@ -111,4 +111,18 @@ resignAdmin(
         }
     );
 }
+
+leaveGroup(
+    groupId: string,
+    userId: string
+) {
+    return this.http.post<{
+        message: string;
+    }>(
+        `${this.apiUrl}/${groupId}/leave`,
+        {
+            userId
+        }
+    );
+}
 }

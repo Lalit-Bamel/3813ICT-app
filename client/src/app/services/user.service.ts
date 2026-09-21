@@ -9,6 +9,7 @@ interface ProfileUpdate {
     lastName: string;
     username: string;
     age: number;
+    dateOfBirth: string;
     profilePicture: string;
     newPassword?: string;
 }

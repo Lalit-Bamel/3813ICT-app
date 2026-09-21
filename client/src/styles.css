@@ -839,3 +839,608 @@ strong {
     }
 
 }
+/* =========================================================
+   LIGHT UI / UX POLISH
+   ========================================================= */
+
+/* Page background */
+body {
+    background: #f3f6fb;
+}
+
+
+/* Main content cards */
+main {
+    border: 1px solid #e7ebf2;
+
+    box-shadow:
+        0 6px 22px
+        rgba(15, 23, 42, 0.07);
+}
+
+
+/* Headings */
+h1 {
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    margin-bottom: 14px;
+}
+
+
+/* Inputs */
+input,
+textarea,
+select {
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+
+input:hover,
+textarea:hover,
+select:hover {
+    border-color: #9ca3af;
+}
+
+
+/* Better keyboard accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.25);
+    outline-offset: 2px;
+}
+
+
+/* Buttons */
+button {
+    border-radius: 8px;
+
+    box-shadow:
+        0 2px 5px
+        rgba(37, 99, 235, 0.12);
+
+    transition:
+        background 0.15s ease,
+        transform 0.12s ease,
+        box-shadow 0.15s ease;
+}
+
+
+button:hover {
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 4px 10px
+        rgba(37, 99, 235, 0.18);
+}
+
+
+button:active {
+    transform: translateY(0);
+}
+
+
+/* Shared cards */
+.group-card,
+.request-card,
+.admin-section,
+.member-row,
+.composer {
+    border-color: #e2e8f0;
+
+    border-radius: 12px;
+
+    box-shadow:
+        0 2px 8px
+        rgba(15, 23, 42, 0.05);
+}
+
+
+.group-card:hover,
+.request-card:hover {
+    border-color: #93c5fd;
+
+    box-shadow:
+        0 5px 14px
+        rgba(15, 23, 42, 0.08);
+}
+
+
+/* Success / error */
+.success,
+.error {
+    margin-top: 14px;
+}
+
+
+/* Back links */
+main > a:first-child {
+    display: inline-block;
+
+    margin-bottom: 8px;
+}
+
+
+/* Chat */
+.messages {
+    border-radius: 12px;
+}
+
+
+.message {
+    transition:
+        background 0.15s ease;
+}
+
+
+.message:hover {
+    background: #f8fafc;
+}
+
+
+.chat-image,
+.image-preview img {
+    border: 1px solid #e5e7eb;
+
+    box-shadow:
+        0 3px 10px
+        rgba(15, 23, 42, 0.06);
+}
+
+
+/* Profile image */
+.profile-picture img,
+.picture-placeholder {
+    border: 3px solid white;
+
+    box-shadow:
+        0 3px 12px
+        rgba(15, 23, 42, 0.12);
+}
+
+
+/* Mobile spacing */
+@media (max-width: 700px) {
+
+    main {
+        border-radius: 10px;
+    }
+
+    button {
+        min-height: 42px;
+    }
+
+}
+/* =========================================================
+   FABULARI — VISIBLE UI POLISH
+   ========================================================= */
+
+
+/* Slightly stronger page background */
+body {
+    background:
+        linear-gradient(
+            180deg,
+            #eef3fa 0%,
+            #f7f9fc 100%
+        );
+}
+
+
+/* Main page container */
+main {
+    border: 1px solid #dfe5ee;
+
+    border-radius: 16px;
+
+    box-shadow:
+        0 10px 30px
+        rgba(15, 23, 42, 0.08);
+}
+
+
+/* Main page headings */
+main h1 {
+    color: #172033;
+
+    font-size: 2rem;
+
+    margin-bottom: 24px;
+}
+
+
+main h2 {
+    color: #1f2937;
+
+    font-size: 1.45rem;
+
+    margin-top: 34px;
+}
+
+
+/* =========================================================
+   GROUP / REQUEST CARDS
+   ========================================================= */
+
+.group-card,
+.request-card,
+.admin-section,
+.member-row {
+    background: #ffffff;
+
+    border:
+        1px solid #dde4ee;
+
+    border-left:
+        4px solid #2563eb;
+
+    border-radius:
+        12px;
+
+    padding:
+        20px;
+
+    box-shadow:
+        0 3px 12px
+        rgba(15, 23, 42, 0.06);
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
+}
+
+
+.group-card:hover,
+.request-card:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 8px 20px
+        rgba(15, 23, 42, 0.10);
+
+    border-left-color:
+        #7c3aed;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+main a {
+    font-weight: 650;
+}
+
+
+main a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
+button {
+    min-height: 38px;
+
+    padding:
+        9px 16px;
+
+    border-radius:
+        9px;
+
+    font-weight:
+        700;
+
+    box-shadow:
+        0 3px 8px
+        rgba(37, 99, 235, 0.18);
+}
+
+
+button:hover {
+    transform:
+        translateY(-1px);
+
+    box-shadow:
+        0 6px 14px
+        rgba(37, 99, 235, 0.23);
+}
+
+
+/* =========================================================
+   INPUTS
+   ========================================================= */
+
+input,
+textarea,
+select {
+    border:
+        1px solid #cbd5e1;
+
+    border-radius:
+        9px;
+
+    background:
+        #fbfdff;
+}
+
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color:
+        #2563eb;
+
+    background:
+        white;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(37, 99, 235, 0.10);
+
+    outline:
+        none;
+}
+
+
+/* =========================================================
+   CHAT
+   ========================================================= */
+
+.messages {
+    background:
+        #f8fafc;
+
+    border:
+        1px solid #dde4ee;
+
+    border-radius:
+        12px;
+
+    padding:
+        20px;
+}
+
+
+.message {
+    background:
+        white;
+
+    border:
+        1px solid #e2e8f0;
+
+    border-radius:
+        10px;
+
+    padding:
+        14px;
+
+    margin-bottom:
+        10px;
+}
+
+
+.composer {
+    background:
+        linear-gradient(
+            180deg,
+            #ffffff,
+            #f8fafc
+        );
+
+    border:
+        1px solid #dde4ee;
+
+    border-radius:
+        14px;
+
+    padding:
+        22px;
+
+    box-shadow:
+        0 4px 12px
+        rgba(15, 23, 42, 0.05);
+}
+
+
+/* Send Image / Send GIF sections */
+.chat-page section {
+    border-radius:
+        12px;
+}
+
+
+/* =========================================================
+   MEMBER ROWS
+   ========================================================= */
+
+.member-row {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        space-between;
+
+    gap:
+        16px;
+}
+
+
+.member-row strong {
+    color:
+        #172033;
+}
+
+
+/* =========================================================
+   SECTION SEPARATION
+   ========================================================= */
+
+main section + section {
+    margin-top:
+        30px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    main {
+        padding:
+            20px;
+
+        border-radius:
+            12px;
+    }
+
+
+    .group-card,
+    .request-card,
+    .admin-section,
+    .member-row,
+    .composer {
+        padding:
+            16px;
+    }
+
+
+    .member-row {
+        align-items:
+            flex-start;
+
+        flex-direction:
+            column;
+    }
+
+}
+
+
+/* =========================================================
+   GROUP THEMES
+   The saved group theme is applied to group cards and every
+   page inside that group. The classes deliberately use CSS
+   variables so existing component layout remains unchanged.
+   ========================================================= */
+
+.theme-default {
+    --group-surface: #ffffff;
+    --group-surface-muted: #f8fafc;
+    --group-text: #172033;
+    --group-muted-text: #475569;
+    --group-border: #cbd5e1;
+    --group-accent: #2563eb;
+}
+
+.theme-blue {
+    --group-surface: #eff6ff;
+    --group-surface-muted: #dbeafe;
+    --group-text: #172554;
+    --group-muted-text: #1e40af;
+    --group-border: #60a5fa;
+    --group-accent: #1d4ed8;
+}
+
+.theme-dark {
+    --group-surface: #1f2937;
+    --group-surface-muted: #111827;
+    --group-text: #f8fafc;
+    --group-muted-text: #cbd5e1;
+    --group-border: #475569;
+    --group-accent: #93c5fd;
+}
+
+.group-card.theme-default,
+.group-card.theme-blue,
+.group-card.theme-dark,
+main.theme-default,
+main.theme-blue,
+main.theme-dark {
+    background: var(--group-surface);
+    border-color: var(--group-border);
+    color: var(--group-text);
+}
+
+.group-card.theme-default,
+.group-card.theme-blue,
+.group-card.theme-dark {
+    border-left: 5px solid var(--group-accent);
+}
+
+main.theme-default section,
+main.theme-blue section,
+main.theme-dark section,
+main.theme-default .admin-section,
+main.theme-blue .admin-section,
+main.theme-dark .admin-section,
+main.theme-default .messages,
+main.theme-blue .messages,
+main.theme-dark .messages,
+main.theme-default .composer,
+main.theme-blue .composer,
+main.theme-dark .composer {
+    background: var(--group-surface-muted);
+    border-color: var(--group-border);
+    color: var(--group-text);
+}
+
+.theme-default h1,
+.theme-default h2,
+.theme-default h3,
+.theme-default strong,
+.theme-blue h1,
+.theme-blue h2,
+.theme-blue h3,
+.theme-blue strong,
+.theme-dark h1,
+.theme-dark h2,
+.theme-dark h3,
+.theme-dark strong {
+    color: var(--group-text);
+}
+
+.theme-default small,
+.theme-blue small,
+.theme-dark small {
+    color: var(--group-muted-text);
+}
+
+.theme-default a,
+.theme-blue a,
+.theme-dark a {
+    color: var(--group-accent);
+}
+
+.theme-dark input,
+.theme-dark textarea,
+.theme-dark select,
+.theme-dark .message,
+.theme-dark .member-row,
+.theme-dark .request-card {
+    background: #273449;
+    border-color: var(--group-border);
+    color: var(--group-text);
+}
+
+.action-message {
+    margin: 8px 0 0;
+}
+
+.danger-button {
+    background: #b91c1c;
+}

@@ -20,6 +20,19 @@ function createAuditLog(type, actorId, targetId, details) {
     };
 }
 
+function emitGroupEvent(req, groupId, eventName, details = {}) {
+
+    const io = req.app.get("io");
+
+    io?.to(`group:${groupId}`).emit(
+        eventName,
+        {
+            groupId,
+            ...details
+        }
+    );
+}
+
 async function enrichRequests(requests, usersCollection, groupsCollection) {
     const userIds = [...new Set(
         requests.flatMap(request => [
@@ -109,6 +122,12 @@ router.post("/group-creation", async function(req, res) {
         if (!Number.isInteger(numericAge) || numericAge < 0) {
             return res.status(400).json({
                 message: "A valid minimum age is required."
+            });
+        }
+
+        if (!["default", "dark", "blue"].includes(theme)) {
+            return res.status(400).json({
+                message: "Theme must be default, dark or blue."
             });
         }
 
@@ -265,6 +284,12 @@ router.post("/join", async function(req, res) {
         await requestsCollection.insertOne(request);
         delete request._id;
 
+        emitGroupEvent(
+            req,
+            group.id,
+            "groupRequestsChanged"
+        );
+
         return res.status(201).json({
             message: "Join request submitted.",
             request
@@ -349,6 +374,12 @@ router.post("/room-creation", async function(req, res) {
 
         await requestsCollection.insertOne(request);
         delete request._id;
+
+        emitGroupEvent(
+            req,
+            group.id,
+            "groupRequestsChanged"
+        );
 
         return res.status(201).json({
             message: "Room creation request submitted.",
@@ -442,6 +473,12 @@ router.post("/group-ban", async function(req, res) {
 
         await requestsCollection.insertOne(request);
         delete request._id;
+
+        emitGroupEvent(
+            req,
+            group.id,
+            "groupRequestsChanged"
+        );
 
         return res.status(201).json({
             message: "Group ban request submitted.",
@@ -948,6 +985,12 @@ router.put("/:requestId", async function(req, res) {
                 });
             }
 
+            if (actorId === request.targetUserId) {
+                return res.status(403).json({
+                    message: "You cannot action a ban request made against you. Another Group Administrator must action it."
+                });
+            }
+
             if (status === "approved") {
                 const targetUserId = request.targetUserId;
 
@@ -1169,6 +1212,62 @@ router.put("/:requestId", async function(req, res) {
         }
 
         await auditLogsCollection.insertMany(auditLogs);
+
+        if (request.targetGroupId) {
+            emitGroupEvent(
+                req,
+                request.targetGroupId,
+                "groupRequestsChanged"
+            );
+        }
+
+        if (
+            status === "approved" &&
+            request.type === "joinGroup"
+        ) {
+            emitGroupEvent(
+                req,
+                request.targetGroupId,
+                "groupMembersChanged"
+            );
+
+            const io = req.app.get("io");
+
+            io?.to(
+                `user:${request.requesterId}`
+            ).emit(
+                "groupMembershipChanged",
+                {
+                    groupId:
+                        request.targetGroupId,
+                    userId:
+                        request.requesterId,
+                    action: "joined"
+                }
+            );
+        }
+
+        if (
+            status === "approved" &&
+            request.type === "groupBan"
+        ) {
+            emitGroupEvent(
+                req,
+                request.targetGroupId,
+                "groupMembersChanged"
+            );
+
+            emitGroupEvent(
+                req,
+                request.targetGroupId,
+                "groupAccessRevoked",
+                {
+                    userId:
+                        request.targetUserId,
+                    reason: "banned"
+                }
+            );
+        }
 
         return res.json({
             message: `Request ${status} successfully.`,

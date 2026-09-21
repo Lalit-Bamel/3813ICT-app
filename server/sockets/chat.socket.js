@@ -34,6 +34,178 @@ function initialiseChatSocket(httpServer) {
 
 
             // ==========================================
+            // SUBSCRIBE TO USER-SPECIFIC UPDATES
+            // ==========================================
+
+            socket.on(
+                "subscribeToUser",
+                async function (
+                    payload,
+                    callback
+                ) {
+
+                    try {
+
+                        const userId =
+                            payload?.userId;
+
+                        if (!userId) {
+                            return callback?.({
+                                success: false,
+                                message:
+                                    "User is required."
+                            });
+                        }
+
+                        const user =
+                            await getDb()
+                                .collection("users")
+                                .findOne({ id: userId });
+
+                        if (!user) {
+                            return callback?.({
+                                success: false,
+                                message:
+                                    "User could not be verified."
+                            });
+                        }
+
+                        socket.join(
+                            `user:${userId}`
+                        );
+
+                        return callback?.({
+                            success: true,
+                            message:
+                                "Subscribed to user updates."
+                        });
+
+                    } catch (error) {
+
+                        console.error(
+                            "User subscription error:",
+                            error
+                        );
+
+                        return callback?.({
+                            success: false,
+                            message:
+                                "Unable to subscribe to user updates."
+                        });
+                    }
+                }
+            );
+
+
+            socket.on(
+                "unsubscribeFromUser",
+                function (payload) {
+
+                    if (payload?.userId) {
+                        socket.leave(
+                            `user:${payload.userId}`
+                        );
+                    }
+                }
+            );
+
+
+            // ==========================================
+            // SUBSCRIBE TO GROUP UPDATES
+            // ==========================================
+
+            socket.on(
+                "subscribeToGroup",
+                async function (
+                    payload,
+                    callback
+                ) {
+
+                    try {
+
+                        const {
+                            groupId,
+                            userId
+                        } = payload || {};
+
+                        if (!groupId || !userId) {
+                            return callback?.({
+                                success: false,
+                                message:
+                                    "Group and user are required."
+                            });
+                        }
+
+                        const db = getDb();
+
+                        const [group, user] =
+                            await Promise.all([
+                                db.collection("groups")
+                                    .findOne({ id: groupId }),
+                                db.collection("users")
+                                    .findOne({ id: userId })
+                            ]);
+
+                        if (!group || !user) {
+                            return callback?.({
+                                success: false,
+                                message:
+                                    "Group membership could not be verified."
+                            });
+                        }
+
+                        if (
+                            !group.memberIds.includes(userId) ||
+                            group.bannedUserIds.includes(userId)
+                        ) {
+                            return callback?.({
+                                success: false,
+                                message:
+                                    "You are not a member of this group."
+                            });
+                        }
+
+                        socket.join(
+                            `group:${groupId}`
+                        );
+
+                        return callback?.({
+                            success: true,
+                            message:
+                                "Subscribed to group updates."
+                        });
+
+                    } catch (error) {
+
+                        console.error(
+                            "Group subscription error:",
+                            error
+                        );
+
+                        return callback?.({
+                            success: false,
+                            message:
+                                "Unable to subscribe to group updates."
+                        });
+                    }
+                }
+            );
+
+
+            socket.on(
+                "unsubscribeFromGroup",
+                function (payload) {
+
+                    if (payload?.groupId) {
+                        socket.leave(
+                            `group:${payload.groupId}`
+                        );
+                    }
+                }
+            );
+
+
+            // ==========================================
             // JOIN CHAT ROOM
             // ==========================================
 

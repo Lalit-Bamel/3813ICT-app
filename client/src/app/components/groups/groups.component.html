@@ -37,6 +37,13 @@
         Request New Group
     </button>
 
+    <p
+        class="success"
+        *ngIf="groupRequestSuccess"
+    >
+        {{ groupRequestSuccess }}
+    </p>
+
 
     <form
         *ngIf="showGroupRequestForm"
@@ -107,22 +114,21 @@
             Submit Request
         </button>
 
+        <p
+            class="error action-message"
+            *ngIf="groupRequestError"
+        >
+            {{ groupRequestError }}
+        </p>
+
     </form>
 
 
     <p
-        class="success"
-        *ngIf="successMessage"
-    >
-        {{ successMessage }}
-    </p>
-
-
-    <p
         class="error"
-        *ngIf="errorMessage"
+        *ngIf="pageError"
     >
-        {{ errorMessage }}
+        {{ pageError }}
     </p>
 
 
@@ -135,6 +141,7 @@
 
     <div
         class="group-card"
+        [ngClass]="'theme-' + (group.theme || 'default')"
         *ngFor="let group of filteredGroups"
     >
 
@@ -206,6 +213,7 @@
 
     <div
         class="group-card"
+        [ngClass]="'theme-' + (group.theme || 'default')"
         *ngFor="let group of filteredGroups"
     >
 
@@ -234,6 +242,15 @@
             >
                 Request to Join
             </button>
+
+            <p
+                *ngIf="joinMessages[group.id] as feedback"
+                class="action-message"
+                [class.success]="feedback.type === 'success'"
+                [class.error]="feedback.type === 'error'"
+            >
+                {{ feedback.message }}
+            </p>
 
         </ng-container>
 

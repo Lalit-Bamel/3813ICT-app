@@ -23,3 +23,20 @@
 .nav-links button {
     cursor: pointer;
 }
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+
+    text-decoration: none;
+}
+
+
+.navbar-logo {
+    display: block;
+
+    width: 125px;
+    height: 58px;
+
+    object-fit: contain;
+}

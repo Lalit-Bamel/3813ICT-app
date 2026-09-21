@@ -2,12 +2,16 @@ import {
     ChangeDetectorRef,
     Component,
     inject,
+    OnDestroy,
     OnInit
 } from '@angular/core';
 
 import {
     CommonModule
 } from '@angular/common';
+import {
+    Subscription
+} from 'rxjs';
 
 import {
     FormsModule
@@ -30,6 +34,9 @@ import {
 import {
     RequestService
 } from '../../services/request.service';
+import {
+    SocketService
+} from '../../services/socket.service';
 
 import {
     Group,
@@ -62,7 +69,7 @@ import {
         './group-admin.component.css'
 })
 export class GroupAdminComponent
-implements OnInit {
+implements OnInit, OnDestroy {
 
     private route =
         inject(ActivatedRoute);
@@ -79,8 +86,14 @@ implements OnInit {
     private requestService =
         inject(RequestService);
 
+    private socketService =
+        inject(SocketService);
+
     private cdr =
         inject(ChangeDetectorRef);
+
+    private groupSubscriptions:
+        Subscription[] = [];
 
 
     currentUser =
@@ -124,7 +137,15 @@ implements OnInit {
 
     successMessage = '';
 
-    errorMessage = '';
+    pageError = '';
+    editError = '';
+    resignError = '';
+    systemBanError = '';
+    groupDeletionError = '';
+    memberErrors:
+        Record<string, string> = {};
+    requestErrors:
+        Record<string, string> = {};
 
 
     ngOnInit() {
@@ -145,6 +166,79 @@ implements OnInit {
         this.loadRequests(groupId);
 
         this.loadMembers(groupId);
+
+        this.subscribeToGroupUpdates(
+            groupId
+        );
+    }
+
+    ngOnDestroy() {
+
+        for (
+            const subscription
+            of this.groupSubscriptions
+        ) {
+            subscription.unsubscribe();
+        }
+
+        if (this.group) {
+            this.socketService
+                .unsubscribeFromGroup(
+                    this.group.id
+                );
+        }
+    }
+
+    private subscribeToGroupUpdates(
+        groupId: string
+    ) {
+
+        const user = this.currentUser();
+
+        if (!user) {
+            return;
+        }
+
+        this.socketService
+            .subscribeToGroup(
+                groupId,
+                user.id
+            );
+
+        this.groupSubscriptions.push(
+            this.socketService
+                .onGroupRequestsChanged()
+                .subscribe(event => {
+
+                    if (event.groupId === groupId) {
+                        this.loadRequests(groupId);
+                    }
+                }),
+
+            this.socketService
+                .onGroupMembersChanged()
+                .subscribe(event => {
+
+                    if (event.groupId === groupId) {
+                        this.loadGroup(groupId);
+                        this.loadMembers(groupId);
+                    }
+                }),
+
+            this.socketService
+                .onGroupAccessRevoked()
+                .subscribe(event => {
+
+                    if (
+                        event.groupId === groupId &&
+                        event.userId === user.id
+                    ) {
+                        this.router.navigate([
+                            '/groups'
+                        ]);
+                    }
+                })
+        );
     }
 
 
@@ -155,6 +249,24 @@ implements OnInit {
             .subscribe({
 
                 next: group => {
+
+                    const user =
+                        this.currentUser();
+
+                    if (
+                        user &&
+                        !group.adminIds.includes(
+                            user.id
+                        )
+                    ) {
+                        this.router.navigate(
+                            group.memberIds.includes(user.id)
+                                ? ['/groups', group.id]
+                                : ['/groups']
+                        );
+
+                        return;
+                    }
 
                     this.group = group;
 
@@ -175,7 +287,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load group.';
 
@@ -200,7 +312,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load members.';
 
@@ -238,7 +350,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load requests.';
 
@@ -263,7 +375,7 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
+        this.editError = '';
         this.successMessage = '';
 
 
@@ -305,7 +417,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.editError =
                         error.error?.message ||
                         'Unable to update group.';
 
@@ -337,6 +449,10 @@ implements OnInit {
             return;
         }
 
+        delete this.memberErrors[
+            member.id
+        ];
+
 
         this.groupService
             .promoteAdmin(
@@ -360,7 +476,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.memberErrors[
+                        member.id
+                    ] =
                         error.error?.message ||
                         'Unable to promote member.';
 
@@ -391,6 +509,10 @@ implements OnInit {
             return;
         }
 
+        delete this.memberErrors[
+            member.id
+        ];
+
 
         this.groupService
             .demoteAdmin(
@@ -414,7 +536,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.memberErrors[
+                        member.id
+                    ] =
                         error.error?.message ||
                         'Unable to demote administrator.';
 
@@ -445,6 +569,8 @@ implements OnInit {
             return;
         }
 
+        this.resignError = '';
+
 
         this.groupService
             .resignAdmin(
@@ -463,7 +589,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.resignError =
                         error.error?.message ||
                         'Unable to resign.';
 
@@ -482,7 +608,7 @@ implements OnInit {
 
         this.systemBanReason = '';
 
-        this.errorMessage = '';
+        this.systemBanError = '';
         this.successMessage = '';
 
         this.cdr.markForCheck();
@@ -495,6 +621,8 @@ implements OnInit {
             null;
 
         this.systemBanReason = '';
+
+        this.systemBanError = '';
 
         this.cdr.markForCheck();
     }
@@ -515,7 +643,7 @@ implements OnInit {
 
         if (!this.systemBanReason.trim()) {
 
-            this.errorMessage =
+            this.systemBanError =
                 'Please enter a reason for the system ban request.';
 
             this.cdr.markForCheck();
@@ -548,7 +676,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.systemBanError =
                         error.error?.message ||
                         'Unable to submit system ban request.';
 
@@ -565,7 +693,7 @@ implements OnInit {
 
         this.groupDeletionReason = '';
 
-        this.errorMessage = '';
+        this.groupDeletionError = '';
         this.successMessage = '';
 
         this.cdr.markForCheck();
@@ -578,6 +706,8 @@ implements OnInit {
             false;
 
         this.groupDeletionReason = '';
+
+        this.groupDeletionError = '';
 
         this.cdr.markForCheck();
     }
@@ -599,7 +729,7 @@ implements OnInit {
                 .trim()
         ) {
 
-            this.errorMessage =
+            this.groupDeletionError =
                 'Please enter a reason for deleting the group.';
 
             this.cdr.markForCheck();
@@ -632,7 +762,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.groupDeletionError =
                         error.error?.message ||
                         'Unable to submit group deletion request.';
 
@@ -657,7 +787,10 @@ implements OnInit {
 
         if (
             request.type === 'groupBan' &&
-            request.requesterId === user.id
+            (
+                request.requesterId === user.id ||
+                request.targetUserId === user.id
+            )
         ) {
             return false;
         }
@@ -678,7 +811,9 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
+        delete this.requestErrors[
+            request.id
+        ];
         this.successMessage = '';
 
 
@@ -712,7 +847,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.requestErrors[
+                        request.id
+                    ] =
                         error.error?.message ||
                         'Unable to approve request.';
 
@@ -731,7 +868,9 @@ implements OnInit {
 
         this.rejectionReason = '';
 
-        this.errorMessage = '';
+        delete this.requestErrors[
+            request.id
+        ];
         this.successMessage = '';
 
         this.cdr.markForCheck();
@@ -766,7 +905,9 @@ implements OnInit {
             !this.rejectionReason.trim()
         ) {
 
-            this.errorMessage =
+            this.requestErrors[
+                request.id
+            ] =
                 'Please enter a rejection reason.';
 
             this.cdr.markForCheck();
@@ -803,7 +944,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.requestErrors[
+                        request.id
+                    ] =
                         error.error?.message ||
                         'Unable to reject request.';
 

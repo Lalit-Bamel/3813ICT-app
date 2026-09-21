@@ -26,6 +26,51 @@ function escapeRegex(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/**
+ * Validates a calendar date and returns the age calculated on the server.
+ * Keeping this calculation on the server prevents a client from submitting
+ * an arbitrary age that does not match the selected date of birth.
+ */
+function getAgeFromDateOfBirth(value) {
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value || "")) {
+        return null;
+    }
+
+    const [year, month, day] =
+        value.split("-").map(Number);
+
+    const birthDate =
+        new Date(Date.UTC(year, month - 1, day));
+
+    if (
+        birthDate.getUTCFullYear() !== year ||
+        birthDate.getUTCMonth() !== month - 1 ||
+        birthDate.getUTCDate() !== day
+    ) {
+        return null;
+    }
+
+    const today = new Date();
+    let age = today.getUTCFullYear() - year;
+
+    if (
+        today.getUTCMonth() < month - 1 ||
+        (
+            today.getUTCMonth() === month - 1 &&
+            today.getUTCDate() < day
+        )
+    ) {
+        age -= 1;
+    }
+
+    if (birthDate > today || age < 1 || age > 120) {
+        return null;
+    }
+
+    return age;
+}
+
 
 // ==================================================
 // GET OWN PROFILE
@@ -85,6 +130,7 @@ router.put("/:userId", async function (req, res) {
             lastName,
             username,
             age,
+            dateOfBirth,
             profilePicture,
             newPassword
         } = req.body;
@@ -93,7 +139,10 @@ router.put("/:userId", async function (req, res) {
             !firstName ||
             !lastName ||
             !username ||
-            age === undefined
+            (
+                dateOfBirth === undefined &&
+                age === undefined
+            )
         ) {
             return res.status(400).json({
                 message:
@@ -110,8 +159,10 @@ router.put("/:userId", async function (req, res) {
         const cleanUsername =
             username.trim();
 
-        const numericAge =
-            Number(age);
+        const derivedAge =
+            dateOfBirth !== undefined
+                ? getAgeFromDateOfBirth(dateOfBirth)
+                : Number(age);
 
         if (
             !cleanFirstName ||
@@ -125,12 +176,12 @@ router.put("/:userId", async function (req, res) {
         }
 
         if (
-            !Number.isInteger(numericAge) ||
-            numericAge < 0
+            !Number.isInteger(derivedAge) ||
+            derivedAge < 1
         ) {
             return res.status(400).json({
                 message:
-                    "A valid age is required."
+                    "Date of birth must produce an age of at least 1."
             });
         }
 
@@ -139,6 +190,9 @@ router.put("/:userId", async function (req, res) {
 
         const usersCollection =
             db.collection("users");
+
+        const groupsCollection =
+            db.collection("groups");
 
         const user =
             await usersCollection.findOne({
@@ -183,6 +237,47 @@ router.put("/:userId", async function (req, res) {
             });
         }
 
+        let ineligibleGroups = [];
+
+        if (derivedAge !== user.age) {
+
+            ineligibleGroups =
+                await groupsCollection
+                    .find(
+                        {
+                            memberIds: user.id,
+                            minimumAge: {
+                                $gt: derivedAge
+                            }
+                        },
+                        {
+                            projection: {
+                                _id: 0,
+                                id: 1,
+                                title: 1,
+                                adminIds: 1
+                            }
+                        }
+                    )
+                    .toArray();
+
+            const soleAdminGroup =
+                ineligibleGroups.find(
+                    group =>
+                        (group.adminIds || []).includes(
+                            user.id
+                        ) &&
+                        (group.adminIds || []).length <= 1
+                );
+
+            if (soleAdminGroup) {
+                return res.status(409).json({
+                    message:
+                        `Date of birth cannot be changed because you are the only administrator of "${soleAdminGroup.title}". Promote another administrator first.`
+                });
+            }
+        }
+
         const updateFields = {
             firstName:
                 cleanFirstName,
@@ -191,8 +286,13 @@ router.put("/:userId", async function (req, res) {
             username:
                 cleanUsername,
             age:
-                numericAge
+                derivedAge
         };
+
+        if (dateOfBirth !== undefined) {
+            updateFields.dateOfBirth =
+                dateOfBirth;
+        }
 
         if (profilePicture !== undefined) {
             updateFields.profilePicture =
@@ -228,6 +328,56 @@ router.put("/:userId", async function (req, res) {
             }
         );
 
+        if (ineligibleGroups.length > 0) {
+
+            const ineligibleGroupIds =
+                ineligibleGroups.map(
+                    group => group.id
+                );
+
+            await groupsCollection.updateMany(
+                {
+                    id: {
+                        $in: ineligibleGroupIds
+                    }
+                },
+                {
+                    $pull: {
+                        memberIds: user.id,
+                        adminIds: user.id
+                    }
+                }
+            );
+
+            const io = req.app.get("io");
+
+            for (const group of ineligibleGroups) {
+
+                io?.to(`group:${group.id}`).emit(
+                    "groupMembersChanged",
+                    { groupId: group.id }
+                );
+
+                io?.to(`group:${group.id}`).emit(
+                    "groupAccessRevoked",
+                    {
+                        groupId: group.id,
+                        userId: user.id,
+                        reason: "ageRestriction"
+                    }
+                );
+
+                io?.to(`user:${user.id}`).emit(
+                    "groupMembershipChanged",
+                    {
+                        groupId: group.id,
+                        userId: user.id,
+                        action: "removed"
+                    }
+                );
+            }
+        }
+
         const updatedUser = {
             ...user,
             ...updateFields
@@ -235,9 +385,18 @@ router.put("/:userId", async function (req, res) {
 
         return res.json({
             message:
-                "Profile updated successfully.",
+                ineligibleGroups.length > 0
+                    ? `Profile updated. You were removed from ${ineligibleGroups.length} group(s) whose minimum age you no longer meet.`
+                    : "Profile updated successfully.",
             user:
-                getSafeUser(updatedUser)
+                getSafeUser(updatedUser),
+            removedFromGroups:
+                ineligibleGroups.map(
+                    group => ({
+                        id: group.id,
+                        title: group.title
+                    })
+                )
         });
 
     } catch (error) {

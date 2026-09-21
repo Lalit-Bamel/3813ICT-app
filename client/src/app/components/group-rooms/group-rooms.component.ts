@@ -2,6 +2,7 @@ import {
     ChangeDetectorRef,
     Component,
     inject,
+    OnDestroy,
     OnInit
 } from '@angular/core';
 
@@ -15,8 +16,12 @@ import {
 
 import {
     ActivatedRoute,
+    Router,
     RouterLink
 } from '@angular/router';
+import {
+    Subscription
+} from 'rxjs';
 
 import {
     AuthService
@@ -33,6 +38,9 @@ import {
 import {
     RequestService
 } from '../../services/request.service';
+import {
+    SocketService
+} from '../../services/socket.service';
 
 import {
     Group,
@@ -65,10 +73,12 @@ import {
         './group-rooms.component.css'
 })
 export class GroupRoomsComponent
-implements OnInit {
+implements OnInit, OnDestroy {
 
     private route =
         inject(ActivatedRoute);
+    private router =
+        inject(Router);
 
     private authService =
         inject(AuthService);
@@ -81,9 +91,13 @@ implements OnInit {
 
     private requestService =
         inject(RequestService);
+    private socketService =
+        inject(SocketService);
 
     private cdr =
         inject(ChangeDetectorRef);
+    private groupSubscriptions:
+        Subscription[] = [];
 
 
     currentUser =
@@ -121,12 +135,18 @@ implements OnInit {
         string | null = null;
 
     groupBanReason = '';
+    groupBanError = '';
+    leaveError = '';
+    pageError = '';
+    createRoomError = '';
+    proposeRoomError = '';
+    renameErrors:
+        Record<string, string> = {};
+    deleteErrors:
+        Record<string, string> = {};
 
 
     successMessage = '';
-
-    errorMessage = '';
-
 
     ngOnInit() {
 
@@ -151,6 +171,70 @@ implements OnInit {
 
         this.loadMembers(
             groupId
+        );
+
+        this.subscribeToGroupUpdates(
+            groupId
+        );
+    }
+
+    ngOnDestroy() {
+
+        for (
+            const subscription
+            of this.groupSubscriptions
+        ) {
+            subscription.unsubscribe();
+        }
+
+        if (this.group) {
+            this.socketService
+                .unsubscribeFromGroup(
+                    this.group.id
+                );
+        }
+    }
+
+    private subscribeToGroupUpdates(
+        groupId: string
+    ) {
+
+        const user = this.currentUser();
+
+        if (!user) {
+            return;
+        }
+
+        this.socketService
+            .subscribeToGroup(
+                groupId,
+                user.id
+            );
+
+        this.groupSubscriptions.push(
+            this.socketService
+                .onGroupMembersChanged()
+                .subscribe(event => {
+
+                    if (event.groupId === groupId) {
+                        this.loadGroup(groupId);
+                        this.loadMembers(groupId);
+                    }
+                }),
+
+            this.socketService
+                .onGroupAccessRevoked()
+                .subscribe(event => {
+
+                    if (
+                        event.groupId === groupId &&
+                        event.userId === user.id
+                    ) {
+                        this.router.navigate([
+                            '/groups'
+                        ]);
+                    }
+                })
         );
     }
 
@@ -179,7 +263,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load group.';
 
@@ -213,7 +297,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load rooms.';
 
@@ -247,7 +331,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load group members.';
 
@@ -307,16 +391,22 @@ implements OnInit {
             this.currentUser();
 
 
-        if (
-            !user ||
-            !this.group ||
-            !this.newRoomName.trim()
-        ) {
+        if (!user || !this.group) {
             return;
         }
 
 
-        this.errorMessage = '';
+        if (!this.newRoomName.trim()) {
+            this.createRoomError =
+                'Please enter a room name.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.createRoomError = '';
 
         this.successMessage = '';
 
@@ -346,7 +436,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.createRoomError =
                         error.error?.message ||
                         'Unable to create room.';
 
@@ -366,16 +456,22 @@ implements OnInit {
             this.currentUser();
 
 
-        if (
-            !user ||
-            !this.group ||
-            !this.proposedRoomName.trim()
-        ) {
+        if (!user || !this.group) {
             return;
         }
 
 
-        this.errorMessage = '';
+        if (!this.proposedRoomName.trim()) {
+            this.proposeRoomError =
+                'Please enter a room name.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        this.proposeRoomError = '';
 
         this.successMessage = '';
 
@@ -401,7 +497,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.proposeRoomError =
                         error.error?.message ||
                         'Unable to submit room proposal.';
 
@@ -425,7 +521,9 @@ implements OnInit {
         this.renameRoomName =
             room.name;
 
-        this.errorMessage = '';
+        delete this.renameErrors[
+            room.id
+        ];
 
         this.successMessage = '';
 
@@ -457,15 +555,25 @@ implements OnInit {
             this.currentUser();
 
 
-        if (
-            !user ||
-            !this.renameRoomName.trim()
-        ) {
+        if (!user) {
             return;
         }
 
 
-        this.errorMessage = '';
+        if (!this.renameRoomName.trim()) {
+            this.renameErrors[
+                room.id
+            ] = 'Please enter a room name.';
+
+            this.cdr.markForCheck();
+
+            return;
+        }
+
+
+        delete this.renameErrors[
+            room.id
+        ];
 
         this.successMessage = '';
 
@@ -502,7 +610,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.renameErrors[
+                        room.id
+                    ] =
                         error.error?.message ||
                         'Unable to rename room.';
 
@@ -543,7 +653,9 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
+        delete this.deleteErrors[
+            room.id
+        ];
 
         this.successMessage = '';
 
@@ -569,7 +681,9 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.deleteErrors[
+                        room.id
+                    ] =
                         error.error?.message ||
                         'Unable to delete room.';
 
@@ -593,8 +707,7 @@ implements OnInit {
         this.groupBanReason =
             '';
 
-        this.errorMessage =
-            '';
+        this.groupBanError = '';
 
         this.successMessage =
             '';
@@ -614,6 +727,8 @@ implements OnInit {
 
         this.groupBanReason =
             '';
+
+        this.groupBanError = '';
 
         this.cdr.markForCheck();
     }
@@ -644,7 +759,7 @@ implements OnInit {
                 .trim()
         ) {
 
-            this.errorMessage =
+            this.groupBanError =
                 'Please enter a reason for the ban request.';
 
             this.cdr.markForCheck();
@@ -653,8 +768,7 @@ implements OnInit {
         }
 
 
-        this.errorMessage =
-            '';
+        this.groupBanError = '';
 
         this.successMessage =
             '';
@@ -685,9 +799,53 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.groupBanError =
                         error.error?.message ||
                         'Unable to submit group ban request.';
+
+                    this.cdr.markForCheck();
+                }
+            });
+    }
+
+
+    // ==========================================
+    // LEAVE GROUP
+    // ==========================================
+
+    leaveGroup() {
+
+        const user = this.currentUser();
+
+        if (!user || !this.group) {
+            return;
+        }
+
+        if (!window.confirm(
+            `Leave ${this.group.title}?`
+        )) {
+            return;
+        }
+
+        this.leaveError = '';
+
+        this.groupService
+            .leaveGroup(
+                this.group.id,
+                user.id
+            )
+            .subscribe({
+
+                next: () => {
+                    this.router.navigate([
+                        '/groups'
+                    ]);
+                },
+
+                error: error => {
+                    this.leaveError =
+                        error.error?.message ||
+                        'Unable to leave group.';
 
                     this.cdr.markForCheck();
                 }

@@ -363,6 +363,105 @@ router.post(
 
 
 // ==================================================
+// MEMBER LEAVES GROUP
+// ==================================================
+
+router.post(
+    "/:groupId/leave",
+    async function (req, res) {
+
+        try {
+
+            const userId = req.body.userId;
+
+            if (!userId) {
+                return res.status(400).json({
+                    message:
+                        "User is required."
+                });
+            }
+
+            const db = getDb();
+            const groupsCollection =
+                db.collection("groups");
+
+            const group =
+                await groupsCollection.findOne({
+                    id: req.params.groupId
+                });
+
+            if (!group) {
+                return res.status(404).json({
+                    message:
+                        "Group not found."
+                });
+            }
+
+            if (!group.memberIds.includes(userId)) {
+                return res.status(409).json({
+                    message:
+                        "You are not a member of this group."
+                });
+            }
+
+            if (
+                group.adminIds.includes(userId) &&
+                group.adminIds.length <= 1
+            ) {
+                return res.status(409).json({
+                    message:
+                        "You are the only Group Administrator. Promote another member before leaving."
+                });
+            }
+
+            await groupsCollection.updateOne(
+                { id: group.id },
+                {
+                    $pull: {
+                        memberIds: userId,
+                        adminIds: userId
+                    }
+                }
+            );
+
+            const io = req.app.get("io");
+
+            io?.to(`group:${group.id}`).emit(
+                "groupMembersChanged",
+                { groupId: group.id }
+            );
+
+            io?.to(`group:${group.id}`).emit(
+                "groupAccessRevoked",
+                {
+                    groupId: group.id,
+                    userId,
+                    reason: "left"
+                }
+            );
+
+            return res.json({
+                message:
+                    "You have left the group."
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Leave group error:",
+                error
+            );
+
+            return res.status(500).json({
+                message:
+                    "Unable to leave group."
+            });
+        }
+    }
+);
+
+
+// ==================================================
 // PROMOTE MEMBER TO GROUP ADMIN
 // ==================================================
 
@@ -650,6 +749,16 @@ router.put(
                 return res.status(400).json({
                     message:
                         "A valid minimum age is required."
+                });
+            }
+
+            if (
+                !["default", "dark", "blue"]
+                    .includes(theme)
+            ) {
+                return res.status(400).json({
+                    message:
+                        "Theme must be default, dark or blue."
                 });
             }
 

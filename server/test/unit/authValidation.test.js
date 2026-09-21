@@ -284,6 +284,46 @@ describe(
 
 
         it(
+            "rejects age zero",
+            function () {
+
+                const result =
+                    validateRegistrationInput({
+                        firstName:
+                            "Lalit",
+
+                        lastName:
+                            "Bamel",
+
+                        username:
+                            "user3",
+
+                        email:
+                            "user3@example.com",
+
+                        age:
+                            0,
+
+                        password:
+                            "Password1"
+                    });
+
+
+                assert.strictEqual(
+                    result.valid,
+                    false
+                );
+
+
+                assert.strictEqual(
+                    result.status,
+                    400
+                );
+            }
+        );
+
+
+        it(
             "rejects a non-integer age",
             function () {
 

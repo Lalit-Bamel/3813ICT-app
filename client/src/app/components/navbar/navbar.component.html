@@ -1,8 +1,15 @@
 <nav class="navbar">
 
-    <div class="brand">
-        <strong>Fabulari</strong>
-    </div>
+<a
+    class="navbar-brand"
+    [routerLink]="isSuperAdmin ? ['/super-admin'] : ['/groups']"
+>
+    <img
+        src="/fabulari-logo.png"
+        alt="Fabulari - where communities meet"
+        class="navbar-logo"
+    >
+</a>
 
     <div class="nav-links">
 

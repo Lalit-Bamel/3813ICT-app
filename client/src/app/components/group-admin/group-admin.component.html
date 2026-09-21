@@ -1,7 +1,10 @@
 <app-navbar></app-navbar>
 
 
-<main class="admin-page">
+<main
+    class="admin-page"
+    [ngClass]="'theme-' + (group?.theme || 'default')"
+>
 
     <a routerLink="/groups">
         ← Back to Groups
@@ -22,10 +25,10 @@
 
 
     <p
-        *ngIf="errorMessage"
+        *ngIf="pageError"
         class="error"
     >
-        {{ errorMessage }}
+        {{ pageError }}
     </p>
 
 
@@ -89,6 +92,13 @@
         >
             Save Group Changes
         </button>
+
+        <p
+            class="error action-message"
+            *ngIf="editError"
+        >
+            {{ editError }}
+        </p>
 
     </section>
 
@@ -178,7 +188,21 @@
                         Cancel
                     </button>
 
+                    <p
+                        class="error action-message"
+                        *ngIf="systemBanError"
+                    >
+                        {{ systemBanError }}
+                    </p>
+
                 </div>
+
+                <p
+                    class="error action-message"
+                    *ngIf="memberErrors[member.id]"
+                >
+                    {{ memberErrors[member.id] }}
+                </p>
 
             </div>
 
@@ -190,6 +214,13 @@
         >
             Resign as Group Administrator
         </button>
+
+        <p
+            class="error action-message"
+            *ngIf="resignError"
+        >
+            {{ resignError }}
+        </p>
 
     </section>
 
@@ -246,6 +277,13 @@
             >
                 Cancel
             </button>
+
+            <p
+                class="error action-message"
+                *ngIf="groupDeletionError"
+            >
+                {{ groupDeletionError }}
+            </p>
 
         </div>
 
@@ -381,8 +419,16 @@
             <p
                 *ngIf="!canActionRequest(request)"
             >
-                Another Group Administrator
-                must action this request.
+                You cannot action a request you submitted
+                or a ban request made against you. Another
+                Group Administrator must action it.
+            </p>
+
+            <p
+                class="error action-message"
+                *ngIf="requestErrors[request.id]"
+            >
+                {{ requestErrors[request.id] }}
             </p>
 
         </div>

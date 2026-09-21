@@ -73,17 +73,28 @@
         >
 
 
-        <label for="age">
-            Age
+        <label for="dateOfBirth">
+            Date of Birth
         </label>
 
         <input
-            id="age"
-            name="age"
-            type="number"
-            [(ngModel)]="age"
+            id="dateOfBirth"
+            name="dateOfBirth"
+            type="date"
+            [(ngModel)]="dateOfBirth"
+            [max]="maxDateOfBirth"
+            (ngModelChange)="onDateOfBirthChanged()"
             required
         >
+
+        <small *ngIf="age !== null">
+            Calculated age: {{ age }}
+        </small>
+
+        <small *ngIf="dateOfBirthIsEstimated">
+            This date was estimated from your existing age.
+            Please select your exact date of birth before saving.
+        </small>
 
 
         <label for="email">

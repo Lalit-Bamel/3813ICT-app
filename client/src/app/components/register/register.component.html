@@ -1,6 +1,14 @@
 <div class="auth-page">
 
-    <h1><strong>FABULARI REGISTRATION</strong></h1>
+<div class="brand-header">
+
+    <img
+        src="/fabulari-logo.png"
+        alt="Fabulari - where communities meet"
+        class="fabulari-logo"
+    >
+
+</div>
 
     <div class="auth-card">
 
@@ -53,17 +61,32 @@
                 required
             >
 
-            <label for="age">
-                Age
-            </label>
+<label for="dateOfBirth">
+    Date of Birth
+</label>
 
-            <input
-                id="age"
-                name="age"
-                type="number"
-                [(ngModel)]="age"
-                required
-            >
+<input
+    id="dateOfBirth"
+    name="dateOfBirth"
+    type="date"
+    [(ngModel)]="dateOfBirth"
+    [max]="latestDateOfBirth"
+    (ngModelChange)="onDateOfBirthChange()"
+    required
+>
+
+<small>
+    Select your date of birth using the calendar.
+</small>
+
+<p
+    *ngIf="calculatedAge !== null"
+>
+    Age:
+    <strong>
+        {{ calculatedAge }}
+    </strong>
+</p>
 
             <label for="password">
                 Password

@@ -42,6 +42,25 @@ export interface SocketMessageDeletedEvent {
     messageId: string;
 }
 
+export interface SocketGroupEvent {
+    groupId: string;
+}
+
+export interface SocketGroupAccessRevokedEvent
+extends SocketGroupEvent {
+    userId: string;
+    reason:
+        'banned' |
+        'left' |
+        'ageRestriction';
+}
+
+export interface SocketGroupMembershipEvent
+extends SocketGroupEvent {
+    userId: string;
+    action: 'joined' | 'removed';
+}
+
 @Injectable({
     providedIn: 'root'
 })
@@ -81,6 +100,164 @@ export class SocketService {
         if (this.socket.connected) {
             this.socket.disconnect();
         }
+    }
+
+    subscribeToUser(
+        userId: string
+    ): Promise<SocketActionResult> {
+
+        this.connect();
+
+        return new Promise(
+            resolve => {
+
+                this.socket.emit(
+                    'subscribeToUser',
+                    { userId },
+                    (
+                        response:
+                            SocketActionResult
+                    ) => resolve(response)
+                );
+            }
+        );
+    }
+
+    unsubscribeFromUser(
+        userId: string
+    ): void {
+
+        this.socket.emit(
+            'unsubscribeFromUser',
+            { userId }
+        );
+    }
+
+    onGroupMembershipChanged():
+        Observable<SocketGroupMembershipEvent> {
+
+        return new Observable(
+            observer => {
+
+                const handler = (
+                    event:
+                        SocketGroupMembershipEvent
+                ) => observer.next(event);
+
+                this.socket.on(
+                    'groupMembershipChanged',
+                    handler
+                );
+
+                return () => this.socket.off(
+                    'groupMembershipChanged',
+                    handler
+                );
+            }
+        );
+    }
+
+    // ==================================================
+    // GROUP PAGE UPDATES
+    // ==================================================
+
+    subscribeToGroup(
+        groupId: string,
+        userId: string
+    ): Promise<SocketActionResult> {
+
+        this.connect();
+
+        return new Promise(
+            resolve => {
+
+                this.socket.emit(
+                    'subscribeToGroup',
+                    {
+                        groupId,
+                        userId
+                    },
+                    (
+                        response:
+                            SocketActionResult
+                    ) => resolve(response)
+                );
+            }
+        );
+    }
+
+    unsubscribeFromGroup(
+        groupId: string
+    ): void {
+
+        this.socket.emit(
+            'unsubscribeFromGroup',
+            { groupId }
+        );
+    }
+
+    onGroupMembersChanged():
+        Observable<SocketGroupEvent> {
+
+        return this.onGroupEvent(
+            'groupMembersChanged'
+        );
+    }
+
+    onGroupRequestsChanged():
+        Observable<SocketGroupEvent> {
+
+        return this.onGroupEvent(
+            'groupRequestsChanged'
+        );
+    }
+
+    onGroupAccessRevoked():
+        Observable<SocketGroupAccessRevokedEvent> {
+
+        return new Observable(
+            observer => {
+
+                const handler = (
+                    event:
+                        SocketGroupAccessRevokedEvent
+                ) => observer.next(event);
+
+                this.socket.on(
+                    'groupAccessRevoked',
+                    handler
+                );
+
+                return () => this.socket.off(
+                    'groupAccessRevoked',
+                    handler
+                );
+            }
+        );
+    }
+
+    private onGroupEvent(
+        eventName: string
+    ): Observable<SocketGroupEvent> {
+
+        return new Observable(
+            observer => {
+
+                const handler = (
+                    event: SocketGroupEvent
+                ) => observer.next(event);
+
+                this.socket.on(
+                    eventName,
+                    handler
+                );
+
+                return () => this.socket.off(
+                    eventName,
+                    handler
+                );
+            }
+        );
     }
 
 

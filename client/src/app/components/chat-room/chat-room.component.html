@@ -1,7 +1,10 @@
 <app-navbar></app-navbar>
 
 
-<main class="chat-page">
+<main
+    class="chat-page"
+    [ngClass]="'theme-' + (group?.theme || 'default')"
+>
 
     <!-- HEADER -->
 

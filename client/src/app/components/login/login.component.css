@@ -32,3 +32,42 @@ button {
 .error {
     color: red;
 }
+.brand-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    margin-bottom: 20px;
+}
+
+
+.fabulari-logo {
+    display: block;
+
+    width: 100%;
+    max-width: 340px;
+
+    height: auto;
+
+    object-fit: contain;
+}
+
+.auth-card {
+    border-radius: 12px;
+
+    background: white;
+
+    box-shadow:
+        0 5px 18px
+        rgba(15, 23, 42, 0.08);
+}
+
+
+.auth-card h2 {
+    margin-top: 0;
+}
+
+
+.auth-page {
+    padding-top: 10px;
+}

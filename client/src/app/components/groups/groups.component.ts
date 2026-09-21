@@ -2,6 +2,7 @@ import {
     ChangeDetectorRef,
     Component,
     inject,
+    OnDestroy,
     OnInit
 } from '@angular/core';
 
@@ -16,6 +17,9 @@ import {
 import {
     RouterLink
 } from '@angular/router';
+import {
+    Subscription
+} from 'rxjs';
 
 import {
     AuthService
@@ -28,6 +32,9 @@ import {
 import {
     RequestService
 } from '../../services/request.service';
+import {
+    SocketService
+} from '../../services/socket.service';
 
 import {
     Group
@@ -59,7 +66,7 @@ import {
         './groups.component.css'
 })
 export class GroupsComponent
-implements OnInit {
+implements OnInit, OnDestroy {
 
     private authService =
         inject(AuthService);
@@ -70,8 +77,14 @@ implements OnInit {
     private requestService =
         inject(RequestService);
 
+    private socketService =
+        inject(SocketService);
+
     private cdr =
         inject(ChangeDetectorRef);
+
+    private membershipSubscription:
+        Subscription | null = null;
 
 
     currentUser =
@@ -98,9 +111,19 @@ implements OnInit {
     requestTheme = 'default';
 
 
-    successMessage = '';
+    pageError = '';
 
-    errorMessage = '';
+    groupRequestSuccess = '';
+
+    groupRequestError = '';
+
+    joinMessages: Record<
+        string,
+        {
+            type: 'success' | 'error';
+            message: string;
+        }
+    > = {};
 
 
     ngOnInit() {
@@ -108,6 +131,40 @@ implements OnInit {
         this.loadGroups();
 
         this.loadRequestHistory();
+
+        const user = this.currentUser();
+
+        if (user) {
+            this.socketService
+                .subscribeToUser(user.id);
+
+            this.membershipSubscription =
+                this.socketService
+                    .onGroupMembershipChanged()
+                    .subscribe(event => {
+
+                        if (event.userId === user.id) {
+                            this.loadGroups();
+                            this.loadRequestHistory();
+                        }
+                    });
+        }
+    }
+
+
+    ngOnDestroy() {
+
+        this.membershipSubscription
+            ?.unsubscribe();
+
+        const user = this.currentUser();
+
+        if (user) {
+            this.socketService
+                .unsubscribeFromUser(
+                    user.id
+                );
+        }
     }
 
 
@@ -127,7 +184,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load groups.';
 
@@ -164,7 +221,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.pageError =
                         error.error?.message ||
                         'Unable to load request history.';
 
@@ -250,8 +307,9 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
-        this.successMessage = '';
+        delete this.joinMessages[
+            group.id
+        ];
 
 
         this.requestService
@@ -263,8 +321,13 @@ implements OnInit {
 
                 next: () => {
 
-                    this.successMessage =
-                        `Join request sent for ${group.title}.`;
+                    this.joinMessages[
+                        group.id
+                    ] = {
+                        type: 'success',
+                        message:
+                            `Join request sent for ${group.title}.`
+                    };
 
                     this.loadRequestHistory();
 
@@ -273,9 +336,14 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
-                        error.error?.message ||
-                        'Unable to request membership.';
+                    this.joinMessages[
+                        group.id
+                    ] = {
+                        type: 'error',
+                        message:
+                            error.error?.message ||
+                            'Unable to request membership.'
+                    };
 
                     this.cdr.markForCheck();
                 }
@@ -297,8 +365,8 @@ implements OnInit {
         }
 
 
-        this.errorMessage = '';
-        this.successMessage = '';
+        this.groupRequestError = '';
+        this.groupRequestSuccess = '';
 
 
         this.requestService
@@ -322,7 +390,7 @@ implements OnInit {
 
                 next: () => {
 
-                    this.successMessage =
+                    this.groupRequestSuccess =
                         'Group creation request submitted.';
 
                     this.showGroupRequestForm =
@@ -345,7 +413,7 @@ implements OnInit {
 
                 error: error => {
 
-                    this.errorMessage =
+                    this.groupRequestError =
                         error.error?.message ||
                         'Unable to request group creation.';
 
