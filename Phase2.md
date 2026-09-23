@@ -1,1401 +1,1248 @@
+
 # Fabulari — Phase 2: Fully Functioning Application
 
 ## Student Information
 
 **Name:** Lalit Bamel  
 **Student Number:** s5383531  
+**Workshop Time:** [ADD WORKSHOP DAY AND TIME]  
+**GitHub Repository:** [ADD PRIVATE GITHUB REPOSITORY LINK]
 
 ---
-## 1. Specifications and Requirements
 
-Fabulari is a group-based chat application developed using Angular, Node.js,
-Express, MongoDB and Socket.IO.
+# 1. Specifications and Requirements
 
-Phase 1 of the application used JSON file persistence. Phase 2 replaces the
-runtime JSON storage with MongoDB and adds real-time communication, image
-uploads and automated testing.
+## 1.1 Project Overview
 
-The major Phase 2 requirements implemented are:
+Fabulari is a full-stack group-based real-time chat application.
 
-- MongoDB persistence using the native MongoDB Node.js driver.
-- Persistent storage of users, groups, rooms, requests, messages,
-  administrative audit records and application state.
-- Real-time chat communication using Socket.IO.
-- Real-time room join and leave notifications.
-- Real-time synchronisation when messages are deleted.
-- Uploading and displaying images in chat.
-- Uploading and displaying user profile pictures.
-- Input validation and user-friendly error handling.
-- Backend unit testing.
-- Backend API integration testing.
-- Angular unit testing.
-- Cypress end-to-end testing.
+The application allows users to create accounts, join communities, communicate
+inside group chat rooms, upload images, manage profiles and participate in
+administrative request workflows.
 
+Different permissions are provided for:
 
-### 1.1 Technology Stack
+- Normal Users.
+- Group Administrators.
+- The Super Administrator.
 
-The Phase 2 application uses the following technologies:
+Phase 1 of Fabulari used JSON-file persistence and concentrated on the initial
+requirements, architecture and prototype.
 
-- Angular 22 for the client application.
-- TypeScript for Angular application development.
-- Node.js for the backend runtime.
-- Express for REST API routing.
-- MongoDB for persistent data storage.
-- Native MongoDB Node.js driver for database communication.
-- Socket.IO for real-time communication.
-- bcrypt for password hashing.
-- Multer for multipart image uploads.
-- RxJS Observables for Angular Socket.IO event handling.
-- Mocha and Node assert for backend unit tests.
-- Mocha and Chai for backend integration tests.
-- Vitest and Angular TestBed for frontend unit tests.
-- Cypress for browser-based end-to-end testing.
+Phase 2 implements the complete application using:
 
+- Angular.
+- Node.js.
+- Express.
+- MongoDB.
+- Socket.IO.
 
-### 1.2 MongoDB Data Collections
+The Phase 2 application also introduces:
 
-Phase 2 replaces the Phase 1 JSON file persistence with MongoDB using the
-native Node.js MongoDB driver.
+- Native MongoDB persistence.
+- Real-time chat.
+- Real-time room presence.
+- Real-time membership synchronisation.
+- Image uploads.
+- Profile pictures.
+- Administrative workflows.
+- Automated testing.
+- Improved validation.
+- Responsive UI/UX.
+- Accessibility improvements.
 
-The application uses the following collections:
+---
 
-- `users` – registered user accounts and profile information.
-- `groups` – group details, membership and administration information.
-- `rooms` – chat rooms belonging to groups.
-- `requests` – group, room, join, ban and deletion requests.
-- `messages` – persistent chat messages.
-- `auditLogs` – administrative activity records.
-- `bannedUsers` – permanently banned user records.
-- `appState` – application-level state such as the Super Administrator
-  bootstrap status.
+## 1.2 Development and Git Strategy
 
-Existing application UUID identifiers were retained during the MongoDB
-migration so that the existing Angular routes, relationships and application
-logic remained compatible.
+Git was used throughout the development of Fabulari.
 
-MongoDB also creates its own `_id` value for each document. The application
-UUID `id` remains the identifier used by Fabulari.
+Development work was performed using feature/development branches rather than
+placing every change directly onto `main`.
 
+A Phase 2 development branch was used for the major Phase 2 implementation:
 
-### 1.3 Authentication Requirements
+`phase2/setup`
 
-Users can register using:
+Changes were committed incrementally as features were implemented and tested.
+
+Examples of development areas committed separately included:
+
+- MongoDB integration.
+- Image upload support.
+- Automated testing.
+- Real-time communication.
+- Validation improvements.
+- Membership and age-rule improvements.
+- UI/UX improvements.
+
+The repository was kept private and the teaching staff member was added as a
+collaborator.
+
+The Phase 2 branch is merged into `main` only after the final application,
+documentation and testing are complete.
+
+---
+
+## 1.3 Technology Stack
+
+Fabulari uses the MEAN stack together with Socket.IO.
+
+| Technology | Purpose |
+|---|---|
+| Angular 22 | Frontend single-page application |
+| TypeScript | Angular application development |
+| Node.js | Backend JavaScript runtime |
+| Express | REST API and HTTP server |
+| MongoDB | Persistent database |
+| Native MongoDB Node.js Driver | MongoDB communication |
+| Socket.IO | Real-time bidirectional communication |
+| RxJS | Angular real-time event subscriptions |
+| bcrypt | Password hashing |
+| Multer | Multipart image uploads |
+| Mocha | Backend testing |
+| Chai / Chai HTTP | Backend integration testing |
+| Vitest | Angular unit testing |
+| Angular TestBed | Angular testing environment |
+| Cypress | End-to-end browser testing |
+
+Mongoose is not used.
+
+MongoDB communication is performed using the native MongoDB Node.js driver.
+
+---
+
+## 1.4 User Roles
+
+Fabulari contains three main permission levels.
+
+### Normal User
+
+A normal user can:
+
+- Register.
+- Login.
+- Edit their profile.
+- Upload a profile picture.
+- Browse groups.
+- Search groups.
+- Request group membership.
+- Request creation of a new group.
+- View request history.
+- View rooms inside groups they belong to.
+- Enter chat rooms.
+- Send text messages.
+- Send images.
+- Send GIF messages.
+- Delete their own messages.
+- See users currently online in the room.
+- Receive room join/leave notifications.
+- Propose new rooms.
+- Request a group ban against an eligible normal group member.
+- Leave a group.
+
+### Group Administrator
+
+A Group Administrator has normal user capabilities and can additionally:
+
+- Create rooms directly.
+- Rename rooms.
+- Delete rooms.
+- Edit group information.
+- Change the group theme.
+- Change the minimum group age.
+- Approve or reject join requests.
+- Approve or reject room-creation requests.
+- Approve or reject valid group-ban requests.
+- Promote members to Group Administrator.
+- Demote other Group Administrators when permitted.
+- Resign as Group Administrator when another administrator remains.
+- Request a system-wide ban.
+- Request deletion of the group.
+
+A group must always contain at least one administrator.
+
+### Super Administrator
+
+Fabulari contains one Super Administrator.
+
+The Super Administrator can:
+
+- Approve or reject group-creation requests.
+- Approve or reject system-ban requests.
+- Approve or reject group-deletion requests.
+- View banned-user records.
+- View audit logs.
+
+The Super Administrator is not a normal chat participant.
+
+The account is created using a controlled server bootstrap process rather than
+public registration.
+
+---
+
+## 1.5 Authentication Requirements
+
+Users register with:
 
 - First name.
 - Last name.
 - Username.
-- Email address.
-- Age.
+- Email.
+- Date of birth.
 - Password.
 
-Usernames are case-insensitively unique.
+The interface uses a calendar/date input for date of birth.
 
-Email addresses are unique and cannot be changed after registration.
+The user's age is calculated from their date of birth.
 
-Passwords are hashed using bcrypt before being stored in MongoDB.
+There is no system-wide Fabulari minimum age.
 
-The password must:
+The client requirement only specifies minimum-age restrictions at group level.
+
+However, invalid or unrealistic account ages are rejected.
+
+The application prevents:
+
+- Future dates of birth.
+- Invalid dates.
+- An effective age of zero.
+- Negative age values.
+- Non-integer age values used internally.
+- Duplicate email addresses.
+- Case-insensitive duplicate usernames.
+
+Passwords must:
 
 - Contain at least eight characters.
 - Contain at least one uppercase character.
 
-Users log in using their username and password.
+Passwords are hashed using bcrypt before MongoDB storage.
 
-The application contains a single Super Administrator. The Super Administrator
-is created using the controlled server bootstrap process rather than public
-registration.
+Plain-text passwords are never stored.
 
+---
 
-### 1.4 Group Requirements
+## 1.6 Profile Requirements
 
-Users can view groups and request membership.
+Users can view and edit their profile.
+
+Editable information includes:
+
+- First name.
+- Last name.
+- Username.
+- Date of birth.
+- Password.
+- Profile picture.
+
+The registered email address cannot be changed.
+
+Date of birth is edited using a calendar input rather than by manually typing
+an age.
+
+When the date of birth changes, the user's age is recalculated.
+
+The backend also rechecks the user's group eligibility.
+
+If the new age becomes lower than a group's minimum age:
+
+- A normal member is removed from that group.
+- An administrator can be removed if another administrator remains.
+- If the user is the only administrator, the age/profile change is rejected.
+
+This prevents a group from being left without an administrator.
+
+---
+
+## 1.7 Group Requirements
+
+Users can browse available groups.
 
 A group contains:
 
+- Application UUID.
 - Title.
 - Description.
 - Minimum age.
 - Theme.
 - Administrator IDs.
 - Member IDs.
-- Banned user IDs.
+- Banned-user IDs.
 - Room IDs.
 - Creation date.
 
-A group must always contain at least one administrator.
+Users can belong to multiple groups.
 
-A user may belong to multiple groups.
+A user cannot join a group if:
 
-Users who do not satisfy the minimum age requirement cannot join the group.
+- They are below the minimum age.
+- They are banned from the group.
+- They are already a member.
+- A matching pending join request already exists.
 
-Group Administrators can manage group information, membership and rooms
-according to the application authorization rules.
+Group creation requires Super Administrator approval.
 
+When a group-creation request is approved:
 
-### 1.5 Room Requirements
-
-Groups may contain zero or more chat rooms.
-
-Each room belongs to one group.
-
-Only members of the parent group can participate in that room.
-
-Group Administrators can create, rename and delete rooms.
-
-When a room is deleted, its associated messages are removed from the database.
-
-
-### 1.6 Real-Time Chat Requirements
-
-Chat rooms use Socket.IO for real-time communication.
-
-When a user opens a chat room:
-
-1. The application retrieves the room and the most recent messages through
-   the REST API.
-2. The Angular client connects to Socket.IO.
-3. The client requests to join the Socket.IO room.
-4. The server validates the user, room and group membership.
-5. The socket joins the room if authorization succeeds.
-
-Text messages and GIF messages are sent using Socket.IO.
-
-When a message is sent:
-
-1. The server validates the sender.
-2. The server verifies room membership.
-3. The message is stored in MongoDB.
-4. The server broadcasts the saved message to all connected clients in that
-   room.
-5. The Angular client updates the chat interface immediately.
-
-The chat interface displays the five most recent messages.
-
-
-### 1.7 Presence Requirements
-
-Socket.IO is also used to indicate when users enter or leave a room.
-
-The server broadcasts:
-
-- `userJoined` when another user joins a room.
-- `userLeft` when a user leaves or disconnects.
-
-The Angular application listens for these events and displays the presence
-message without requiring a page refresh.
-
-
-### 1.8 Message Deletion Requirements
-
-Users can delete only their own messages.
-
-Message deletion is initiated through the REST API.
-
-The backend verifies message ownership and performs a soft deletion by setting:
-
-`deleted: true`
-
-After the database operation succeeds, the backend emits the Socket.IO event:
-
-`messageDeleted`
-
-All connected clients in the room then remove the deleted message from their
-local message list immediately.
-
-
-### 1.9 Image Upload Requirements
-
-Users can:
-
-- Upload images as chat messages.
-- Upload a profile picture.
-
-Images are not stored directly as Base64 or binary data inside MongoDB.
-
-The implemented process is:
-
-1. Angular sends the actual image file using `multipart/form-data`.
-2. Multer validates and receives the file on the Node.js server.
-3. The image file is stored on the server filesystem.
-4. MongoDB stores the public file path and image metadata.
-5. Express static file hosting makes the image accessible to the Angular
-   frontend.
-
-Chat images are stored under:
-
-`server/uploads/chat/`
-
-Profile pictures are stored under:
-
-`server/uploads/profiles/`
-
-Supported image types are:
-
-- JPEG.
-- PNG.
-- GIF.
-- WEBP.
-
-The maximum allowed image size is 5 MB.
-
-
-### 1.10 Validation and Error Handling Requirements
-
-Validation is performed at both application and database levels.
-
-Examples include:
-
-- Required field validation.
-- Email format validation.
-- Integer age validation.
-- Password validation.
-- Case-insensitive username uniqueness.
-- Email uniqueness.
-- Group membership authorization.
-- Group Administrator authorization.
-- Message ownership validation.
-- Image MIME-type validation.
-- Image size validation.
-
-MongoDB unique indexes provide an additional database-level protection against
-duplicate identifiers, usernames and email addresses.
-
-The API returns appropriate HTTP status codes including:
-
-- `200` for successful requests.
-- `201` for successful resource creation.
-- `400` for invalid input.
-- `401` for invalid login credentials.
-- `403` for unauthorized operations.
-- `404` for resources that cannot be found.
-- `409` for duplicate/conflicting data.
-- `500` for unexpected server errors.
-
-Unknown API routes return a JSON `404` response rather than the default Express
-error page.
-
-## 2. Server API Documentation
-
-The Fabulari backend provides a REST API using Node.js and Express.
-
-The development server runs at:
-
-`http://localhost:3000`
-
-Most API responses use JSON. Image upload endpoints use
-`multipart/form-data`.
-
-The API is divided into authentication, users, groups, requests, rooms,
-administration and image-upload routes.
+- The group is created.
+- The requester becomes a member.
+- The requester becomes the first Group Administrator.
 
 ---
 
-### 2.1 General Server Routes
+## 1.8 Group Themes
 
-| Method | Endpoint | Purpose | Successful Response |
-|---|---|---|---|
-| GET | `/api/health` | Checks server and MongoDB availability and returns collection counts | `200` with server/database information |
-| Any | Unknown `/api/*` route | Handles invalid API paths | `404` with `API route not found.` |
+Groups support three visual themes:
 
-The server also exposes uploaded files through:
+- `default`
+- `blue`
+- `dark`
 
-`/uploads/*`
+The theme is stored with the group and changes the appearance of group-related
+interfaces.
 
-using Express static file hosting.
+This gives the Theme field a visible purpose rather than storing unused
+configuration data.
 
-This allows chat images and user profile pictures stored on the Node.js
-filesystem to be displayed by the Angular frontend.
-
----
-
-### 2.2 Authentication API
-
-Authentication routes are mounted under:
-
-`/api`
-
-| Method | Endpoint | Request Data | Purpose | Success |
-|---|---|---|---|---|
-| POST | `/api/register` | `firstName`, `lastName`, `username`, `email`, `age`, `password` | Creates a new user account | `201` |
-| POST | `/api/login` | `username`, `password` | Authenticates an existing user | `200` |
-
-#### POST `/api/register`
-
-The registration endpoint:
-
-1. Validates all required fields.
-2. Trims user-entered text.
-3. Converts the email address to lowercase.
-4. Validates the email format.
-5. Validates the user's age.
-6. Requires a password containing at least eight characters and one uppercase
-   letter.
-7. Prevents duplicate email addresses.
-8. Prevents case-insensitive duplicate usernames.
-9. Prevents an email belonging to a permanently banned user from registering.
-10. Hashes the password using bcrypt.
-11. Generates a UUID for the user.
-12. Saves the user in MongoDB.
-
-The returned user object does not expose the password hash or MongoDB `_id`.
-
-Important responses include:
-
-- `201` – account created successfully.
-- `400` – invalid registration information.
-- `403` – banned email address.
-- `409` – username or email already exists.
-- `500` – unexpected registration error.
-
-MongoDB unique indexes also provide a second layer of protection against
-duplicate usernames and email addresses.
-
-#### POST `/api/login`
-
-The login endpoint performs a case-insensitive username lookup.
-
-The supplied password is compared with the stored bcrypt password hash.
-
-A successful login returns the user information without exposing
-`passwordHash` or MongoDB `_id`.
-
-Important responses include:
-
-- `200` – login successful.
-- `400` – username or password missing.
-- `401` – invalid username or password.
-- `500` – unexpected login error.
+Theme changes persist in MongoDB.
 
 ---
 
-### 2.3 User API
+## 1.9 Group Membership and Leaving
 
-User routes are mounted under:
+Group membership is voluntary.
 
-`/api/users`
+A member can leave a group through the group interface.
 
-| Method | Endpoint | Request Data | Purpose |
-|---|---|---|---|
-| GET | `/api/users/:userId` | Path parameter: `userId` | Retrieves a user's profile |
-| PUT | `/api/users/:userId` | `firstName`, `lastName`, `username`, `age`, optional `profilePicture`, optional `newPassword` | Updates profile information |
+If a normal member leaves:
 
-#### GET `/api/users/:userId`
+- Their ID is removed from the group's membership.
+- Their access to group rooms is removed.
 
-This endpoint retrieves the requested user profile.
+If a Group Administrator attempts to leave:
 
-The server removes:
+- The operation is allowed if another Group Administrator remains.
+- The operation is rejected if they are the only Group Administrator.
 
-- `passwordHash`
-- MongoDB `_id`
+The application therefore guarantees that every group retains at least one
+administrator.
 
-before returning the profile to the Angular application.
+Membership changes are synchronised between open clients using Socket.IO.
 
-A `404` response is returned if the requested user does not exist.
-
-#### PUT `/api/users/:userId`
-
-This endpoint allows a user profile to be updated.
-
-The endpoint:
-
-- Validates first name.
-- Validates last name.
-- Validates username.
-- Validates age.
-- Prevents duplicate usernames.
-- Keeps the registered email address unchanged.
-- Optionally hashes and stores a new password.
-- Updates the MongoDB user document.
-- Returns a safe user object.
-
-MongoDB duplicate-key errors are converted into user-friendly `409` responses.
+A user does not need to manually refresh the browser to see approved membership
+changes.
 
 ---
 
-### 2.4 Group API
+## 1.10 Group Administration Requirements
 
-Group routes are mounted under:
+Group Administrators can manage:
 
-`/api/groups`
-
-| Method | Endpoint | Request Data | Purpose |
-|---|---|---|---|
-| GET | `/api/groups` | None | Returns all groups |
-| GET | `/api/groups/:groupId` | Path parameter: `groupId` | Returns one group |
-| GET | `/api/groups/:groupId/rooms` | Path parameter: `groupId` | Returns rooms belonging to a group |
-| POST | `/api/groups/:groupId/rooms` | `actorId`, `name` | Allows a Group Administrator to create a room |
-| GET | `/api/groups/:groupId/members` | Path parameter: `groupId` | Returns members of a group |
-| POST | `/api/groups/:groupId/admins/resign` | `actorId` | Allows a Group Administrator to resign |
-| POST | `/api/groups/:groupId/admins/:userId` | `actorId` | Promotes a member to Group Administrator |
-| DELETE | `/api/groups/:groupId/admins/:userId` | `actorId` | Demotes a Group Administrator |
-| PUT | `/api/groups/:groupId` | `actorId`, `title`, `description`, `minimumAge`, `theme` | Updates group information |
-
-#### Group Administration Rules
-
-Group administration operations are protected by backend authorization checks.
-
-The implementation ensures that:
-
-- Only existing Group Administrators can perform administrative actions.
-- Only group members can be promoted to Group Administrator.
-- An existing Group Administrator cannot be promoted again.
-- Administrators cannot demote themselves using the normal demotion endpoint.
-- Administrator resignation uses a separate operation.
-- A group cannot be left without at least one administrator.
-- Group titles have a maximum length of 30 characters.
-- Group descriptions have a maximum length of 250 characters.
-- Minimum age must be a valid non-negative integer.
-
-When a group's minimum age is increased, members who no longer satisfy the age
-requirement are removed from the group.
-
-The update is rejected if the age change would result in the group having no
-remaining administrator.
-
----
-
-### 2.5 Request API
-
-Request routes are mounted under:
-
-`/api/requests`
-
-Fabulari uses requests for operations that require approval from either a Group
-Administrator or the Super Administrator.
-
-| Method | Endpoint | Request Data | Purpose |
-|---|---|---|---|
-| POST | `/api/requests/group-creation` | `requesterId`, `title`, `description`, `minimumAge`, `theme` | Requests creation of a new group |
-| POST | `/api/requests/join` | `requesterId`, `groupId` | Requests membership of a group |
-| POST | `/api/requests/room-creation` | `requesterId`, `groupId`, `roomName` | Proposes creation of a new room |
-| POST | `/api/requests/group-ban` | `requesterId`, `groupId`, `targetUserId`, `reason` | Requests a group-level ban |
-| POST | `/api/requests/system-ban` | `requesterId`, `groupId`, `targetUserId`, `reason` | Requests a system-wide ban |
-| POST | `/api/requests/group-deletion` | `requesterId`, `groupId`, optional `reason` | Requests deletion of a group |
-| GET | `/api/requests/super-admin/:userId` | Path parameter: `userId` | Returns pending requests for the Super Administrator |
-| GET | `/api/requests/group-admin/:userId/:groupId` | Path parameters: `userId`, `groupId` | Returns pending requests for a Group Administrator |
-| GET | `/api/requests/user/:userId/history` | Path parameter: `userId` | Returns the user's request history |
-| PUT | `/api/requests/:requestId` | `actorId`, `status`, optional `rejectionReason` | Approves or rejects a request |
-
----
-
-### 2.6 Request Types and Approval Behaviour
-
-#### Group Creation
-
-Request type:
-
-`groupCreation`
-
-The requester supplies the proposed:
-
-- Group title.
+- Title.
 - Description.
 - Minimum age.
 - Theme.
+- Rooms.
+- Administrators.
+- Pending requests.
+
+Group titles have a maximum length of 30 characters.
+
+Group descriptions have a maximum length of 250 characters.
+
+If a group's minimum age is increased:
+
+- Members who no longer meet the age requirement are removed.
+- Administrators who no longer qualify can be removed if another administrator remains.
+- The update is rejected if it would leave the group with no administrator.
+
+Protected administrative operations are validated by the backend.
+
+Client-side controls alone are never trusted for authorization.
+
+---
+
+## 1.11 Room Requirements
+
+Each room belongs to one group.
+
+Groups may contain zero or more rooms.
+
+Only members of the parent group can enter a room.
+
+Group Administrators can:
+
+- Create rooms.
+- Rename rooms.
+- Delete rooms.
+
+Normal group members can propose a room through a request.
+
+When a room is deleted:
+
+- The room document is removed.
+- Its ID is removed from the parent group.
+- Messages belonging to the room are removed.
+
+---
+
+## 1.12 Real-Time Chat Requirements
+
+Chat uses Socket.IO.
+
+When a user enters a room:
+
+1. Angular loads the group and room.
+2. The most recent messages are retrieved through REST.
+3. The Socket.IO connection is established.
+4. The user requests to join the Socket.IO room.
+5. The backend validates the user.
+6. The backend validates the room.
+7. The backend validates group membership.
+8. The socket joins the room.
+
+Supported message types are:
+
+- Text.
+- Image.
+- GIF.
+
+For real-time text and GIF messages:
+
+1. Angular sends a Socket.IO event.
+2. Node validates the sender.
+3. Membership is checked.
+4. The message is inserted into MongoDB.
+5. The server broadcasts the stored message.
+6. All connected room clients update immediately.
+
+The normal chat display keeps the five most recent messages.
+
+---
+
+## 1.13 Room Presence Requirements
+
+Fabulari provides both:
+
+- Join/leave notifications.
+- A persistent list showing who is currently inside the room.
+
+The room interface displays:
+
+`Online in this room`
+
+together with the currently connected users.
+
+When a user:
+
+- Joins.
+- Leaves.
+- Changes room.
+- Disconnects.
+
+the room presence data is updated immediately.
+
+The presence system deduplicates users by application user ID.
+
+Therefore, if the same user opens the same room in multiple browser tabs, the
+username is displayed once rather than multiple times.
+
+Only valid members of the group can appear in the room presence list.
+
+Existing join and leave notifications are retained in addition to the
+persistent online-user list.
+
+---
+
+## 1.14 Real-Time Group Synchronisation
+
+Socket.IO is also used outside the chat message flow for important group-state
+changes.
+
+Examples include:
+
+- A Group Administrator receiving a new join request while the admin page is open.
+- A user's Groups page updating when their join request is approved.
+- Member lists updating when another user joins or leaves.
+- Access being revoked immediately when a user is removed or banned.
+
+This prevents users from relying on manual page refreshes to see important
+membership changes.
+
+---
+
+## 1.15 Group Ban Requirements
+
+A group member may request a group-level ban against an eligible normal member.
+
+The application prevents invalid ban workflows.
+
+A user cannot:
+
+- Request a ban against themselves.
+- Request a normal group ban against a protected Group Administrator.
+- Approve their own ban request.
+
+When a valid group ban is approved:
+
+- The target is added to the group's banned-user IDs.
+- The target is removed from members.
+- Access to the group is revoked.
+
+The operation cannot leave the group without an administrator.
+
+If the removed user currently has the group page open, access revocation is
+handled immediately rather than waiting for a manual refresh.
+
+---
+
+## 1.16 System Ban Requirements
+
+System-ban requests are initiated by a Group Administrator and actioned by the
+Super Administrator.
+
+If approved:
+
+- The target is removed from appropriate groups.
+- The user's normal account is removed.
+- A permanent banned-user record is created.
+- The banned email cannot simply register another account.
+
+A system ban cannot complete if doing so would leave a group without an
+administrator.
+
+---
+
+## 1.17 Group Deletion Requirements
+
+Only a Group Administrator can request group deletion.
 
 The Super Administrator approves or rejects the request.
 
 When approved:
 
-- A new group UUID is generated.
-- The requester becomes a member.
-- The requester becomes the first Group Administrator.
-- The group initially contains no rooms.
-- The group initially contains no banned users.
-
-#### Join Group
-
-Request type:
-
-`joinGroup`
-
-Before creating or approving the request, the application checks that:
-
-- The user exists.
-- The user is not already a member.
-- The user is not banned from the group.
-- The user meets the minimum age requirement.
-- A duplicate pending join request does not already exist.
-
-A Group Administrator approves or rejects the request.
-
-#### Room Creation
-
-Request type:
-
-`roomCreation`
-
-A regular group member can propose a room.
-
-The request stores the proposed room name and target group.
-
-A Group Administrator approves or rejects the request.
-
-When approved, a new room is created and associated with the group.
-
-#### Group Ban
-
-Request type:
-
-`groupBan`
-
-A group member can request that another member be banned from the group.
-
-A user cannot create a ban request against themselves.
-
-A Group Administrator approves or rejects the request.
-
-The administrator who submitted a ban request cannot approve their own
-request.
-
-If approved:
-
-- The target is added to `bannedUserIds`.
-- The target is removed from `memberIds`.
-- The target is removed from `adminIds` when applicable.
-
-The operation cannot leave a group without an administrator.
-
-#### System Ban
-
-Request type:
-
-`systemBan`
-
-A system ban request is created by a Group Administrator and actioned by the
-Super Administrator.
-
-If approved:
-
-- The target user is removed from relevant groups.
-- A permanent banned-user record is stored in `bannedUsers`.
-- The account is removed from the `users` collection.
-
-A system ban cannot be completed if the target is the sole administrator of a
-group.
-
-#### Group Deletion
-
-Request type:
-
-`groupDeletion`
-
-Only a Group Administrator can request deletion of their group.
-
-The Super Administrator approves or rejects the request.
-
-If approved:
-
-- The group is deleted.
-- Rooms belonging to the group are deleted.
-- Messages belonging to those rooms are deleted.
-
-#### Approving or Rejecting Requests
-
-Requests are actioned through:
-
-`PUT /api/requests/:requestId`
-
-The body contains:
-
-- `actorId`
-- `status`
-- Optional `rejectionReason`
-
-The accepted status values are:
-
-`approved`
-
-or:
-
-`rejected`
-
-A rejection requires a rejection reason.
-
-The backend verifies that the person performing the action has the correct
-administrative role for that request type.
-
-A request that has already been actioned cannot be actioned again.
-
-Important administrative actions are recorded in the `auditLogs` collection.
+- The group is removed.
+- Its rooms are removed.
+- Messages belonging to those rooms are removed.
 
 ---
 
-### 2.7 Room and Message API
+## 1.18 Message History Requirements
 
-Room routes are mounted under:
+Messages are persisted in MongoDB.
 
-`/api/rooms`
+When a room is entered, the application retrieves the five most recent
+non-deleted messages.
 
-| Method | Endpoint | Request Data | Purpose |
-|---|---|---|---|
-| GET | `/api/rooms/:roomId` | Path parameter: `roomId` | Retrieves one room |
-| PUT | `/api/rooms/:roomId` | `actorId`, `name` | Renames a room |
-| DELETE | `/api/rooms/:roomId` | `actorId` | Deletes a room |
-| GET | `/api/rooms/:roomId/messages` | Query: `userId`, optional `limit` | Retrieves recent non-deleted messages |
-| POST | `/api/rooms/:roomId/messages` | `senderId`, `type`, `content` | Creates a message using REST |
-| DELETE | `/api/rooms/:roomId/messages/:messageId` | `actorId` | Soft-deletes the user's own message |
+Older messages remain in MongoDB.
 
-#### GET `/api/rooms/:roomId/messages`
+The display limit does not mean only five messages are stored.
 
-The endpoint verifies that:
+---
 
-- The room exists.
-- The requesting user exists.
-- The requester is not the Super Administrator.
-- The parent group exists.
-- The requester belongs to the parent group.
+## 1.19 Message Deletion Requirements
 
-The default message limit is:
+Users can delete only their own messages.
 
-`5`
+Deletion is implemented as a soft delete.
 
-The maximum accepted limit is:
-
-`50`
-
-Messages where:
+The message remains in MongoDB with:
 
 `deleted: true`
 
-are excluded.
+After the database update succeeds, the server uses Socket.IO so the deleted
+message disappears immediately for every connected user in that room.
 
-Returned messages are enriched with:
-
-- `senderUsername`
-- `senderProfilePicture`
-- `senderIsAdmin`
-
-#### POST `/api/rooms/:roomId/messages`
-
-This REST route supports the following message types:
-
-- `text`
-- `image`
-- `gif`
-
-The final real-time Angular chat primarily uses Socket.IO for text and GIF
-messages.
-
-The REST endpoint remains available for persistent message creation.
-
-#### DELETE `/api/rooms/:roomId/messages/:messageId`
-
-A user can delete only a message they originally sent.
-
-Deletion is implemented as a soft delete by updating:
-
-`deleted: true`
-
-After MongoDB is successfully updated, the backend emits the Socket.IO event:
-
-`messageDeleted`
-
-to clients in that room.
-
-This allows the deleted message to disappear from all connected clients without
-a page refresh.
-
-#### PUT `/api/rooms/:roomId`
-
-Only a Group Administrator belonging to the room's parent group can rename the
-room.
-
-#### DELETE `/api/rooms/:roomId`
-
-Only a Group Administrator can delete a room.
-
-Deleting a room:
-
-1. Removes the room document.
-2. Removes the room ID from the parent group's `roomIds`.
-3. Deletes messages belonging to the room.
+Normal message-history queries exclude deleted messages.
 
 ---
 
-### 2.8 Administration API
+## 1.20 Image Upload Requirements
 
-Administration routes are mounted under:
+Users can upload:
 
-`/api/admin`
+- Chat images.
+- Profile pictures.
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/api/admin/banned-users/:userId` | Returns permanently banned users |
-| GET | `/api/admin/audit-logs/:userId` | Returns administrative audit records |
-
-Both routes verify that the supplied `userId` belongs to the Super
-Administrator.
-
-Unauthorized users receive:
-
-`403 Access denied.`
-
-Audit logs are returned in reverse chronological order and are enriched with
-available user information.
-
----
-
-### 2.9 Image Upload API
-
-Image upload routes are mounted under:
-
-`/api/uploads`
-
-The endpoints use:
-
-`multipart/form-data`
-
-The uploaded file field is named:
-
-`image`
-
-Supported MIME types are:
-
-- `image/jpeg`
-- `image/png`
-- `image/gif`
-- `image/webp`
-
-The maximum supported image size is:
-
-`5 MB`
-
-| Method | Endpoint | Multipart Fields | Purpose |
-|---|---|---|---|
-| POST | `/api/uploads/chat-image` | `image`, `roomId`, `senderId` | Uploads an image as a chat message |
-| POST | `/api/uploads/profile-image` | `image`, `userId` | Uploads a user's profile picture |
-
-#### POST `/api/uploads/chat-image`
-
-The endpoint:
-
-1. Validates the room.
-2. Validates the sender.
-3. Checks that the sender belongs to the parent group.
-4. Prevents the Super Administrator from participating in chat.
-5. Generates a unique file name.
-6. Saves the actual image under `server/uploads/chat/`.
-7. Stores the image path and metadata in MongoDB.
-8. Creates a message with type `image`.
-9. Broadcasts `newMessage` using Socket.IO.
-10. Returns the created message using HTTP status `201`.
-
-Stored image metadata includes:
-
-- Generated file name.
-- Original file name.
-- MIME type.
-- File size.
-
-#### POST `/api/uploads/profile-image`
-
-The endpoint:
-
-1. Validates the user.
-2. Validates the uploaded image.
-3. Generates a unique file name.
-4. Saves the image under `server/uploads/profiles/`.
-5. Stores the public image path in `profilePicture`.
-6. Stores image metadata in `profilePictureMetadata`.
-7. Returns the updated safe user object.
-
-Profile image metadata includes:
-
-- Generated file name.
-- Original file name.
-- MIME type.
-- File size.
-- Upload timestamp.
-
----
-
-### 2.10 Socket.IO API
-
-Socket.IO is attached to the same Node.js HTTP server used by Express.
-
-During development, Socket.IO accepts connections from the Angular application
-running at:
-
-`http://localhost:4200`
-
-Fabulari uses Socket.IO rooms so events are delivered only to users currently
-viewing the relevant chat room.
-
-#### Client-to-Server Socket Events
-
-| Event | Payload | Purpose | Acknowledgement |
-|---|---|---|---|
-| `joinRoom` | `{ roomId, userId }` | Validates the user and joins the socket to a chat room | `{ success, message }` |
-| `leaveRoom` | `{ roomId }` | Removes the socket from its current chat room | `{ success, message }` |
-| `sendMessage` | `{ roomId, senderId, type, content }` | Validates, persists and broadcasts a real-time message | `{ success, message }` |
-
-#### `joinRoom`
-
-Before allowing a socket to join a room, the backend verifies:
-
-- `roomId` is supplied.
-- `userId` is supplied.
-- The room exists.
-- The user exists.
-- The user is not the Super Administrator.
-- The parent group exists.
-- The user belongs to the parent group.
-
-If the socket was already inside another room, it leaves that room first.
-
-The server stores the current:
-
-- Room ID.
-- User ID.
-- Username.
-
-inside `socket.data`.
-
-After a successful join, other users in the room receive:
-
-`userJoined`
-
-#### `leaveRoom`
-
-The backend verifies that the socket is currently inside the supplied room.
-
-The socket then:
-
-1. Leaves the Socket.IO room.
-2. Causes `userLeft` to be broadcast.
-3. Clears its current room information.
-
-#### `sendMessage`
-
-The event accepts:
-
-- `roomId`
-- `senderId`
-- `type`
-- `content`
-
-Supported message types are:
-
-- `text`
-- `image`
-- `gif`
-
-The backend verifies:
-
-- The room exists.
-- The sender exists.
-- The sender is not the Super Administrator.
-- The parent group exists.
-- The sender belongs to the group.
-- The socket has joined the requested room.
-- The Socket.IO user matches the supplied sender ID.
-
-After validation:
-
-1. A UUID is generated for the message.
-2. The message is inserted into MongoDB.
-3. Sender information is added to the outgoing message.
-4. `newMessage` is broadcast to every socket currently inside that room,
-   including the original sender.
-
----
-
-### 2.11 Server-to-Client Socket Events
-
-| Event | Payload | Purpose |
-|---|---|---|
-| `userJoined` | `{ userId, username, roomId }` | Indicates that another user entered the room |
-| `userLeft` | `{ userId, username, roomId }` | Indicates that another user left the room |
-| `newMessage` | Chat message object | Delivers a newly persisted message to connected clients |
-| `messageDeleted` | `{ roomId, messageId }` | Removes a deleted message from connected clients |
-
-#### `newMessage`
-
-A normal real-time message contains information including:
-
-- `id`
-- `roomId`
-- `senderId`
-- `type`
-- `content`
-- `createdAt`
-- `deleted`
-- `senderUsername`
-- `senderProfilePicture`
-- `senderIsAdmin`
-
-Image uploads also cause a `newMessage` event after the file and MongoDB message
-have been successfully stored.
-
-Image messages additionally contain image metadata.
-
-#### `userJoined`
-
-This event is broadcast to other users in the room after a successful room
-join.
-
-#### `userLeft`
-
-This event can be broadcast when:
-
-- A user explicitly leaves a room.
-- A user changes rooms.
-- A socket disconnects while inside a room.
-
-#### `messageDeleted`
-
-This event is emitted after the REST message-deletion endpoint successfully
-marks a message as deleted in MongoDB.
-
-The Angular client receives the event and removes the matching message from its
-local message array.
-
-This keeps all active users in the room synchronized without requiring a page
-refresh.
-
-## 3. Angular Architecture
-
-The Fabulari client is implemented using Angular 22 and TypeScript.
-
-The application uses Angular's standalone application architecture rather than
-an NgModule-based structure.
-
-The application is started using `bootstrapApplication()` in `main.ts`.
-
-`app.config.ts` provides:
-
-- Angular routing through `provideRouter(routes)`.
-- HTTP communication through `provideHttpClient()`.
-- Browser-level global error listeners.
-
-The frontend is divided into:
-
-- Components for user-interface features.
-- Services for REST and Socket.IO communication.
-- Models for application data structures.
-- Route guards for authentication and role-based navigation.
-
-The frontend communicates with the Node.js backend at:
-
-`http://localhost:3000`
-
----
-
-### 3.1 Components
-
-Fabulari contains the following Angular components.
-
-| Component | Main Responsibility |
-|---|---|
-| `LoginComponent` | Authenticates existing users |
-| `RegisterComponent` | Creates new user accounts |
-| `NavbarComponent` | Provides shared navigation and logout functionality |
-| `GroupsComponent` | Displays groups, group searching, membership requests and group creation requests |
-| `GroupRoomsComponent` | Displays and manages rooms within a group |
-| `GroupAdminComponent` | Provides Group Administrator management functions |
-| `SuperAdminComponent` | Provides Super Administrator request and audit management |
-| `ProfileComponent` | Displays and updates the current user's profile and profile picture |
-| `ChatRoomComponent` | Provides persistent and real-time chat functionality |
-
----
-
-#### 3.1.1 LoginComponent
-
-`LoginComponent` provides the Fabulari login interface.
-
-The user enters:
-
-- Username.
-- Password.
-
-The component calls:
-
-`AuthService.login()`
-
-If authentication succeeds, the authenticated user is stored by
-`AuthService` and the application navigates to the appropriate protected area.
-
-If authentication fails, the backend error message is displayed to the user.
-
-`ChangeDetectorRef.markForCheck()` is used after asynchronous responses so
-error information is displayed immediately.
-
----
-
-#### 3.1.2 RegisterComponent
-
-`RegisterComponent` provides the public account registration interface.
-
-The component collects:
-
-- First name.
-- Last name.
-- Username.
-- Email.
-- Age.
-- Password.
-
-Registration data is sent using:
-
-`AuthService.register()`
-
-The backend performs the authoritative validation and account creation.
-
-The component displays backend validation errors such as:
-
-- Invalid input.
-- Duplicate username.
-- Duplicate email address.
-- Password validation failures.
-
-After successful registration, the user can proceed to login.
-
----
-
-#### 3.1.3 NavbarComponent
-
-`NavbarComponent` provides shared navigation across authenticated pages.
-
-It accesses the current user through `AuthService`.
-
-The navbar can determine whether the current account is the Super
-Administrator through the `isSuperAdmin` state.
-
-The component also provides logout functionality.
-
-Logout:
-
-1. Removes the current user from local storage.
-2. Clears the authentication signal.
-3. Returns the user to the login interface.
-
----
-
-#### 3.1.4 GroupsComponent
-
-`GroupsComponent` is the main page for normal authenticated users.
-
-The component loads:
-
-- Available groups.
-- The current user's request history.
-
-Group data is obtained through:
-
-`GroupService`
-
-Request information is obtained through:
-
-`RequestService`
-
-The component supports:
-
-- Viewing available groups.
-- Searching groups by title or description.
-- Determining whether the current user is a member.
-- Determining whether the current user is a Group Administrator.
-- Requesting membership of a group.
-- Submitting a group-creation request.
-- Viewing previous request statuses.
-
-The component does not directly create groups because new group creation
-requires Super Administrator approval.
-
----
-
-#### 3.1.5 GroupRoomsComponent
-
-`GroupRoomsComponent` displays the contents of a selected group.
-
-The group ID is obtained from the Angular route parameter:
-
-`groupId`
-
-When the component loads, it retrieves:
-
-- The group.
-- Rooms belonging to the group.
-- Members belonging to the group.
-
-The component uses:
-
-- `GroupService`
-- `RoomService`
-- `RequestService`
-
-The available functionality depends on whether the current user is a normal
-member or Group Administrator.
-
-Group Administrators can:
-
-- Create rooms directly.
-- Rename rooms.
-- Delete rooms.
-
-Normal group members can:
-
-- View available rooms.
-- Open chat rooms.
-- Propose a new room through a room-creation request.
-
-Group members can also create a group-ban request against another eligible
-member.
-
-The component contains client-side helper functions that determine:
-
-- Whether the current user is a Group Administrator.
-- Whether another member is an administrator.
-
-Backend authorization is still performed for all protected operations.
-
----
-
-#### 3.1.6 GroupAdminComponent
-
-`GroupAdminComponent` provides the management interface for Group
-Administrators.
-
-Access to this component is protected by:
-
-- `authGuard`
-- `userGuard`
-- `groupAdminGuard`
-
-The component loads:
-
-- Current group information.
-- Group members.
-- Pending requests requiring Group Administrator action.
-
-The component supports:
-
-- Editing the group title.
-- Editing the group description.
-- Editing the minimum age.
-- Editing the group theme.
-- Promoting members to Group Administrator.
-- Demoting Group Administrators.
-- Resigning as Group Administrator.
-- Approving pending requests.
-- Rejecting pending requests with a reason.
-- Creating system-ban requests.
-- Creating group-deletion requests.
-
-The backend still performs all authorization and business-rule checks.
-
-This prevents client-side manipulation from bypassing rules such as the
-requirement for a group to always contain at least one administrator.
-
----
-
-#### 3.1.7 SuperAdminComponent
-
-`SuperAdminComponent` provides the interface available only to the single
-Super Administrator.
-
-Access is protected by:
-
-- `authGuard`
-- `superAdminGuard`
-
-The component uses:
-
-- `RequestService`
-- `AdminService`
-
-The Super Administrator interface loads pending requests and separates them
-according to request type.
-
-The component handles:
-
-- Group-creation requests.
-- System-ban requests.
-- Group-deletion requests.
-- Request approval.
-- Request rejection with a rejection reason.
-- Viewing permanently banned users.
-- Viewing administrative audit logs.
-- Filtering audit-log information.
-
-The Super Administrator account does not participate in normal group chat.
-
----
-
-#### 3.1.8 ProfileComponent
-
-`ProfileComponent` displays and updates the authenticated user's profile.
-
-The component initially retrieves the latest profile information from the
-backend using:
-
-`UserService.getProfile()`
-
-Editable profile fields include:
-
-- First name.
-- Last name.
-- Username.
-- Age.
-- Password.
-
-The email address is displayed but cannot be edited.
-
-Profile updates use:
-
-`UserService.updateProfile()`
-
-The component also supports profile-picture uploads.
-
-When an image is selected:
-
-1. The file type is validated.
-2. The size is limited to 5 MB.
-3. `FileReader` creates a Base64 preview only inside the browser.
-4. The actual `File` object is retained for upload.
-5. The file is sent using `multipart/form-data`.
-6. The backend stores the image on the filesystem.
-7. The returned image path becomes the user's `profilePicture`.
-
-The Base64 preview is not stored in MongoDB.
-
-After an update, `AuthService.setCurrentUser()` refreshes the stored client-side
-user information.
-
----
-
-#### 3.1.9 ChatRoomComponent
-
-`ChatRoomComponent` provides the main real-time communication functionality.
-
-The route contains:
-
-- `groupId`
-- `roomId`
-
-When the component initializes, it:
-
-1. Reads the route parameters.
-2. Connects to Socket.IO.
-3. Registers Socket.IO event listeners.
-4. Retrieves the group.
-5. Retrieves the room.
-6. Retrieves the most recent five messages using REST.
-7. Joins the Socket.IO room after the room has been validated.
-
-The component uses:
-
-- `AuthService`
-- `GroupService`
-- `RoomService`
-- `SocketService`
-
-Initial message history is retrieved using REST.
-
-Live communication is handled with Socket.IO.
-
-The component listens for:
-
-- `newMessage`
-- `userJoined`
-- `userLeft`
-- `messageDeleted`
-
-When `newMessage` is received, the message is added to the local message array.
-
-The interface keeps the most recent five messages using:
-
-`slice(-5)`
-
-Text messages are sent using:
-
-`SocketService.sendMessage()`
-
-GIF messages are also sent through Socket.IO.
-
-Chat images use a hybrid process:
-
-1. The actual image file is uploaded through HTTP.
-2. The backend saves the image file.
-3. MongoDB stores the message and image metadata.
-4. The backend broadcasts `newMessage`.
-5. Every connected client displays the image immediately.
-
-Image selection validates:
+Supported formats are:
 
 - JPEG.
 - PNG.
 - GIF.
 - WEBP.
 
-The maximum image size is 5 MB.
+Maximum size:
 
-`FileReader` is used only for a local image preview.
+`5 MB`
 
-Message deletion uses REST for the state-changing request.
+Images are not stored as Base64 inside MongoDB.
 
-After a message is soft-deleted, the server broadcasts:
+The process is:
 
-`messageDeleted`
+1. Angular sends the actual `File` using `multipart/form-data`.
+2. Multer validates the upload.
+3. Node stores the file on the server filesystem.
+4. MongoDB stores the public path and metadata.
+5. Express serves the uploaded file.
 
-The component responds by filtering the deleted message from the local
-`messages` array.
+Chat images are stored under:
 
-This allows the deletion to appear immediately on every client currently
-viewing the room.
+`server/uploads/chat/`
 
-When the component is destroyed, it:
+Profile images are stored under:
 
-1. Leaves the Socket.IO room.
-2. Unsubscribes from Socket.IO/RxJS subscriptions.
-3. Disconnects the socket.
+`server/uploads/profiles/`
 
-This prevents unused listeners from remaining active after the user leaves the
-chat page.
+`FileReader` is used only for browser previews.
 
 ---
 
-### 3.2 Services
+## 1.21 Validation and Error Handling
 
-Angular services separate backend communication and application state from the
-visual components.
+Validation occurs at several levels.
 
-Fabulari uses the following services.
+### Client-side
+
+Examples:
+
+- Required fields.
+- Date inputs.
+- Image type.
+- Image size.
+- Empty message input.
+- Empty room name.
+
+### Backend
+
+Examples:
+
+- Authorization.
+- Group membership.
+- Minimum age.
+- Date-of-birth validation.
+- Password validation.
+- Duplicate account information.
+- Message ownership.
+- Request authorization.
+- Administrator invariants.
+
+### MongoDB
+
+Unique indexes protect:
+
+- Application IDs.
+- Email addresses.
+- Usernames.
+
+Errors are displayed near the action that caused them where practical.
+
+For example:
+
+- Join-group errors appear near the Join button.
+- Room errors appear near the relevant room.
+- Administrator resignation errors appear near the resignation action.
+
+This prevents users from having to scroll to the top of a page to discover why
+an action failed.
+
+Common HTTP response codes include:
+
+- `200` success.
+- `201` resource created.
+- `400` invalid input.
+- `401` invalid credentials.
+- `403` unauthorized operation.
+- `404` resource not found.
+- `409` conflicting/duplicate data.
+- `500` unexpected server error.
+
+Unknown `/api/*` routes return a JSON `404` response.
+
+---
+
+## 1.22 MongoDB Collections
+
+The runtime application uses MongoDB.
+
+The main collections are:
+
+| Collection | Purpose |
+|---|---|
+| `users` | User accounts and profiles |
+| `groups` | Groups, membership, roles and themes |
+| `rooms` | Group chat rooms |
+| `requests` | Approval workflows |
+| `messages` | Persistent chat messages |
+| `auditLogs` | Administrative actions |
+| `bannedUsers` | Permanently banned users |
+| `appState` | Application/bootstrap state |
+
+Fabulari keeps application UUIDs in addition to MongoDB `_id` values.
+
+The UUIDs are used by:
+
+- Angular routes.
+- Relationships.
+- API requests.
+- Socket.IO payloads.
+
+---
+
+# 2. Server API Documentation
+
+The backend is implemented using Node.js and Express.
+
+Development URL:
+
+`http://localhost:3000`
+
+JSON is used for normal API requests.
+
+Image endpoints use:
+
+`multipart/form-data`
+
+---
+
+## 2.1 General Routes
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/health` | Reports server/database health and collection information |
+| Any | Unknown `/api/*` | Returns controlled JSON `404` response |
+
+Uploaded files are served through:
+
+`/uploads/*`
+
+---
+
+## 2.2 Authentication API
+
+| Method | Endpoint | Main Request Data | Purpose |
+|---|---|---|---|
+| POST | `/api/register` | `firstName`, `lastName`, `username`, `email`, `dateOfBirth`, calculated `age`, `password` | Register user |
+| POST | `/api/login` | `username`, `password` | Authenticate user |
+
+### Registration
+
+Registration:
+
+1. Validates required information.
+2. Trims text fields.
+3. Normalises email.
+4. Validates date of birth.
+5. Rejects future dates.
+6. Rejects age zero.
+7. Validates password.
+8. Prevents duplicate email.
+9. Prevents case-insensitive duplicate username.
+10. Checks permanently banned email addresses.
+11. Hashes the password using bcrypt.
+12. Generates an application UUID.
+13. Inserts the user into MongoDB.
+
+The returned user object excludes:
+
+- `passwordHash`.
+- MongoDB `_id`.
+
+### Login
+
+Login performs:
+
+1. Case-insensitive username lookup.
+2. bcrypt password comparison.
+3. Safe user response.
+
+Invalid credentials return `401`.
+
+---
+
+## 2.3 User API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/users/:userId` | Get profile |
+| PUT | `/api/users/:userId` | Update profile |
+
+Profile updates can include:
+
+- First name.
+- Last name.
+- Username.
+- Date of birth.
+- Calculated age.
+- Optional new password.
+- Existing profile-picture information where appropriate.
+
+Email remains immutable.
+
+When age changes, group eligibility is re-evaluated before completing the
+update.
+
+---
+
+## 2.4 Group API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/groups` | Get all groups |
+| GET | `/api/groups/:groupId` | Get one group |
+| GET | `/api/groups/:groupId/rooms` | Get group rooms |
+| GET | `/api/groups/:groupId/members` | Get members |
+| POST | `/api/groups/:groupId/rooms` | Group Admin creates room |
+| PUT | `/api/groups/:groupId` | Update group |
+| POST | `/api/groups/:groupId/admins/:userId` | Promote Group Administrator |
+| DELETE | `/api/groups/:groupId/admins/:userId` | Demote Group Administrator |
+| POST | `/api/groups/:groupId/admins/resign` | Resign as Group Administrator |
+| POST | `/api/groups/:groupId/leave` | Leave group |
+
+Protected group requests include the acting user's ID.
+
+### Group Invariants
+
+The server guarantees:
+
+- Only authorised administrators perform administrative actions.
+- Only members can be promoted.
+- A group always has at least one administrator.
+- Minimum-age rules are enforced.
+- Under-age members are removed when required.
+- Sole-admin age changes that would invalidate the administrator are rejected.
+- Leaving a group cannot leave the group administrator-less.
+
+---
+
+## 2.5 Request API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| POST | `/api/requests/group-creation` | Request group creation |
+| POST | `/api/requests/join` | Request group membership |
+| POST | `/api/requests/room-creation` | Propose room |
+| POST | `/api/requests/group-ban` | Request group ban |
+| POST | `/api/requests/system-ban` | Request system ban |
+| POST | `/api/requests/group-deletion` | Request group deletion |
+| GET | `/api/requests/super-admin/:userId` | Super Admin pending requests |
+| GET | `/api/requests/group-admin/:userId/:groupId` | Group Admin pending requests |
+| GET | `/api/requests/user/:userId/history` | User request history |
+| PUT | `/api/requests/:requestId` | Approve or reject request |
+
+Supported request types are:
+
+- `groupCreation`
+- `joinGroup`
+- `roomCreation`
+- `groupBan`
+- `systemBan`
+- `groupDeletion`
+
+Request statuses are:
+
+- `pending`
+- `approved`
+- `rejected`
+
+A rejected request requires a rejection reason.
+
+Important administrative actions are added to `auditLogs`.
+
+---
+
+## 2.6 Room and Message API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/rooms/:roomId` | Get room |
+| PUT | `/api/rooms/:roomId` | Rename room |
+| DELETE | `/api/rooms/:roomId` | Delete room |
+| GET | `/api/rooms/:roomId/messages` | Get recent messages |
+| POST | `/api/rooms/:roomId/messages` | Persist message through REST |
+| DELETE | `/api/rooms/:roomId/messages/:messageId` | Soft-delete own message |
+
+### Message History
+
+The default history limit is:
+
+`5`
+
+The maximum supported limit is:
+
+`50`
+
+Deleted messages are excluded.
+
+Returned messages can include enriched sender information:
+
+- Username.
+- Profile picture.
+- Group Administrator status.
+
+### Message Deletion
+
+A user can delete only their own message.
+
+The backend updates:
+
+`deleted: true`
+
+and then informs connected room clients using Socket.IO.
+
+---
+
+## 2.7 Administration API
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| GET | `/api/admin/banned-users/:userId` | Get permanently banned users |
+| GET | `/api/admin/audit-logs/:userId` | Get audit logs |
+
+Both routes verify Super Administrator access.
+
+---
+
+## 2.8 Upload API
+
+| Method | Endpoint | Fields | Purpose |
+|---|---|---|---|
+| POST | `/api/uploads/chat-image` | `image`, `roomId`, `senderId` | Send chat image |
+| POST | `/api/uploads/profile-image` | `image`, `userId` | Upload profile picture |
+
+The upload endpoints validate:
+
+- MIME type.
+- Maximum 5 MB file size.
+- User authorization.
+- Relevant room/group access.
+
+---
+
+## 2.9 Socket.IO API
+
+Socket.IO is attached to the same HTTP server as Express.
+
+Angular connects from:
+
+`http://localhost:4200`
+
+### Main Client-to-Server Operations
+
+| Operation | Purpose |
+|---|---|
+| Join room | Validate user and join chat room |
+| Leave room | Leave current Socket.IO room |
+| Send message | Validate, persist and broadcast text/GIF message |
+| Subscribe to group updates | Receive live membership/request changes |
+| Unsubscribe from group updates | Stop group-level updates |
+
+### Main Server-to-Client Events
+
+Fabulari uses real-time events for:
+
+- New messages.
+- Message deletion.
+- User joined.
+- User left.
+- Current room-presence list.
+- Group member changes.
+- Group request changes.
+- Group access revocation.
+
+### Message Flow
+
+```text
+Angular
+   |
+   | sendMessage
+   v
+Socket.IO Server
+   |
+   | Validate room/user/membership
+   v
+MongoDB
+   |
+   | Insert message
+   v
+Socket.IO broadcast
+   |
+   v
+Connected Angular clients
+```
+
+### Presence Flow
+
+```text
+User joins room
+      |
+      v
+Backend validates user
+      |
+      v
+Socket joins room
+      |
+      +---- userJoined notification
+      |
+      +---- updated online-user list
+```
+
+When a user leaves, switches rooms or disconnects, the online-user list is
+updated again.
+
+---
+
+# 3. Angular Architecture
+
+Fabulari uses Angular 22 with standalone components.
+
+The application starts using:
+
+`bootstrapApplication()`
+
+Angular provides:
+
+- Routing.
+- HTTP communication.
+- Signals.
+- RxJS.
+- Form bindings.
+- Route guards.
+
+---
+
+## 3.1 Components
+
+| Component | Responsibility |
+|---|---|
+| `LoginComponent` | User login |
+| `RegisterComponent` | Registration and DOB/calendar handling |
+| `NavbarComponent` | Shared Fabulari navigation and logout |
+| `GroupsComponent` | Group browsing, join requests, group requests and history |
+| `GroupRoomsComponent` | Rooms, members, group leaving and member actions |
+| `GroupAdminComponent` | Group administration |
+| `SuperAdminComponent` | System-level administration |
+| `ProfileComponent` | Profile, DOB and profile image |
+| `ChatRoomComponent` | Persistent real-time chat and room presence |
+
+---
+
+## 3.2 LoginComponent
+
+`LoginComponent`:
+
+- Accepts username/password.
+- Calls `AuthService.login()`.
+- Displays backend errors.
+- Navigates after successful authentication.
+
+---
+
+## 3.3 RegisterComponent
+
+`RegisterComponent` collects:
+
+- First name.
+- Last name.
+- Username.
+- Email.
+- Date of birth.
+- Password.
+
+Date of birth uses:
+
+`<input type="date">`
+
+The component calculates age from the selected date.
+
+It prevents invalid/future DOB values and age zero.
+
+Registration uses:
+
+`AuthService.register()`
+
+---
+
+## 3.4 NavbarComponent
+
+The navbar:
+
+- Displays the Fabulari logo.
+- Shows role-appropriate navigation.
+- Displays the logged-in username.
+- Provides logout.
+
+---
+
+## 3.5 GroupsComponent
+
+`GroupsComponent` provides:
+
+- Group search.
+- Your Groups.
+- Available Groups.
+- Join requests.
+- Group-creation requests.
+- Request history.
+
+Only groups relevant to a section generate group-card elements, preventing
+empty theme cards from being rendered.
+
+Real-time membership changes can update the page without manual refresh.
+
+---
+
+## 3.6 GroupRoomsComponent
+
+`GroupRoomsComponent` loads:
+
+- Group.
+- Rooms.
+- Members.
+
+Group Administrators can:
+
+- Create rooms.
+- Rename rooms.
+- Delete rooms.
+
+Normal members can:
+
+- Enter rooms.
+- Propose rooms.
+
+Members can also:
+
+- Submit valid group-ban requests.
+- Leave the group.
+
+The component subscribes to group-level real-time changes.
+
+When membership changes, the group and member list can reload automatically.
+
+If the current user's access is revoked, they are redirected away from the
+protected group page.
+
+---
+
+## 3.7 GroupAdminComponent
+
+`GroupAdminComponent` provides:
+
+- Group editing.
+- Theme editing.
+- Minimum-age editing.
+- Member administration.
+- Promotion.
+- Demotion.
+- Resignation.
+- Request approval/rejection.
+- System-ban requests.
+- Group-deletion requests.
+
+Pending requests can update while the page is open.
+
+Protected backend rules remain authoritative.
+
+---
+
+## 3.8 SuperAdminComponent
+
+The Super Administrator can:
+
+- Process group creation.
+- Process system bans.
+- Process group deletion.
+- View banned users.
+- View audit logs.
+
+Normal chat functionality is not available to this system account.
+
+---
+
+## 3.9 ProfileComponent
+
+The Profile page allows users to update:
+
+- First name.
+- Last name.
+- Username.
+- Date of birth.
+- Password.
+- Profile picture.
+
+Email is read-only.
+
+The date picker replaces manual age entry.
+
+Profile updates refresh the local authentication state after the server returns
+the updated user.
+
+Profile-picture selection uses `FileReader` only for preview.
+
+The actual file is uploaded using `FormData`.
+
+---
+
+## 3.10 ChatRoomComponent
+
+`ChatRoomComponent`:
+
+1. Reads `groupId` and `roomId`.
+2. Loads group information.
+3. Loads room information.
+4. Retrieves the five latest messages.
+5. Connects to Socket.IO.
+6. Joins the room.
+7. Subscribes to real-time events.
+
+The component supports:
+
+- Text.
+- Images.
+- GIFs.
+- Message deletion.
+- Join notifications.
+- Leave notifications.
+- Persistent room presence list.
+
+The interface displays:
+
+`Online in this room (n)`
+
+Messages are limited visually to the latest five.
+
+When the component is destroyed:
+
+- Room membership is released.
+- Subscriptions are removed.
+- Socket state is cleaned up.
+
+---
+
+## 3.11 Services
 
 | Service | Responsibility |
 |---|---|
 | `AuthService` | Authentication and current-user state |
-| `UserService` | Profile retrieval, updating and profile-image upload |
-| `GroupService` | Group and Group Administrator operations |
-| `RoomService` | Room management, message history and chat-image upload |
-| `RequestService` | Creation and actioning of application requests |
-| `AdminService` | Super Administrator banned-user and audit-log retrieval |
-| `SocketService` | Socket.IO connection and real-time chat events |
+| `UserService` | Profile and profile-image operations |
+| `GroupService` | Group/membership/admin operations |
+| `RoomService` | Rooms, message history and chat images |
+| `RequestService` | Request/approval workflows |
+| `AdminService` | Audit logs and banned-user information |
+| `SocketService` | Real-time Socket.IO communication |
 
 ---
 
-#### 3.2.1 AuthService
+## 3.12 AuthService
 
-`AuthService` manages authentication and current-user state.
+`AuthService` uses an Angular signal for the current authenticated user.
 
-The service communicates with:
+The user is also stored in:
 
-- `POST /api/register`
-- `POST /api/login`
+`localStorage`
 
-The service maintains the authenticated user using an Angular signal:
-
-`currentUserSignal`
-
-A read-only version is exposed to components through:
-
-`currentUser`
-
-The current user is also stored in browser `localStorage` using the key:
-
-`currentUser`
-
-This allows the authenticated user state to survive a normal browser refresh.
+This allows authentication state to survive a normal browser refresh.
 
 Important methods include:
 
@@ -1407,229 +1254,115 @@ Important methods include:
 - `isLoggedIn()`
 - `isSuperAdmin()`
 
-The login operation uses RxJS `tap()` to store the user after a successful
-response.
+---
+
+## 3.13 UserService
+
+Important operations include:
+
+- Retrieve profile.
+- Update profile.
+- Upload profile picture.
+
+Profile uploads use `FormData`.
 
 ---
 
-#### 3.2.2 UserService
+## 3.14 GroupService
 
-`UserService` handles user-profile communication.
+Important operations include:
 
-Important methods include:
-
-- `getProfile()`
-- `updateProfile()`
-- `uploadProfilePicture()`
-
-Profile-image uploads use `FormData`.
-
-The service sends:
-
-- `userId`
-- The actual image file
-
-to:
-
-`POST /api/uploads/profile-image`
-
-This keeps binary image handling separate from normal JSON profile updates.
+- Get groups.
+- Get one group.
+- Get members.
+- Update group.
+- Promote administrator.
+- Demote administrator.
+- Resign administrator.
+- Leave group.
 
 ---
 
-#### 3.2.3 GroupService
+## 3.15 RoomService
 
-`GroupService` communicates with the group API.
+Important operations include:
 
-Important methods include:
-
-- `getGroups()`
-- `getGroup()`
-- `getGroupMembers()`
-- `updateGroup()`
-- `promoteAdmin()`
-- `demoteAdmin()`
-- `resignAdmin()`
-
-The service is used by normal group interfaces and the Group Administrator
-interface.
-
-Administrative requests include the acting user's ID so the backend can
-perform authorization checks.
+- Get rooms.
+- Get room.
+- Create room.
+- Rename room.
+- Delete room.
+- Get message history.
+- Persist REST messages.
+- Upload chat image.
+- Delete message.
 
 ---
 
-#### 3.2.4 RoomService
+## 3.16 RequestService
 
-`RoomService` handles room and persistent-message HTTP operations.
+Important operations include:
 
-Important methods include:
-
-- `getRooms()`
-- `getRoom()`
-- `createRoom()`
-- `renameRoom()`
-- `deleteRoom()`
-- `getMessages()`
-- `sendMessage()`
-- `uploadChatImage()`
-- `deleteMessage()`
-
-`getMessages()` requests the most recent five messages.
-
-`sendMessage()` represents the REST message endpoint retained by the
-application, although the live chat primarily uses Socket.IO for text and GIF
-messages.
-
-`uploadChatImage()` creates a `FormData` object containing:
-
-- `roomId`
-- `senderId`
-- `image`
-
-and sends it to the chat-image upload API.
-
-`deleteMessage()` uses the REST API to perform the database update before the
-server broadcasts the real-time deletion event.
+- Group creation request.
+- Join request.
+- Room request.
+- Group-ban request.
+- System-ban request.
+- Group-deletion request.
+- User history.
+- Group Admin pending requests.
+- Super Admin pending requests.
+- Approve/reject request.
 
 ---
 
-#### 3.2.5 RequestService
+## 3.17 SocketService
 
-`RequestService` handles the request/approval system.
+`SocketService` isolates Socket.IO from visual components.
 
-Important methods include:
+It handles:
 
-- `createGroupRequest()`
-- `requestJoin()`
-- `createRoomRequest()`
-- `createGroupBanRequest()`
-- `createSystemBanRequest()`
-- `createGroupDeletionRequest()`
-- `getSuperAdminRequests()`
-- `getGroupJoinRequests()`
-- `getUserRequestHistory()`
-- `actionRequest()`
+- Connection.
+- Disconnection.
+- Room joining.
+- Room leaving.
+- Message sending.
+- New-message events.
+- Message-deletion events.
+- Room presence.
+- Join/leave events.
+- Group-level subscriptions.
+- Membership updates.
+- Access-revocation updates.
 
-`actionRequest()` sends:
+Socket events are exposed to components using RxJS Observables where
+appropriate.
 
-- Request ID.
-- Acting administrator ID.
-- `approved` or `rejected` status.
-- Optional rejection reason.
-
-The backend determines whether the acting user has permission to action the
-specific request type.
+Listeners are removed when subscriptions are destroyed to prevent duplicate
+event handling.
 
 ---
 
-#### 3.2.6 AdminService
+## 3.18 Models
 
-`AdminService` provides Super Administrator data retrieval.
+### User
 
-Important methods are:
+Important fields include:
 
-- `getBannedUsers()`
-- `getAuditLogs()`
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `firstName` | `string` |
+| `lastName` | `string` |
+| `username` | `string` |
+| `email` | `string` |
+| `dateOfBirth` | `string` |
+| `age` | `number` |
+| `profilePicture` | `string` |
+| `systemRole` | `'user' \| 'superAdmin'` |
+| `createdAt` | `string` |
 
-Both operations include the Super Administrator user ID.
-
-The backend performs the final role validation.
-
----
-
-#### 3.2.7 SocketService
-
-`SocketService` isolates Socket.IO communication from Angular components.
-
-The service connects to:
-
-`http://localhost:3000`
-
-The socket is created with:
-
-`autoConnect: false`
-
-This means the application explicitly connects when a chat room requires
-real-time communication.
-
-Connection methods include:
-
-- `connect()`
-- `disconnect()`
-
-Client-to-server methods include:
-
-- `joinRoom()`
-- `leaveRoom()`
-- `sendMessage()`
-
-These methods use Socket.IO acknowledgement callbacks and return a
-`Promise<SocketActionResult>`.
-
-The acknowledgement contains:
-
-- `success`
-- `message`
-
-Server-to-client Socket.IO events are exposed as RxJS Observables.
-
-Listener methods include:
-
-- `onNewMessage()`
-- `onUserJoined()`
-- `onUserLeft()`
-- `onMessageDeleted()`
-
-Each Observable removes its Socket.IO listener when the Angular subscription is
-unsubscribed.
-
-This prevents duplicate listeners when components are destroyed and recreated.
-
----
-
-### 3.3 Models
-
-TypeScript interfaces define the frontend representation of application data.
-
-These models provide consistent typing between components and services.
-
----
-
-#### 3.3.1 User Model
-
-The `User` interface contains:
-
-| Field | Type | Purpose |
-|---|---|---|
-| `id` | `string` | Application UUID |
-| `firstName` | `string` | User's first name |
-| `lastName` | `string` | User's last name |
-| `username` | `string` | Unique username |
-| `email` | `string` | Registered email |
-| `age` | `number` | User age |
-| `profilePicture` | `string` | Stored profile-image path |
-| `systemRole` | `'user' \| 'superAdmin'` | System-level role |
-| `createdAt` | `string` | Account creation timestamp |
-
-The same model file also defines `BannedUser`.
-
-`BannedUser` contains:
-
-- `id`
-- `originalUserId`
-- `firstName`
-- `lastName`
-- `email`
-- `reason`
-- `bannedBy`
-- `bannedAt`
-
----
-
-#### 3.3.2 Group Model
-
-The `Group` interface contains:
+### Group
 
 | Field | Type |
 |---|---|
@@ -1644,23 +1377,7 @@ The `Group` interface contains:
 | `roomIds` | `string[]` |
 | `createdAt` | `string` |
 
-The group model file also defines:
-
-`GroupMember`
-
-which contains:
-
-- `id`
-- `username`
-
-This smaller representation is used when displaying and managing group
-membership.
-
----
-
-#### 3.3.3 Room Model
-
-The `Room` interface contains:
+### Room
 
 | Field | Type |
 |---|---|
@@ -1669,42 +1386,28 @@ The `Room` interface contains:
 | `name` | `string` |
 | `createdAt` | `string` |
 
-`groupId` links each room to its parent group.
+### Message
 
----
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `roomId` | `string` |
+| `senderId` | `string` |
+| `type` | `'text' \| 'image' \| 'gif'` |
+| `content` | `string` |
+| `createdAt` | `string` |
+| `deleted` | `boolean` |
+| `senderUsername` | optional `string` |
+| `senderProfilePicture` | optional `string` |
+| `senderIsAdmin` | optional `boolean` |
 
-#### 3.3.4 Message Model
+### Request
 
-The `Message` interface contains:
-
-| Field | Type | Purpose |
-|---|---|---|
-| `id` | `string` | Message UUID |
-| `roomId` | `string` | Parent room |
-| `senderId` | `string` | Sending user |
-| `type` | `'text' \| 'image' \| 'gif'` | Message type |
-| `content` | `string` | Text, URL or stored image path |
-| `senderProfilePicture` | optional `string` | Sender avatar |
-| `createdAt` | `string` | Creation timestamp |
-| `deleted` | `boolean` | Soft-deletion state |
-| `senderUsername` | optional `string` | Display username |
-| `senderIsAdmin` | optional `boolean` | Group Administrator indicator |
-
-The sender-related fields are used to enrich the chat interface without
-requiring an additional user request for every rendered message.
-
----
-
-#### 3.3.5 Request Model
-
-The `Request` interface contains:
+Important fields include:
 
 - `id`
 - `type`
 - `requesterId`
-- Optional `requesterUsername`
-- Optional `targetUsername`
-- Optional `groupTitle`
 - `targetGroupId`
 - `targetUserId`
 - `details`
@@ -1713,20 +1416,9 @@ The `Request` interface contains:
 - `rejectionReason`
 - `createdAt`
 
-The `status` field is restricted to:
+### AuditLog
 
-- `pending`
-- `approved`
-- `rejected`
-
-The flexible `details` property stores information specific to each request
-type.
-
----
-
-#### 3.3.6 AuditLog Model
-
-The `AuditLog` interface contains:
+Important fields include:
 
 - `id`
 - `type`
@@ -1734,1281 +1426,649 @@ The `AuditLog` interface contains:
 - `targetId`
 - `details`
 - `createdAt`
-- Optional `actorUsername`
-- Optional `targetUsername`
-
-Audit records can therefore contain both persisted IDs and enriched usernames
-for display in the Super Administrator interface.
 
 ---
 
-### 3.4 Routes and Guards
-
-Angular Router controls navigation between application features.
-
-The configured routes are:
+## 3.19 Routes and Guards
 
 | Route | Component | Guards |
 |---|---|---|
-| `/` | Redirects to `/login` | None |
-| `/login` | `LoginComponent` | None |
-| `/register` | `RegisterComponent` | None |
-| `/groups` | `GroupsComponent` | `authGuard`, `userGuard` |
-| `/profile` | `ProfileComponent` | `authGuard`, `userGuard` |
-| `/groups/:groupId/rooms/:roomId` | `ChatRoomComponent` | `authGuard`, `userGuard` |
-| `/groups/:groupId/admin` | `GroupAdminComponent` | `authGuard`, `userGuard`, `groupAdminGuard` |
-| `/groups/:groupId` | `GroupRoomsComponent` | `authGuard`, `userGuard` |
-| `/super-admin` | `SuperAdminComponent` | `authGuard`, `superAdminGuard` |
-| `**` | Redirects to `/login` | None |
+| `/` | Redirect to Login | — |
+| `/login` | Login | — |
+| `/register` | Register | — |
+| `/groups` | Groups | `authGuard`, `userGuard` |
+| `/profile` | Profile | `authGuard`, `userGuard` |
+| `/groups/:groupId/rooms/:roomId` | Chat Room | `authGuard`, `userGuard` |
+| `/groups/:groupId/admin` | Group Admin | `authGuard`, `userGuard`, `groupAdminGuard` |
+| `/groups/:groupId` | Group Rooms | `authGuard`, `userGuard` |
+| `/super-admin` | Super Admin | `authGuard`, `superAdminGuard` |
+| `**` | Redirect | — |
 
-The specific chat-room and Group Administrator routes appear before the
-generic:
+Client guards improve navigation security and UX.
 
-`/groups/:groupId`
-
-route so that Angular matches the intended route correctly.
+The backend independently checks authorization for protected actions.
 
 ---
 
-#### 3.4.1 authGuard
+# 4. Design Documents
 
-`authGuard` checks:
-
-`AuthService.isLoggedIn()`
-
-If a user is authenticated, navigation is allowed.
-
-Otherwise the guard returns a URL tree redirecting to:
-
-`/login`
-
-This protects authenticated application pages from unauthenticated access.
-
----
-
-#### 3.4.2 userGuard
-
-`userGuard` prevents the Super Administrator from entering interfaces intended
-for normal users.
-
-If the current account is not the Super Administrator, navigation is allowed.
-
-If the current account is the Super Administrator, the user is redirected to:
-
-`/super-admin`
-
-This separates normal-user functionality from system administration.
-
----
-
-#### 3.4.3 superAdminGuard
-
-`superAdminGuard` checks:
-
-`AuthService.isSuperAdmin()`
-
-Only the Super Administrator can access the Super Administrator page.
-
-Other authenticated users are redirected to:
-
-`/groups`
-
----
-
-#### 3.4.4 groupAdminGuard
-
-`groupAdminGuard` protects the Group Administrator interface.
-
-The guard:
-
-1. Retrieves the current user.
-2. Reads `groupId` from the route.
-3. Requests the current group using `GroupService`.
-4. Checks whether the user's ID appears in `group.adminIds`.
-
-If the user is a Group Administrator, navigation is allowed.
-
-Otherwise the user is redirected to:
-
-`/groups`
-
-Errors while retrieving the group are also handled by redirecting away from
-the protected route.
-
-The guard provides client-side navigation protection, while the Node.js backend
-still independently validates authorization for every protected API action.
-
----
-
-### 3.5 Angular State and Communication Flow
-
-Fabulari uses several different frontend communication mechanisms depending on
-the type of operation.
-
-#### Authentication State
-
-`AuthService`
-
-uses:
-
-- Angular signals for reactive current-user state.
-- `localStorage` for browser persistence.
-
-Components can therefore access the current authenticated user without
-repeatedly requesting it from the backend.
-
-#### REST Communication
-
-Angular's `HttpClient` is used for persistent operations such as:
-
-- Registration.
-- Login.
-- Profile management.
-- Group operations.
-- Room operations.
-- Request operations.
-- Message history.
-- Image uploads.
-- Message deletion.
-
-#### Real-Time Communication
-
-`SocketService`
-
-uses `socket.io-client` for:
-
-- Room joining.
-- Room leaving.
-- Text and GIF messages.
-- New-message delivery.
-- Presence events.
-- Real-time message-deletion synchronization.
-
-RxJS Observables wrap server-to-client Socket.IO events so components can
-subscribe and unsubscribe using normal Angular patterns.
-
-#### Change Detection
-
-Several components use:
-
-`ChangeDetectorRef.markForCheck()`
-
-after asynchronous HTTP and Socket.IO updates.
-
-This ensures that newly received data, validation errors and real-time events
-are reflected immediately in the interface.
-
-## 4. Design Documents
-
-Fabulari Phase 2 uses a MEAN-style client-server architecture consisting of
-Angular, Express/Node.js and MongoDB, with Socket.IO providing real-time
-communication.
-
-The application was designed so that persistent CRUD operations, file uploads
-and administration are handled using HTTP/REST, while events that need to
-appear immediately for multiple connected users are handled using Socket.IO.
-
----
-
-### 4.1 Overall System Architecture
-
-The overall application architecture is:
+## 4.1 Overall Architecture
 
 ```text
-Angular 22 Client
-        |
-        | HTTP / REST
-        | Socket.IO
-        v
-Node.js + Express Server
-        |
-        | Native MongoDB Driver
-        v
+              Angular 22
+                  |
+          +-------+-------+
+          |               |
+       HTTP/REST       Socket.IO
+          |               |
+          +-------+-------+
+                  |
+             Node.js
+             Express
+                  |
+          Native MongoDB
+              Driver
+                  |
+               MongoDB
+```
+
+Uploaded image files are additionally stored on the Node.js filesystem.
+
+---
+
+## 4.2 Data Storage Design
+
+MongoDB stores application data.
+
+Uploaded files are stored separately.
+
+```text
 MongoDB
-```
-
-The backend also stores uploaded image files on the server filesystem:
-
-```text
-Node.js Server
-    |
-    +-- uploads/
-        |
-        +-- chat/
-        |
-        +-- profiles/
-```
-
-MongoDB stores references and metadata for those files rather than storing the
-image binary directly.
-
----
-
-### 4.2 Application Communication Design
-
-Fabulari uses both REST and Socket.IO because different operations have
-different communication requirements.
-
-#### REST is used for:
-
-- Registration.
-- Login.
-- Profile retrieval.
-- Profile updates.
-- Group management.
-- Room management.
-- Request creation.
-- Request approval and rejection.
-- Super Administrator data.
-- Initial message-history retrieval.
-- Chat-image uploads.
-- Profile-image uploads.
-- Message deletion.
-
-#### Socket.IO is used for:
-
-- Joining a chat room.
-- Leaving a chat room.
-- Sending live text messages.
-- Sending live GIF messages.
-- Broadcasting uploaded image messages.
-- User join notifications.
-- User leave notifications.
-- Synchronising message deletion.
-
-This creates a hybrid design:
-
-```text
-Persistent request/response operation
-             |
-             v
-            REST
-
-
-Immediate multi-user update
-             |
-             v
-         Socket.IO
-```
-
-For example, deleting a message uses REST to perform the authenticated database
-operation.
-
-After the deletion succeeds, Socket.IO broadcasts `messageDeleted` so all
-users currently viewing the room update immediately.
-
----
-
-### 4.3 Server Startup Design
-
-The backend connects to MongoDB before accepting HTTP connections.
-
-The startup sequence is:
-
-```text
-Start Node.js server
-        |
-        v
-Load environment variables
-        |
-        v
-Connect to MongoDB
-        |
-        v
-Create/verify MongoDB indexes
-        |
-        v
-Run Super Administrator bootstrap check
-        |
-        v
-Start HTTP server
-        |
-        v
-Express + Socket.IO available
-```
-
-This prevents the application from accepting normal requests when the database
-connection has not been established.
-
-Socket.IO is attached to the same Node.js HTTP server used by Express.
-
----
-
-### 4.4 MongoDB Design
-
-Phase 1 used a JSON file for application persistence.
-
-Phase 2 migrated the live application data to MongoDB using the native
-MongoDB Node.js driver.
-
-Mongoose is not used.
-
-The MongoDB database is:
-
-`fabulari`
-
-The main collections are:
-
-| Collection | Purpose |
-|---|---|
-| `users` | Registered users and profile information |
-| `groups` | Group configuration, membership and administrator relationships |
-| `rooms` | Chat rooms |
-| `requests` | Approval workflow requests |
-| `messages` | Persistent chat messages |
-| `auditLogs` | Administrative activity |
-| `bannedUsers` | Permanently banned users |
-| `appState` | Application-level state |
-
----
-
-### 4.5 Application IDs and MongoDB `_id`
-
-MongoDB automatically creates an `_id` value for each document.
-
-Fabulari also retains its existing UUID-based `id` properties.
-
-For example:
-
-```text
-MongoDB _id
-    |
-    +-- Internal MongoDB document identity
-
-Fabulari id
-    |
-    +-- Application UUID used by Angular,
-        routes and relationships
-```
-
-The Phase 1 application already used UUIDs throughout its routes and
-relationships.
-
-Retaining these identifiers during the migration reduced unnecessary frontend
-changes and preserved compatibility between Phase 1 and Phase 2.
-
-MongoDB `_id` values are generally removed before objects are returned to the
-Angular client.
-
----
-
-### 4.6 MongoDB Relationships
-
-Fabulari uses application UUIDs to represent relationships between collections.
-
-#### Group relationships
-
-A group stores:
-
-- `adminIds`
-- `memberIds`
-- `bannedUserIds`
-- `roomIds`
-
-These values reference application UUIDs.
-
-Example:
-
-```text
-Group
  |
- +-- adminIds --------> User IDs
+ +-- users
+ +-- groups
+ +-- rooms
+ +-- requests
+ +-- messages
+ +-- auditLogs
+ +-- bannedUsers
+ +-- appState
+
+
+Node Server
  |
- +-- memberIds -------> User IDs
- |
- +-- bannedUserIds ---> User IDs
- |
- +-- roomIds ---------> Room IDs
+ +-- uploads/
+      |
+      +-- chat/
+      |
+      +-- profiles/
 ```
 
-#### Room relationships
+This avoids storing large image binary/Base64 values in MongoDB.
 
-Each room contains:
+---
 
-`groupId`
-
-which identifies its parent group.
-
-```text
-Group
-  |
-  +---- Room
-          |
-          +---- groupId
-```
-
-#### Message relationships
-
-Each message contains:
-
-- `roomId`
-- `senderId`
+## 4.3 MongoDB Relationships
 
 ```text
 User
-  |
-  +---- senderId
-          |
-        Message
-          |
-          +---- roomId ----> Room
+ |
+ | senderId
+ v
+Message -------- roomId -------> Room
+                                  |
+                                  | groupId
+                                  v
+                                Group
 ```
 
-#### Request relationships
+Groups reference users through:
 
-Requests contain identifiers such as:
+- `memberIds`
+- `adminIds`
+- `bannedUserIds`
+
+Groups reference rooms through:
+
+- `roomIds`
+
+Requests reference entities through fields such as:
 
 - `requesterId`
-- `targetGroupId`
 - `targetUserId`
-
-The exact fields used depend on the request type.
-
----
-
-### 4.7 MongoDB Index Design
-
-Indexes were added for identifiers, uniqueness requirements and frequently
-used query patterns.
-
-#### Users
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate application user UUIDs |
-| `email` unique | Prevent duplicate email addresses |
-| `username` unique with case-insensitive collation | Prevent usernames that differ only by letter case |
-
-The username index uses case-insensitive collation.
-
-Therefore usernames such as:
-
-```text
-user1
-User1
-USER1
-```
-
-cannot exist as separate accounts.
-
-#### Groups
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate group UUIDs |
-
-#### Rooms
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate room UUIDs |
-| `groupId` | Improve retrieval of rooms belonging to a group |
-
-#### Requests
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate request UUIDs |
-| `requesterId + createdAt` | Improve user request-history queries |
-| `type + status + targetGroupId` | Improve pending administrative request queries |
-
-#### Messages
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate message UUIDs |
-| `roomId + createdAt DESC` | Improve retrieval of recent room messages |
-
-The message index is particularly relevant because the chat repeatedly asks
-for the newest messages belonging to one room.
-
-#### Audit Logs
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate audit-log UUIDs |
-| `createdAt DESC` | Improve chronological audit-log queries |
-
-#### Banned Users
-
-| Index | Purpose |
-|---|---|
-| `id` unique | Prevent duplicate banned-user records |
-| `originalUserId` unique | Prevent multiple permanent-ban records for the same user |
-
-#### Application State
-
-| Index | Purpose |
-|---|---|
-| `key` unique | Prevent duplicate application-state keys |
-
-MongoDB also maintains its normal `_id` index automatically.
+- `targetGroupId`
 
 ---
 
-### 4.8 MongoDB Migration Design
+## 4.4 Index Design
 
-Phase 2 required existing Phase 1 information to be moved from JSON
-persistence to MongoDB.
+MongoDB indexes are created during server startup.
 
-Dedicated migration scripts were used for this process.
+Important examples include:
 
-The migration was separated from the final runtime routes.
+### Users
 
-Conceptually:
+- Unique application user ID.
+- Unique email.
+- Case-insensitive unique username.
+
+### Messages
+
+- Unique message ID.
+- Compound room/date index:
 
 ```text
-Phase 1 data.json
-        |
-        v
-Migration scripts
-        |
-        v
-MongoDB collections
+roomId: 1
+createdAt: -1
 ```
 
-After migration:
+This supports efficient recent-message retrieval.
+
+Other collections use unique application IDs and indexes appropriate to their
+normal lookup patterns.
+
+---
+
+## 4.5 Server Startup Design
 
 ```text
-Angular
+Start Node
    |
    v
-Express
+Load environment
    |
    v
-MongoDB
+Connect MongoDB
+   |
+   v
+Create/verify indexes
+   |
+   v
+Check Super Admin bootstrap
+   |
+   v
+Start HTTP server
+   |
+   +---- Express
+   |
+   +---- Socket.IO
 ```
 
-The Phase 1 JSON file is no longer used as live runtime persistence.
-
-Migration utilities remain separate from normal application execution.
+The server connects to MongoDB before accepting normal application traffic.
 
 ---
 
-### 4.9 Super Administrator Bootstrap Design
+## 4.6 Super Administrator Bootstrap
 
 Fabulari supports exactly one Super Administrator.
 
-The account is not created using normal public registration.
+The server checks application bootstrap state during startup.
 
-Instead, application startup performs a controlled bootstrap check.
+The bootstrap process is controlled rather than exposed through public user
+registration.
 
-The bootstrap logic uses:
-
-- The `users` collection.
-- The `appState` collection.
-
-The design allows the server to determine whether the one-time Super
-Administrator bootstrap has already been completed.
-
-Conceptually:
-
-```text
-Server starts
-      |
-      v
-Check application state
-      |
-      +-- Super Admin already exists
-      |        |
-      |        v
-      |     Continue
-      |
-      +-- No Super Admin and bootstrap allowed
-               |
-               v
-          Create account
-               |
-               v
-       Mark bootstrap complete
-```
-
-This prevents normal registration from creating additional Super
-Administrators.
+After creation, application state records that bootstrap has been completed.
 
 ---
 
-### 4.10 Socket.IO Room Design
-
-Socket.IO rooms are used to prevent chat events from being broadcast to every
-connected user.
-
-When a user opens a chat room:
+## 4.7 Request/Approval Design
 
 ```text
-Angular ChatRoomComponent
-          |
-          v
-SocketService.joinRoom()
-          |
-          v
-Socket.IO server
-          |
-          v
-Validate room
-Validate user
-Validate group membership
-          |
-          v
-socket.join(roomId)
-```
-
-Only after server-side validation does the socket join the requested room.
-
-New messages are broadcast using:
-
-```text
-io.to(roomId).emit(...)
-```
-
-Therefore a message from one room is not sent to users viewing unrelated rooms.
-
-The socket stores information about its active session in `socket.data`,
-including the current:
-
-- Room ID.
-- User ID.
-- Username.
-
-This information is also used for presence and sender validation.
-
----
-
-### 4.11 Real-Time Message Design
-
-Text and GIF messages use the following flow:
-
-```text
-User types message
-       |
-       v
-ChatRoomComponent
-       |
-       v
-SocketService.sendMessage()
-       |
-       v
-Socket.IO server
-       |
-       v
-Validate sender + membership
-       |
-       v
-Insert message into MongoDB
-       |
-       v
-io.to(roomId).emit("newMessage")
-       |
-       v
-All connected clients receive message
-       |
-       v
-Angular messages[] updated
-```
-
-The sender also receives the server's `newMessage` event.
-
-Therefore the frontend does not manually add the sent message after a
-successful acknowledgement.
-
-This avoids displaying duplicate messages.
-
----
-
-### 4.12 Initial Chat History Design
-
-Socket.IO handles new messages, but persisted message history is loaded using
-REST.
-
-When the room opens:
-
-```text
-GET /api/rooms/:roomId/messages
-               |
-               v
-MongoDB messages collection
-               |
-               v
-Newest five non-deleted messages
-               |
-               v
-Angular messages[]
-```
-
-The default chat interface displays the five most recent messages.
-
-New Socket.IO messages are added to the local array and the frontend retains
-the latest five using:
-
-`slice(-5)`
-
-This separates:
-
-- Historical/persisted retrieval through REST.
-- Live updates through Socket.IO.
-
----
-
-### 4.13 Presence Design
-
-Socket.IO provides room-presence information.
-
-When a user successfully joins:
-
-`userJoined`
-
-is sent to other users in the room.
-
-When a user leaves or disconnects:
-
-`userLeft`
-
-is broadcast.
-
-The frontend displays these events using a presence message.
-
-Conceptually:
-
-```text
-User2 joins
+Normal User
+    |
+    | Request
+    v
+MongoDB request
     |
     v
-Socket.IO server
+Correct Administrator
     |
-    v
-userJoined
+    +---- Approve
     |
-    v
-User1 sees:
-"User2 joined the room."
+    +---- Reject + reason
 ```
 
-The same structure applies when the user leaves.
+Approval authority depends on request type.
+
+| Request | Approver |
+|---|---|
+| Group creation | Super Administrator |
+| Join group | Group Administrator |
+| Room creation | Group Administrator |
+| Group ban | Group Administrator |
+| System ban | Super Administrator |
+| Group deletion | Super Administrator |
 
 ---
 
-### 4.14 Message Deletion Design
-
-Message deletion combines REST and Socket.IO.
-
-The flow is:
+## 4.8 Real-Time Chat Design
 
 ```text
-User clicks Delete
-       |
-       v
-DELETE REST request
-       |
-       v
-Backend validates ownership
-       |
-       v
-MongoDB:
-deleted = true
-       |
-       v
-messageDeleted Socket.IO event
-       |
-       v
-Every connected room client
-removes matching message
+User A
+  |
+  | Socket.IO message
+  v
+Node server
+  |
+  | Validate
+  v
+MongoDB
+  |
+  | Persist
+  v
+Socket.IO room
+  |
+  +---- User A
+  |
+  +---- User B
+  |
+  +---- User C
 ```
 
-Messages are soft-deleted rather than immediately removing the MongoDB
-document.
-
-The normal message-history query excludes documents where:
-
-`deleted: true`
-
-The Angular client handles the real-time deletion event using:
-
-```text
-messages.filter(...)
-```
-
-to remove the matching message from the currently displayed message array.
+Persistence occurs before the message is broadcast.
 
 ---
 
-### 4.15 Image Storage Design
+## 4.9 Initial Message History Design
 
-The original Phase 1 approach could represent images using Base64 data.
+REST is used for the initial history.
 
-For Phase 2, the final design stores actual image files separately from
-MongoDB.
-
-The image-upload flow is:
+Socket.IO is used for new messages.
 
 ```text
-User chooses image
-       |
-       v
-Angular File object
-       |
-       v
+Enter room
+   |
+   +---- REST ----> latest 5 stored messages
+   |
+   +---- Socket.IO ----> future live messages
+```
+
+This avoids requiring old message history to be transmitted through the
+real-time socket connection.
+
+---
+
+## 4.10 Room Presence Design
+
+Room presence is maintained separately from persistent chat messages.
+
+```text
+Join room
+   |
+   v
+Validate membership
+   |
+   v
+Register active socket/user
+   |
+   +---- join notification
+   |
+   +---- updated room-user list
+```
+
+Presence is recalculated when:
+
+- A user joins.
+- A user leaves.
+- A user changes room.
+- A socket disconnects.
+
+Users are deduplicated by application user ID.
+
+---
+
+## 4.11 Group Synchronisation Design
+
+Group-related pages subscribe to real-time group updates.
+
+```text
+Membership/request changes
+          |
+          v
+       Backend
+          |
+          v
+      Socket.IO
+          |
+      +---+---+
+      |       |
+ User page  Admin page
+```
+
+This supports:
+
+- Live join requests.
+- Live approved membership.
+- Live member lists.
+- Immediate access revocation.
+
+---
+
+## 4.12 Image Storage Design
+
+Images use:
+
+```text
+Angular File
+    |
+    v
 multipart/form-data
-       |
-       v
-Multer
-       |
-       v
-Node.js filesystem
-       |
-       +-- chat image
-       |      |
-       |      +--> uploads/chat/
-       |
-       +-- profile image
-              |
-              +--> uploads/profiles/
-
-MongoDB stores:
-- public path
-- file metadata
-```
-
-This design prevents MongoDB documents from becoming unnecessarily large by
-storing complete Base64 image content.
-
----
-
-### 4.16 Chat Image Design
-
-Chat images use both HTTP and Socket.IO.
-
-The flow is:
-
-```text
-Select image
-     |
-     v
-Local preview using FileReader
-     |
-     v
-HTTP multipart upload
-     |
-     v
-Multer validates file
-     |
-     v
-File stored in uploads/chat/
-     |
-     v
-Message metadata stored in MongoDB
-     |
-     v
-newMessage Socket.IO event
-     |
-     v
-Image appears for all room users
-```
-
-`FileReader` is used only for the browser preview.
-
-The Base64 preview is not persisted.
-
-MongoDB stores information such as:
-
-- File path.
-- Generated file name.
-- Original file name.
-- MIME type.
-- File size.
-
----
-
-### 4.17 Profile Image Design
-
-Profile-image uploads follow a similar design:
-
-```text
-Select profile image
-       |
-       v
-Local preview
-       |
-       v
-FormData upload
-       |
-       v
-uploads/profiles/
-       |
-       v
-users.profilePicture
-       |
-       v
-Profile + chat avatar display
-```
-
-The user document stores the public image path and image metadata.
-
-The same profile-picture path is returned when chat messages are enriched with
-sender information.
-
-This allows messages to display the sender's avatar.
-
----
-
-### 4.18 Authentication State Design
-
-The Angular frontend uses `AuthService` to maintain the current user's state.
-
-The service uses:
-
-- An Angular signal.
-- Browser `localStorage`.
-
-Conceptually:
-
-```text
-Successful login
-      |
-      v
-AuthService.setCurrentUser()
-      |
-      +--> Angular signal
-      |
-      +--> localStorage
-```
-
-The signal allows components and guards to access the current user.
-
-`localStorage` allows the client-side user state to survive a normal browser
-refresh.
-
-Sensitive password hashes are never stored in the Angular user object.
-
-Backend routes independently check the supplied user or administrator IDs when
-performing protected operations.
-
----
-
-### 4.19 Angular Service Design
-
-Angular components do not directly contain HTTP implementation details for
-every backend operation.
-
-Instead, functionality is separated into services.
-
-```text
-Component
     |
     v
-Angular Service
+Multer
     |
-    +--> HttpClient
+    +---- Filesystem file
     |
-    +--> Socket.IO
+    +---- MongoDB path + metadata
 ```
 
-Examples include:
-
-- `AuthService` for authentication.
-- `UserService` for profiles.
-- `GroupService` for group operations.
-- `RoomService` for rooms/messages.
-- `RequestService` for approval workflows.
-- `AdminService` for system administration.
-- `SocketService` for real-time communication.
-
-This separation makes components primarily responsible for user-interface
-state and presentation.
+The design avoids database bloat from Base64 image storage.
 
 ---
 
-### 4.20 Request and Approval Workflow Design
+## 4.13 Age and DOB Design
 
-Fabulari separates actions that users can perform directly from actions that
-require administrative approval.
+Date of birth is the user-facing input.
 
-Examples include:
+Age is derived from date of birth.
 
 ```text
-User
- |
- +--> Group creation request ------> Super Admin
- |
- +--> Join request ----------------> Group Admin
- |
- +--> Room proposal ---------------> Group Admin
- |
- +--> Group ban request -----------> Group Admin
-
-Group Admin
- |
- +--> System ban request ----------> Super Admin
- |
- +--> Group deletion request ------> Super Admin
+DOB selected
+    |
+    v
+Calculate age
+    |
+    v
+Validate
+    |
+    v
+Store/update profile
+    |
+    v
+Recheck group eligibility
 ```
 
-The request remains stored with a status such as:
+There is no global account minimum age.
 
-- `pending`
-- `approved`
-- `rejected`
+Group-specific minimum age remains the authoritative social-access rule.
 
-The backend performs the final authorization check when an administrator
-attempts to action the request.
-
-This means frontend controls alone are not relied upon for authorization.
+Age zero and future DOB values are rejected.
 
 ---
 
-### 4.21 Validation and Error-Handling Design
+## 4.14 Authorization Design
 
-Validation occurs at multiple levels.
+Authorization is performed on the backend even when Angular also hides
+unauthorised controls.
 
-#### Client-side validation
+This provides defence in depth.
 
-Examples include:
+```text
+Angular guard/UI
+      |
+      v
+HTTP / Socket request
+      |
+      v
+Backend authorization
+      |
+      v
+Database change
+```
 
-- Required form fields.
-- Image MIME-type checking.
-- Image size checking.
-- Preventing empty chat messages.
-
-#### Backend validation
-
-The server validates:
-
-- Required request data.
-- Email format.
-- Password rules.
-- Age values.
-- Group membership.
-- Administrative roles.
-- Message ownership.
-- Request status.
-- File type and size.
-
-#### Database-level validation
-
-Unique indexes protect values such as:
-
-- Application IDs.
-- Email addresses.
-- Usernames.
-
-MongoDB duplicate-key errors are converted into user-friendly HTTP responses.
-
-#### Global API handling
-
-Unknown API endpoints return:
-
-`404 API route not found.`
-
-Unexpected errors are handled by the Express global error handler and return a
-controlled `500` response.
+A user cannot gain administrative privileges by manually modifying the Angular
+interface.
 
 ---
 
-### 4.22 Accessibility and Interface Design
+## 4.15 Error-Handling Design
 
-The final interface includes accessibility improvements such as:
+Errors are divided into:
 
-- Explicit `<label>` elements for form fields.
-- Explicit button types.
-- Descriptive image alternative text.
-- `role="alert"` for important errors.
-- `aria-live` regions for dynamic status and presence messages.
+- Page-level loading errors.
+- Action-specific errors.
+
+Action errors are displayed near the relevant button/form.
+
+Examples:
+
+- Join request.
+- Room creation.
+- Room rename.
+- Room deletion.
+- Group-ban request.
+- Leave group.
+- Administrator resignation.
+
+This provides clearer feedback than placing every error at the top of the
+page.
+
+---
+
+## 4.16 Interface and Accessibility Design
+
+Phase 2 includes UI/UX improvements focusing on usability rather than adding
+unnecessary features.
+
+Improvements include:
+
+- Consistent page containers.
+- Consistent buttons.
+- Group cards.
+- Visual group themes.
+- Fabulari logo branding.
+- Improved section spacing.
+- Responsive layouts.
+- Form labels.
+- Clear error/success states.
+- Keyboard focus visibility.
 - Semantic headings.
-- Keyboard-accessible buttons and links.
+- Accessible image alternative text.
+- `aria-live`/status behaviour where appropriate.
+- Responsive chat images.
 
-Dynamic chat information is particularly suitable for `aria-live` because
-messages and presence information can change without a full page refresh.
-
----
-
-### 4.23 Key Design Decisions
-
-The main Phase 2 design decisions were:
-
-1. Use the native MongoDB Node.js driver instead of Mongoose.
-2. Preserve application UUIDs while also allowing MongoDB to maintain `_id`.
-3. Connect to MongoDB before starting the HTTP server.
-4. Use REST for persistent CRUD and Socket.IO for real-time communication.
-5. Use Socket.IO rooms to scope chat events.
-6. Load initial chat history using REST.
-7. Persist messages before broadcasting them.
-8. Store image files outside MongoDB.
-9. Store image metadata and file references inside MongoDB.
-10. Use Base64 only for temporary browser image previews.
-11. Use soft deletion for individual chat messages.
-12. Keep frontend services separate from components.
-13. Perform backend authorization even when Angular route guards or UI checks
-    are present.
-14. Use separate MongoDB databases for automated integration and end-to-end
-    testing.
+The final visual design intentionally remains simple so application
+functionality is clear during normal use and demonstration.
 
 ---
 
-## 5. Testing Methodology
+## 4.17 Responsive Design
 
-Fabulari Phase 2 uses multiple levels of automated testing.
+Pages were checked at narrower browser widths.
 
-The purpose of using several levels is to test individual logic, interactions
-between backend systems, Angular frontend behaviour and complete user journeys.
+Important controls remain usable on smaller displays.
 
-The testing layers are:
+Cards and member rows adjust rather than requiring a fixed desktop width.
+
+Chat images use maximum sizing so uploaded content does not overflow the
+interface.
+
+---
+
+## 4.18 Storyboards
+
+The Phase 2 documentation retains Phase 1 storyboards where the original
+design remains representative of the final application.
+
+Storyboards were updated where Phase 2 functionality or interface changes
+materially changed the original design.
+
+### Unchanged Storyboards
+
+- Login
+- Super Administrator
+
+### Updated Phase 2 Storyboards
+
+- Registration
+- Groups
+- Group Rooms
+- Chat Room
+- Profile
+- Group Administrator
+
+`design/`
+
+### Login
+
+![Login Storyboard](design/01-login.png)
+
+### Registration
+
+Updated to include Date of Birth instead of manual age entry.
+
+![Registration Storyboard](design/02-register.png)
+
+### Groups
+
+Updated to show:
+
+- Search.
+- Your Groups.
+- Available Groups.
+- Group themes.
+- Join requests.
+- Group creation.
+- Request feedback.
+
+![Groups Storyboard](design/03-groups.png)
+
+### Group Rooms
+
+Updated to show:
+
+- Rooms.
+- Room management.
+- Members.
+- Leave Group.
+- Group/member actions.
+
+![Group Rooms Storyboard](design/04-groups-rooms.png)
+
+### Chat Room
+
+Updated to show:
+
+- Five recent messages.
+- Online users.
+- Text.
+- Images.
+- GIFs.
+- Presence notifications.
+
+![Chat Room Storyboard](design/05-chat-room.png)
+
+### Profile
+
+Updated to show:
+
+- Date-of-birth calendar.
+- Profile editing.
+- Profile image.
+
+![Profile Storyboard](design/06-profile.png)
+
+### Group Administrator
+
+Updated to show:
+
+- Group editing.
+- Membership.
+- Requests.
+- Administrative controls.
+- Action-specific feedback.
+
+![Group Administrator Storyboard](design/07-group-admin.png)
+
+### Super Administrator
+
+![Super Administrator Storyboard](design/08-super-admin.png)
+
+---
+
+## 4.19 Key Design Decisions
+
+Important Phase 2 decisions include:
+
+1. Native MongoDB driver instead of Mongoose.
+2. Application UUIDs retained alongside MongoDB `_id`.
+3. Socket.IO used only where immediate multi-user updates are beneficial.
+4. REST retained for persistent request/response operations.
+5. Files stored on filesystem rather than Base64 in MongoDB.
+6. Super Administrator created through controlled bootstrap.
+7. Group administrator invariant enforced by backend.
+8. Date of birth used instead of directly editable age.
+9. Group age eligibility rechecked after profile changes.
+10. Action errors shown close to relevant controls.
+11. Room presence deduplicated by user ID.
+12. Automated tests use separate databases.
+13. Existing functionality was polished before adding unnecessary additional
+    features.
+
+---
+
+# 5. Testing Methodology
+
+Fabulari uses multiple levels of testing.
 
 ```text
-Unit Testing
-     |
-     v
-Integration Testing
-     |
-     v
-Angular Unit Testing
-     |
-     v
-End-to-End Testing
+Backend Unit Tests
+        |
+        v
+Backend Integration Tests
+        |
+        v
+Angular Unit Tests
+        |
+        v
+Cypress End-to-End Tests
+        |
+        v
+Manual Multi-User Testing
+        |
+        v
+MongoDB Inspection
 ```
 
-A total of 31 automated tests were implemented and passed during Phase 2
-development.
-
 ---
 
-### 5.1 Angular Unit Testing
+## 5.1 Backend Unit Testing
 
-Angular frontend tests use:
-
-- Vitest.
-- Angular TestBed.
-- `HttpTestingController`.
-
-The Angular tests run without requiring the real Node.js server.
-
-HTTP requests are intercepted and controlled using Angular's HTTP testing
-utilities.
-
-The test command is:
-
-```bash
-npm test -- --watch=false
-```
-
-The Angular test suite contains:
-
-- 6 `AuthService` tests.
-- 3 `UserService` tests.
-- 1 application-component test.
-
-Total:
-
-`10 tests`
-
----
-
-#### 5.1.1 AuthService Tests
-
-`AuthService` contains six automated tests.
-
-| Test | Purpose |
-|---|---|
-| Sends registration data to the backend | Verifies the correct registration endpoint, HTTP method and request body |
-| Sends login credentials to the backend | Verifies the login request |
-| Stores the logged-in user after successful login | Verifies authentication state and `localStorage` |
-| Sets and returns the current user | Verifies current-user state management |
-| Clears the current user during logout | Verifies logout and local-storage cleanup |
-| Identifies a Super Administrator | Verifies role detection |
-
-The HTTP tests use `HttpTestingController` so no real backend is required.
-
-For example, the registration test checks that Angular sends a `POST` request
-to:
-
-`http://localhost:3000/api/register`
-
-with the expected registration data.
-
----
-
-#### 5.1.2 UserService Tests
-
-`UserService` contains three automated tests.
-
-| Test | Purpose |
-|---|---|
-| Retrieves a user profile | Verifies the profile `GET` request |
-| Sends updated profile data | Verifies the profile `PUT` request and body |
-| Uploads a profile picture using FormData | Verifies multipart profile-image construction |
-
-The image-upload test verifies that the request body is a `FormData` object and
-contains:
-
-- `userId`
-- `image`
-
-This confirms that the frontend sends the actual file rather than storing a
-Base64 image inside the normal JSON profile object.
-
----
-
-#### 5.1.3 Application Test
-
-The Angular root application includes one component-creation test.
-
-The test uses Angular TestBed to create the root `App` component and verifies
-that the application instance is successfully created.
-
----
-
-### 5.2 Node.js Unit Testing
-
-Backend unit testing uses:
+Backend unit tests use:
 
 - Mocha.
 - Node.js `assert`.
 
-The tests focus on isolated registration validation logic.
-
-The test command is:
-
-```bash
-npm run test:unit
-```
-
-The validation logic was separated from Express and MongoDB into a function
-that can be tested independently.
-
-This means the unit tests do not require:
+The registration validation logic is tested independently from:
 
 - Express.
-- An HTTP server.
 - MongoDB.
-- A browser.
+- Browser UI.
 
-The tested function receives registration data and returns either validated,
-normalised information or an appropriate validation error.
-
-Nine backend unit tests were implemented.
+Ten backend unit tests pass.
 
 | Test | Purpose |
 |---|---|
-| Accepts valid registration data | Confirms valid information passes |
-| Trims registration text fields | Confirms whitespace is removed |
-| Rejects missing required fields | Confirms required-field validation |
-| Rejects whitespace-only names or usernames | Confirms blank text cannot bypass validation |
-| Rejects an invalid email address | Confirms email validation |
-| Rejects a negative age | Confirms invalid negative ages fail |
-| Rejects a non-integer age | Confirms age must be an integer |
-| Rejects a password shorter than eight characters | Confirms password-length rule |
-| Rejects a password without an uppercase letter | Confirms uppercase-password rule |
+| Valid registration accepted | Valid-data baseline |
+| Text fields trimmed | Normalisation |
+| Missing field rejected | Required data |
+| Whitespace-only input rejected | Blank-input protection |
+| Invalid email rejected | Email validation |
+| Negative age rejected | Age validation |
+| Age zero rejected | Unrealistic DOB/age validation |
+| Non-integer age rejected | Age integrity |
+| Short password rejected | Password length |
+| Password without uppercase rejected | Password complexity |
 
 Result:
 
-`9 passing`
-
-This test layer demonstrates isolated unit testing because no external
-application systems are involved.
+`10 passing`
 
 ---
 
-### 5.3 Integration Testing
+## 5.2 Backend Integration Testing
 
-Backend API integration tests use:
+Integration tests use:
 
 - Mocha.
 - Chai.
@@ -3016,317 +2076,195 @@ Backend API integration tests use:
 - Express.
 - MongoDB.
 
-The purpose of integration testing is to test several backend layers operating
-together.
-
-For example:
-
-```text
-HTTP request
-     |
-     v
-Express route
-     |
-     v
-Validation
-     |
-     v
-MongoDB
-     |
-     v
-HTTP response
-```
-
-The integration test command is:
-
-```bash
-npm run test:integration
-```
-
----
-
-#### 5.3.1 Separate Integration Test Database
-
-Integration tests do not use the normal:
-
-`fabulari`
-
-database.
-
-Instead they use:
+The integration database is:
 
 `fabulari_test`
 
-The environment variable is set before the server/database modules are
-imported.
+The normal development database is not modified.
 
-The test database is reset between tests.
-
-A safety check confirms that the database name is:
-
-`fabulari_test`
-
-before destructive cleanup is allowed.
-
-This protects the real development data.
-
----
-
-#### 5.3.2 Importable Express Application
-
-The server startup design was adjusted so importing `server.js` during a test
-does not automatically open port 3000.
-
-Normal execution still starts the server.
-
-Conceptually:
-
-```text
-node server.js
-     |
-     v
-startServer()
-
-
-Integration test imports server.js
-     |
-     v
-Express app available
-without starting normal listener
-```
-
-This allows Chai HTTP to test the Express application directly.
-
----
-
-#### 5.3.3 Integration Test Cases
-
-Six backend integration tests were implemented.
+Six integration tests pass.
 
 | Test | Purpose |
 |---|---|
-| Returns server and database health information | Verifies `/api/health` and test database connection |
-| Returns `404` for an unknown API route | Verifies API fallback error handling |
-| Registers a valid user | Tests Express, validation, bcrypt and MongoDB insertion |
-| Rejects a duplicate username | Verifies duplicate detection and case-insensitive username handling |
-| Logs in with valid credentials | Tests MongoDB lookup and bcrypt password comparison |
-| Rejects an incorrect password | Verifies authentication failure behaviour |
+| Health route | Server + DB health |
+| Unknown API route | Controlled 404 |
+| Valid registration | API + validation + bcrypt + MongoDB |
+| Duplicate username | Conflict handling |
+| Valid login | Authentication |
+| Incorrect password | Authentication error |
 
 Result:
 
 `6 passing`
 
-The valid-registration test also directly checks MongoDB to confirm that the
-new user was actually persisted.
+---
 
-The returned response is checked to confirm that `passwordHash` is not exposed
-to the client.
+## 5.3 Angular Unit Testing
+
+Angular testing uses:
+
+- Vitest.
+- Angular TestBed.
+- `HttpTestingController`.
+
+Ten Angular tests pass.
+
+The suite includes:
+
+- 6 AuthService tests.
+- 3 UserService tests.
+- 1 application creation test.
+
+UserService test data was updated to include `dateOfBirth` after the final
+profile model was changed.
+
+Result:
+
+`10 passing`
 
 ---
 
-### 5.4 End-to-End Testing
+## 5.4 Cypress End-to-End Testing
 
-End-to-end testing uses:
+Cypress tests the real application in the browser.
 
-`Cypress`
-
-Cypress tests the application from the user's browser perspective.
-
-Unlike the Angular unit tests, the end-to-end tests use the real:
-
-- Angular application.
-- Node.js server.
-- Express API.
-- MongoDB database.
-- Socket.IO server.
-
-The normal E2E execution command is:
-
-```bash
-npx cypress run
-```
-
-Cypress can also be opened interactively using:
-
-```bash
-npx cypress open
-```
-
----
-
-#### 5.4.1 End-to-End Test Environment
-
-End-to-end tests use a separate MongoDB database:
+The E2E environment uses:
 
 `fabulari_e2e`
 
-This prevents automated browser tests from modifying normal Fabulari
-development data.
+rather than the normal development database.
 
-The E2E environment consists of:
-
-```text
-MongoDB
-   |
-   v
-fabulari_e2e
-
-Node.js / Express / Socket.IO
-   |
-   v
-http://localhost:3000
-
-Angular
-   |
-   v
-http://localhost:4200
-
-Cypress Browser
-```
-
-Controlled chat data is seeded into `fabulari_e2e` for the real-time chat test.
-
----
-
-#### 5.4.2 Authentication End-to-End Tests
-
-Five authentication/navigation E2E tests were implemented.
-
-| Test | Purpose |
-|---|---|
-| Registers a new user through the UI | Completes the registration form and verifies a successful backend response |
-| Logs in with valid credentials | Uses the real login UI and verifies authenticated state |
-| Shows an error for an incorrect password | Confirms backend authentication errors appear in the interface |
-| Redirects an unauthenticated user away from the profile page | Verifies route-guard behaviour |
-| Navigates between login and registration pages | Verifies public navigation |
-
-The login test also checks that the successful user is stored in browser
-`localStorage` and that the application navigates to `/groups`.
-
----
-
-#### 5.4.3 Real-Time Chat End-to-End Test
-
-One E2E test targets the main Phase 2 real-time feature.
-
-The test:
-
-1. Uses controlled E2E user/group/room data.
-2. Opens the real Fabulari login page.
-3. Logs in through the browser.
-4. Navigates to the seeded chat room.
-5. Types a message into the real chat composer.
-6. Clicks `Send Text`.
-7. Uses the application's Socket.IO connection.
-8. Allows the server to validate and persist the message.
-9. Waits for `newMessage`.
-10. Confirms the message appears in the browser.
-
-The tested flow is:
+Cypress communicates with:
 
 ```text
-Cypress
-   |
-   v
-Angular login
-   |
-   v
-Express authentication
-   |
-   v
-MongoDB
-   |
-   v
-Angular chat room
-   |
-   v
-Socket.IO sendMessage
-   |
-   v
-MongoDB message insert
-   |
-   v
-Socket.IO newMessage
-   |
-   v
-Message visible in browser
+Angular :4200
+     |
+     v
+Node / Express / Socket.IO :3000
+     |
+     v
+MongoDB fabulari_e2e
 ```
 
-This test verifies multiple application layers together rather than mocking the
-real-time connection.
+Controlled chat data is seeded before the chat test.
+
+Six E2E tests pass.
+
+### Authentication/navigation tests
+
+1. Register through the UI using Date of Birth.
+2. Login with valid credentials.
+3. Display error for incorrect password.
+4. Redirect unauthenticated profile access.
+5. Navigate between login and registration.
+
+### Real-time chat test
+
+The chat E2E test:
+
+1. Logs in.
+2. Opens a seeded group/room.
+3. Enters a message.
+4. Sends through Socket.IO.
+5. Allows backend validation.
+6. Persists to MongoDB.
+7. Receives the real-time broadcast.
+8. Confirms the message appears.
+
+Result:
+
+`6 passing`
 
 ---
 
-### 5.5 Automated Test Results
+## 5.5 Automated Test Results
 
-The final automated testing results are:
+Final automated results:
 
-| Testing Layer | Technology | Number of Tests | Result |
-|---|---|---:|---|
-| Backend Unit Testing | Mocha + Node assert | 9 | 9 passed |
-| Backend Integration Testing | Mocha + Chai / Chai HTTP | 6 | 6 passed |
-| Angular Unit Testing | Vitest + Angular TestBed | 10 | 10 passed |
-| End-to-End Testing | Cypress | 6 | 6 passed |
-| **Total** |  | **31** | **31 passed** |
+| Test Layer | Tests | Result |
+|---|---:|---|
+| Backend Unit | 10 | 10 passed |
+| Backend Integration | 6 | 6 passed |
+| Angular Unit | 10 | 10 passed |
+| Cypress E2E | 6 | 6 passed |
+| **Total** | **32** | **32 passed** |
 
-The automated testing strategy therefore covers:
+Final automated result:
 
-- Isolated validation logic.
-- Backend API behaviour.
-- MongoDB persistence.
-- Authentication.
-- Duplicate-data handling.
-- Angular HTTP services.
-- Angular authentication state.
-- Multipart profile uploads.
-- Route protection.
-- User registration and login journeys.
-- Real-time Socket.IO chat.
+**32 / 32 passing**
 
 ---
 
-### 5.6 Manual Testing
+## 5.6 Manual Functional Testing
 
-Automated testing was supplemented by manual functional testing.
+Automated tests were supplemented with manual tests.
 
-Manual testing was useful for behaviour involving multiple simultaneously
-connected users and visual interface behaviour.
+Manual testing was particularly important for functionality involving several
+simultaneously connected users.
 
-The following functionality was manually verified:
-
-| Feature | Manual Verification |
+| Feature | Result |
 |---|---|
-| User registration | Valid and invalid registrations tested |
-| Login | Valid and invalid credentials tested |
-| Duplicate usernames | Case-insensitive duplicate username rejected |
-| Duplicate email | Existing email rejected |
-| Profile editing | Changes persisted after refresh |
-| Profile picture | File stored and displayed after refresh |
-| Group access | Group membership rules verified |
-| Minimum age | Under-age membership behaviour tested |
-| Room access | Group members could enter valid rooms |
-| Real-time text | Message appeared for two connected users without refresh |
-| Join presence | Other user saw join notification |
-| Leave presence | Other user saw leave notification |
-| Chat image | Image appeared for connected users |
-| Image persistence | Physical file stored under `uploads/chat/` |
-| Image MongoDB storage | Path and metadata stored instead of Base64 |
-| Profile-image persistence | Physical file stored under `uploads/profiles/` |
-| GIF message | GIF appeared through real-time chat |
-| Message deletion | Deleted message disappeared for both connected clients |
-| Soft deletion | MongoDB message stored with `deleted: true` |
-| Invalid API route | Controlled JSON `404` response returned |
-| Oversized image | File larger than 5 MB rejected |
-| Navigation guards | Unauthorized navigation redirected |
-| Accessibility regression | Labels, buttons and keyboard navigation checked |
+| Registration | Passed |
+| Invalid registration | Passed |
+| DOB calendar | Passed |
+| Future DOB rejection | Passed |
+| Age-zero rejection | Passed |
+| Login | Passed |
+| Incorrect login | Passed |
+| Profile update | Passed |
+| Profile DOB update | Passed |
+| Profile image | Passed |
+| Group creation request | Passed |
+| Group approval | Passed |
+| Join request | Passed |
+| Join approval | Passed |
+| Minimum group age | Passed |
+| Age change/group eligibility | Passed |
+| Sole-admin age protection | Passed |
+| Group themes | Passed |
+| Room creation | Passed |
+| Room proposal | Passed |
+| Room rename | Passed |
+| Room deletion | Passed |
+| Leave group | Passed |
+| Sole-admin leave protection | Passed |
+| Admin promotion | Passed |
+| Admin demotion | Passed |
+| Admin resignation | Passed |
+| Group-ban protections | Passed |
+| System ban | Passed |
+| Group deletion | Passed |
+| Real-time text | Passed |
+| Real-time image | Passed |
+| Real-time GIF | Passed |
+| Five recent messages | Passed |
+| Message deletion | Passed |
+| Soft deletion | Passed |
+| Join notification | Passed |
+| Leave notification | Passed |
+| Online room-user list | Passed |
+| Duplicate-tab presence handling | Passed |
+| Live admin join requests | Passed |
+| Live membership approval | Passed |
+| Live member-list updates | Passed |
+| Immediate access revocation | Passed |
+| Audit logs | Passed |
+| Route guards | Passed |
+| Invalid API route | Passed |
+| Action-specific error messages | Passed |
+| Responsive layout | Passed |
+| Keyboard accessibility | Passed |
+| Browser/server error check | Passed |
 
 ---
 
-### 5.7 MongoDB Verification
+## 5.7 MongoDB Verification
 
-MongoDB behaviour was also manually inspected using `mongosh`.
+MongoDB was manually inspected using:
 
-Example commands used include:
+`mongosh`
+
+Example commands:
 
 ```javascript
 use fabulari
@@ -3345,85 +2283,113 @@ db.groups.find()
 ```
 
 ```javascript
+db.rooms.find()
+```
+
+```javascript
+db.requests.find()
+```
+
+```javascript
 db.messages.find()
 ```
 
-Indexes were verified using:
-
 ```javascript
-db.messages.getIndexes()
+db.auditLogs.find()
 ```
 
-and:
+Indexes were checked using:
 
 ```javascript
 db.users.getIndexes()
 ```
 
-The message collection confirmed the compound index:
+and:
 
-```text
-roomId: 1
-createdAt: -1
+```javascript
+db.messages.getIndexes()
 ```
 
-The users collection confirmed:
+MongoDB verification confirmed:
 
-- Unique application user IDs.
-- Unique email addresses.
-- Case-insensitive unique usernames.
-
-MongoDB inspection was also used to verify that uploaded chat images store a
-file path and metadata rather than Base64 image content.
+- Users persist.
+- Passwords are hashed.
+- Groups persist.
+- Rooms persist.
+- Requests persist.
+- Messages persist.
+- Chat images contain filesystem paths/metadata.
+- Profile images contain filesystem paths/metadata.
+- Deleted messages remain with `deleted: true`.
+- Administrative activity is stored.
+- Unique indexes exist.
+- Recent-message indexing exists.
 
 ---
 
-### 5.8 Testing Summary
+## 5.8 Test Database Separation
 
-The Phase 2 testing strategy combines multiple levels of verification.
+Fabulari uses separate databases for automated testing.
 
-```text
-Node Unit Tests
-      |
-      | Isolated logic
-      v
+| Purpose | Database |
+|---|---|
+| Development application | `fabulari` |
+| Backend integration tests | `fabulari_test` |
+| Cypress E2E tests | `fabulari_e2e` |
 
-Backend Integration Tests
-      |
-      | API + MongoDB
-      v
+This prevents automated tests from damaging development data.
 
-Angular Unit Tests
-      |
-      | Frontend services/state
-      v
+---
 
-Cypress E2E Tests
-      |
-      | Complete user journey
-      v
+## 5.9 Testing Summary
 
-Manual Multi-User Testing
-      |
-      | Realtime + visual behaviour
-      v
+The final testing approach combines:
 
-MongoDB Inspection
-```
+- Isolated backend logic testing.
+- Backend/API/database integration testing.
+- Angular unit testing.
+- Complete browser E2E testing.
+- Multi-browser real-time manual testing.
+- Direct MongoDB verification.
 
-Using several testing levels reduces reliance on one type of testing.
+All final automated tests pass:
 
-Unit tests provide fast checks of isolated logic.
+**32 / 32**
 
-Integration tests confirm that backend modules and MongoDB operate together.
+The application was additionally manually verified for the multi-user,
+administrative, age-validation, accessibility and real-time behaviours that
+are difficult to fully represent using isolated automated tests.
 
-Angular tests verify frontend services and state without depending on a real
-backend.
+---
 
-Cypress verifies actual browser workflows.
+# Conclusion
 
-Manual multi-user testing verifies real-time behaviours that are easier to
-observe with two active sessions.
+Fabulari Phase 2 completes the transition from the Phase 1 prototype into a
+fully functioning MEAN-stack real-time chat application.
 
-Together these approaches provide evidence that the main Phase 2 requirements
-operate correctly.
+The final system includes:
+
+- Angular 22.
+- Node.js.
+- Express.
+- Native MongoDB persistence.
+- Socket.IO real-time communication.
+- Authentication.
+- Role-based administration.
+- Groups and rooms.
+- Group minimum-age rules.
+- Date-of-birth validation.
+- Real-time text/image/GIF chat.
+- Persistent message history.
+- Room presence.
+- Live group synchronisation.
+- File uploads.
+- Profile management.
+- Group/system bans.
+- Audit logs.
+- Automated testing.
+- Responsive and accessible UI/UX.
+
+The final implementation prioritises correctness, usability, clear
+authorization rules, persistent storage and real-time synchronisation while
+remaining simple enough to understand, maintain and demonstrate.

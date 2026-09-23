@@ -25,6 +25,18 @@ export interface SocketUserEvent {
 }
 
 
+export interface SocketRoomUser {
+    userId: string;
+    username: string;
+}
+
+
+export interface SocketRoomUsersEvent {
+    roomId: string;
+    users: SocketRoomUser[];
+}
+
+
 export interface SocketChatMessage {
     id: string;
     roomId: string;
@@ -474,6 +486,48 @@ export class SocketService {
             }
         );
     }
+
+
+    // ==================================================
+    // CURRENT USERS IN ROOM
+    // ==================================================
+
+    onRoomUsersUpdated():
+        Observable<SocketRoomUsersEvent> {
+
+        return new Observable(
+            observer => {
+
+                const handler =
+                    (
+                        event:
+                            SocketRoomUsersEvent
+                    ) => {
+
+                        observer.next(
+                            event
+                        );
+                    };
+
+
+                this.socket.on(
+                    'roomUsersUpdated',
+                    handler
+                );
+
+
+                return () => {
+
+                    this.socket.off(
+                        'roomUsersUpdated',
+                        handler
+                    );
+                };
+            }
+        );
+    }
+
+
     onMessageDeleted() {
 
     return new Observable<

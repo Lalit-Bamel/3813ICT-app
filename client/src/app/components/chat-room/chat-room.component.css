@@ -10,6 +10,43 @@
 }
 
 
+.room-presence {
+    border: 1px solid #cccccc;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+
+.room-presence h3 {
+    margin-top: 0;
+}
+
+
+.room-presence ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+
+.room-presence li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.online-indicator {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #16803c;
+}
+
+
 .messages {
     border: 1px solid #cccccc;
     padding: 20px;

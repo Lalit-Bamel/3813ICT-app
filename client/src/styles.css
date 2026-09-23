@@ -1399,6 +1399,14 @@ main.theme-dark .composer {
     color: var(--group-text);
 }
 
+main.theme-default .group-card,
+main.theme-blue .group-card,
+main.theme-dark .group-card {
+    background: var(--group-surface);
+    border-color: var(--group-border);
+    color: var(--group-text);
+}
+
 .theme-default h1,
 .theme-default h2,
 .theme-default h3,

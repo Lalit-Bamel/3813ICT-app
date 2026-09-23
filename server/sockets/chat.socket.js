@@ -24,6 +24,181 @@ function initialiseChatSocket(httpServer) {
     );
 
 
+    /**
+     * Returns the valid, connected users in a room.
+     *
+     * Socket.IO already tracks the sockets in each room. We use that
+     * information as the presence source, then check MongoDB membership
+     * before sending the list to clients. A Set deduplicates users who
+     * have the same account open in more than one tab.
+     */
+    async function getRoomUsers(roomId) {
+
+        const connectedSockets =
+            await io.in(roomId)
+                .fetchSockets();
+
+        const connectedUserIds = [
+            ...new Set(
+                connectedSockets
+                    .map(connectedSocket =>
+                        connectedSocket.data.userId
+                    )
+                    .filter(Boolean)
+            )
+        ];
+
+
+        if (connectedUserIds.length === 0) {
+            return [];
+        }
+
+
+        const db = getDb();
+
+        const room =
+            await db.collection("rooms")
+                .findOne({ id: roomId });
+
+
+        if (!room) {
+            return [];
+        }
+
+
+        const group =
+            await db.collection("groups")
+                .findOne({ id: room.groupId });
+
+
+        if (!group) {
+            return [];
+        }
+
+
+        const memberIds =
+            new Set(group.memberIds || []);
+
+        const bannedUserIds =
+            new Set(group.bannedUserIds || []);
+
+        const validUserIds =
+            connectedUserIds.filter(userId =>
+                memberIds.has(userId) &&
+                !bannedUserIds.has(userId)
+            );
+
+
+        if (validUserIds.length === 0) {
+            return [];
+        }
+
+
+        const users =
+            await db.collection("users")
+                .find({
+                    id: {
+                        $in: validUserIds
+                    },
+                    systemRole: {
+                        $ne: "superAdmin"
+                    }
+                })
+                .project({
+                    _id: 0,
+                    id: 1,
+                    username: 1
+                })
+                .toArray();
+
+
+        return users
+            .map(user => ({
+                userId: user.id,
+                username: user.username
+            }))
+            .sort((firstUser, secondUser) =>
+                firstUser.username.localeCompare(
+                    secondUser.username
+                )
+            );
+    }
+
+
+    async function emitRoomUsers(roomId) {
+
+        try {
+
+            const users =
+                await getRoomUsers(roomId);
+
+
+            io.to(roomId).emit(
+                "roomUsersUpdated",
+                {
+                    roomId,
+                    users
+                }
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Room presence update error:",
+                error
+            );
+        }
+    }
+
+
+    async function isUserInRoom(
+        roomId,
+        userId
+    ) {
+
+        const connectedSockets =
+            await io.in(roomId)
+                .fetchSockets();
+
+
+        return connectedSockets.some(
+            connectedSocket =>
+                connectedSocket.data.userId ===
+                    userId
+        );
+    }
+
+
+    async function notifyRoomDeparture(
+        roomId,
+        userId,
+        username
+    ) {
+
+        const userStillPresent =
+            await isUserInRoom(
+                roomId,
+                userId
+            );
+
+
+        if (!userStillPresent) {
+
+            io.to(roomId).emit(
+                "userLeft",
+                {
+                    userId,
+                    username,
+                    roomId
+                }
+            );
+        }
+
+
+        await emitRoomUsers(roomId);
+    }
+
+
     io.on(
         "connection",
         function (socket) {
@@ -320,7 +495,9 @@ function initialiseChatSocket(httpServer) {
 
                         if (
                             !group.memberIds
-                                .includes(user.id)
+                                .includes(user.id) ||
+                            group.bannedUserIds
+                                ?.includes(user.id)
                         ) {
 
                             return callback?.({
@@ -335,33 +512,40 @@ function initialiseChatSocket(httpServer) {
                         // before entering another one.
                         if (
                             socket.data.roomId &&
-                            socket.data.roomId !==
-                                room.id
+                            (
+                                socket.data.roomId !==
+                                    room.id ||
+                                socket.data.userId !==
+                                    user.id
+                            )
                         ) {
 
                             const previousRoomId =
                                 socket.data.roomId;
 
+                            const previousUserId =
+                                socket.data.userId;
+
+                            const previousUsername =
+                                socket.data.username;
+
                             socket.leave(
                                 previousRoomId
                             );
 
-                            socket.to(
-                                previousRoomId
-                            ).emit(
-                                "userLeft",
-                                {
-                                    userId:
-                                        socket.data.userId,
-
-                                    username:
-                                        socket.data.username,
-
-                                    roomId:
-                                        previousRoomId
-                                }
+                            await notifyRoomDeparture(
+                                previousRoomId,
+                                previousUserId,
+                                previousUsername
                             );
                         }
+
+
+                        const userAlreadyPresent =
+                            await isUserInRoom(
+                                room.id,
+                                user.id
+                            );
 
 
                         socket.join(
@@ -379,20 +563,28 @@ function initialiseChatSocket(httpServer) {
                             user.username;
 
 
-                        socket.to(
+                        if (!userAlreadyPresent) {
+
+                            socket.to(
+                                room.id
+                            ).emit(
+                                "userJoined",
+                                {
+                                    userId:
+                                        user.id,
+
+                                    username:
+                                        user.username,
+
+                                    roomId:
+                                        room.id
+                                }
+                            );
+                        }
+
+
+                        await emitRoomUsers(
                             room.id
-                        ).emit(
-                            "userJoined",
-                            {
-                                userId:
-                                    user.id,
-
-                                username:
-                                    user.username,
-
-                                roomId:
-                                    room.id
-                            }
                         );
 
 
@@ -427,7 +619,7 @@ function initialiseChatSocket(httpServer) {
 
             socket.on(
                 "leaveRoom",
-                function (
+                async function (
                     payload,
                     callback
                 ) {
@@ -456,20 +648,10 @@ function initialiseChatSocket(httpServer) {
                             roomId
                         );
 
-
-                        socket.to(
-                            roomId
-                        ).emit(
-                            "userLeft",
-                            {
-                                userId:
-                                    socket.data.userId,
-
-                                username:
-                                    socket.data.username,
-
-                                roomId
-                            }
+                        await notifyRoomDeparture(
+                            roomId,
+                            socket.data.userId,
+                            socket.data.username
                         );
 
 
@@ -793,26 +975,16 @@ function initialiseChatSocket(httpServer) {
 
             socket.on(
                 "disconnect",
-                function () {
+                async function () {
 
                     if (
                         socket.data.roomId
                     ) {
 
-                        socket.to(
-                            socket.data.roomId
-                        ).emit(
-                            "userLeft",
-                            {
-                                userId:
-                                    socket.data.userId,
-
-                                username:
-                                    socket.data.username,
-
-                                roomId:
-                                    socket.data.roomId
-                            }
+                        await notifyRoomDeparture(
+                            socket.data.roomId,
+                            socket.data.userId,
+                            socket.data.username
                         );
                     }
 

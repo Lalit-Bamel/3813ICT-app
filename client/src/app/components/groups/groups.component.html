@@ -132,132 +132,128 @@
     </p>
 
 
-    <!-- YOUR GROUPS -->
+<!-- YOUR GROUPS -->
 
-    <h2>
-        Your Groups
-    </h2>
+<h2>
+    Your Groups
+</h2>
 
+
+<ng-container
+    *ngFor="let group of filteredGroups"
+>
 
     <div
+        *ngIf="isMember(group)"
         class="group-card"
         [ngClass]="'theme-' + (group.theme || 'default')"
-        *ngFor="let group of filteredGroups"
     >
 
-        <ng-container
-            *ngIf="isMember(group)"
+        <h3>
+            {{ group.title }}
+        </h3>
+
+
+        <p>
+            {{ group.description }}
+        </p>
+
+
+        <p>
+            Minimum Age:
+            {{ group.minimumAge }}+
+        </p>
+
+
+        <strong
+            *ngIf="isAdmin(group)"
         >
-
-            <h3>
-                {{ group.title }}
-            </h3>
+            Group Administrator
+        </strong>
 
 
-            <p>
-                {{ group.description }}
-            </p>
+        <br>
 
 
-            <p>
-                Minimum Age:
-                {{ group.minimumAge }}+
-            </p>
+        <a
+            [routerLink]="[
+                '/groups',
+                group.id
+            ]"
+        >
+            Open Group
+        </a>
 
 
-            <strong
-                *ngIf="isAdmin(group)"
-            >
-                Group Administrator
-            </strong>
+        <br>
 
 
-            <br>
-
-
-            <a
-                [routerLink]="[
-                    '/groups',
-                    group.id
-                ]"
-            >
-                Open Group
-            </a>
-
-
-            <br>
-
-
-            <a
-                *ngIf="isAdmin(group)"
-                [routerLink]="[
-                    '/groups',
-                    group.id,
-                    'admin'
-                ]"
-            >
-                Manage Group
-            </a>
-
-        </ng-container>
+        <a
+            *ngIf="isAdmin(group)"
+            [routerLink]="[
+                '/groups',
+                group.id,
+                'admin'
+            ]"
+        >
+            Manage Group
+        </a>
 
     </div>
 
+</ng-container>
+<!-- ALL GROUPS -->
 
-    <!-- ALL GROUPS -->
+<h2>
+    All Groups
+</h2>
 
-    <h2>
-        All Groups
-    </h2>
 
+<ng-container
+    *ngFor="let group of filteredGroups"
+>
 
     <div
+        *ngIf="!isMember(group)"
         class="group-card"
         [ngClass]="'theme-' + (group.theme || 'default')"
-        *ngFor="let group of filteredGroups"
     >
 
-        <ng-container
-            *ngIf="!isMember(group)"
+        <h3>
+            {{ group.title }}
+        </h3>
+
+
+        <p>
+            {{ group.description }}
+        </p>
+
+
+        <p>
+            Minimum Age:
+            {{ group.minimumAge }}+
+        </p>
+
+
+        <button
+            (click)="requestJoin(group)"
         >
-
-            <h3>
-                {{ group.title }}
-            </h3>
+            Request to Join
+        </button>
 
 
-            <p>
-                {{ group.description }}
-            </p>
-
-
-            <p>
-                Minimum Age:
-                {{ group.minimumAge }}+
-            </p>
-
-
-            <button
-                (click)="requestJoin(group)"
-            >
-                Request to Join
-            </button>
-
-            <p
-                *ngIf="joinMessages[group.id] as feedback"
-                class="action-message"
-                [class.success]="feedback.type === 'success'"
-                [class.error]="feedback.type === 'error'"
-            >
-                {{ feedback.message }}
-            </p>
-
-        </ng-container>
+        <p
+            *ngIf="joinMessages[group.id] as feedback"
+            class="action-message"
+            [class.success]="feedback.type === 'success'"
+            [class.error]="feedback.type === 'error'"
+        >
+            {{ feedback.message }}
+        </p>
 
     </div>
 
-
-    <hr>
+</ng-container>
 
 
     <!-- REQUEST HISTORY -->

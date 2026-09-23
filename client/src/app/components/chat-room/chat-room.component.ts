@@ -37,6 +37,7 @@ import {
 } from '../../services/group.service';
 
 import {
+    SocketRoomUser,
     SocketService
 } from '../../services/socket.service';
 
@@ -111,6 +112,8 @@ implements OnInit, OnDestroy {
     group: Group | null = null;
 
     messages: Message[] = [];
+
+    onlineUsers: SocketRoomUser[] = [];
 
 
     textMessage = '';
@@ -352,6 +355,34 @@ implements OnInit, OnDestroy {
 
 
         // ------------------------------------------
+        // CURRENT USERS IN ROOM
+        // ------------------------------------------
+
+        const roomUsersSubscription =
+            this.socketService
+                .onRoomUsersUpdated()
+                .subscribe(
+                    event => {
+
+                        if (
+                            !this.room ||
+                            event.roomId !==
+                                this.room.id
+                        ) {
+                            return;
+                        }
+
+
+                        this.onlineUsers =
+                            event.users;
+
+
+                        this.cdr.markForCheck();
+                    }
+                );
+
+
+        // ------------------------------------------
         // MESSAGE DELETED
         // ------------------------------------------
 
@@ -404,6 +435,7 @@ implements OnInit, OnDestroy {
             messageSubscription,
             joinedSubscription,
             leftSubscription,
+            roomUsersSubscription,
             deletedSubscription
         );
     }

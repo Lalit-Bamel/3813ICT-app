@@ -78,6 +78,44 @@
     </p>
 
 
+    <!-- CURRENT ROOM USERS -->
+
+    <section
+        class="room-presence"
+        *ngIf="room"
+        aria-labelledby="room-presence-heading"
+        aria-live="polite"
+    >
+
+        <h3 id="room-presence-heading">
+            Online in this room
+            ({{ onlineUsers.length }})
+        </h3>
+
+
+        <p *ngIf="onlineUsers.length === 0">
+            No one is currently online.
+        </p>
+
+
+        <ul *ngIf="onlineUsers.length > 0">
+
+            <li *ngFor="let user of onlineUsers">
+
+                <span
+                    class="online-indicator"
+                    aria-hidden="true"
+                ></span>
+
+                {{ user.username }}
+
+            </li>
+
+        </ul>
+
+    </section>
+
+
     <!-- MESSAGES -->
 
     <section

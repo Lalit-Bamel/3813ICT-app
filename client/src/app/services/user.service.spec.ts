@@ -158,23 +158,14 @@ describe(
             'sends updated profile data',
             () => {
 
-                const updateData = {
-
-                    firstName:
-                        'Updated',
-
-                    lastName:
-                        'User',
-
-                    username:
-                        'updateduser',
-
-                    age:
-                        21,
-
-                    profilePicture:
-                        ''
-                };
+            const updateData = {
+                firstName: 'Updated',
+                lastName: 'User',
+                username: 'updateduser',
+                age: 20,
+                dateOfBirth: '2006-09-22',
+                profilePicture: '/uploads/profiles/test.png'
+            };
 
 
                 service

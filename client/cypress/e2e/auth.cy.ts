@@ -48,7 +48,7 @@ describe(
                 `cypressRegister${unique}@example.com`,
 
             age:
-                21,
+                '2000-01-01',
 
             password:
                 'Password1'
@@ -132,11 +132,11 @@ describe(
 
 
                 cy.get(
-                    '#age'
+                    '#dateOfBirth'
                 ).type(
-                    registrationUser.age.toString()
+                    registrationUser.age
                 );
-
+                
 
                 cy.get(
                     '#password'
