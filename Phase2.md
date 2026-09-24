@@ -5,9 +5,7 @@
 
 **Name:** Lalit Bamel  
 **Student Number:** s5383531  
-**Workshop Time:** [ADD WORKSHOP DAY AND TIME]  
-**GitHub Repository:** [ADD PRIVATE GITHUB REPOSITORY LINK]
-
+ 
 ---
 
 # 1. Specifications and Requirements
