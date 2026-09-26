@@ -303,7 +303,20 @@ Any later client announcement will supersede the assumptions above where necessa
 
 For Phase 1, application data will be persistently stored in a server-side JSON file. Unique IDs will be used to represent relationships between users, groups, rooms and requests.
 
-The main data collections are:
+The top-level JSON structure contains the following data:
+
+| Field | Type | Description |
+|---|---|---|
+| `bootstrapCompleted` | `boolean` | Indicates whether the one-time Super Administrator bootstrap process has been completed |
+| `users` | `User[]` | List of registered users |
+| `groups` | `Group[]` | List of application groups |
+| `rooms` | `Room[]` | List of chat rooms |
+| `requests` | `Request[]` | List of submitted approval requests |
+| `auditLogs` | `AuditLog[]` | List of administrative and system activity records |
+| `messages` | `Message[]` | List of chat messages |
+| `bannedUsers` | `BannedUser[]` | List of permanently banned-user records |
+
+The JSON file will therefore follow the general structure:
 
 ```json
 {
@@ -318,127 +331,154 @@ The main data collections are:
 }
 ```
 
+---
+
 ### 4.1 User
 
-The User data structure stores account and profile information for each registered user.
+The `User` data structure stores account and profile information for each registered user.
 
-Field Type Description
-id string Unique identifier for the user
-firstName string User's first name
-lastName string User's last name
-username string User's display username
-email string Unique email address used to identify the account
-age number User's self-reported age
-passwordHash string Hashed version of the user's password
-profilePicture string Path or reference to the user's profile picture
-systemRole string System-level role of either user or superAdmin
-createdAt string Date and time the account was created
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the user |
+| `firstName` | `string` | User's first name |
+| `lastName` | `string` | User's last name |
+| `username` | `string` | User's display username |
+| `email` | `string` | Unique email address used to identify the account |
+| `age` | `number` | User's self-reported age |
+| `passwordHash` | `string` | Hashed version of the user's password |
+| `profilePicture` | `string` | Path or reference to the user's profile picture |
+| `systemRole` | `'user' \| 'superAdmin'` | System-level role assigned to the user |
+| `createdAt` | `string` | Date and time the account was created |
 
-The email address cannot be changed after registration. Password hashes will only be stored on the server and will not be stored in browser local storage.
+The email address cannot be changed after registration.
+
+Password hashes are stored only on the server and are not stored in browser local storage.
 
 Group Administrator status is not stored as a global user role because a user may be an administrator of one group while being a normal member of another group.
 
+---
+
 ### 4.2 Group
 
-The Group data structure stores information about each group and its relationships with users and rooms.
+The `Group` data structure stores information about each group and its relationships with users and rooms.
 
-Field Type Description
-id string Unique identifier for the group
-title string Group title with a maximum length of 30 characters
-description string Group description with a maximum length of 250 characters
-minimumAge number Minimum age required for a user to join the group
-theme string Theme selected for the group and its rooms
-adminIds string[] IDs of users who are administrators of the group
-memberIds string[] IDs of users who are members of the group
-bannedUserIds string[] IDs of users permanently banned from the group
-roomIds string[] IDs of rooms belonging to the group
-createdAt string Date and time the group was created
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the group |
+| `title` | `string` | Group title with a maximum length of 30 characters |
+| `description` | `string` | Group description with a maximum length of 250 characters |
+| `minimumAge` | `number` | Minimum age required for a user to join the group |
+| `theme` | `string` | Theme selected for the group and its rooms |
+| `adminIds` | `string[]` | IDs of users who are administrators of the group |
+| `memberIds` | `string[]` | IDs of users who are members of the group |
+| `bannedUserIds` | `string[]` | IDs of users permanently banned from the group |
+| `roomIds` | `string[]` | IDs of rooms belonging to the group |
+| `createdAt` | `string` | Date and time the group was created |
 
 Every group must always contain at least one Group Administrator.
 
+---
+
 ### 4.3 Room
 
-The Room data structure represents a chat room belonging to a group.
+The `Room` data structure represents a chat room belonging to a group.
 
-Field Type Description
-id string Unique identifier for the room
-groupId string ID of the group that owns the room
-name string Name of the chat room
-createdAt string Date and time the room was created
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the room |
+| `groupId` | `string` | ID of the group that owns the room |
+| `name` | `string` | Name of the chat room |
+| `createdAt` | `string` | Date and time the room was created |
 
-A group may contain zero or more rooms. Rooms inherit the minimum age restriction and theme of their parent group.
+A group may contain zero or more rooms.
+
+Rooms inherit the minimum-age restriction and theme of their parent group.
+
+---
 
 ### 4.4 Request
 
-The Request data structure is used for requests made between users, Group Administrators and the Super Administrator.
+The `Request` data structure is used for requests made between users, Group Administrators and the Super Administrator.
 
-Field Type Description
-id string Unique identifier for the request
-type string Type of request being made
-requesterId string ID of the user who created the request
-targetGroupId string/null ID of the related group where applicable
-targetUserId string/null ID of the related user where applicable
-details object Additional information required for the request
-reason string/null Reason supplied with the request where required
-status string Current status: pending, approved or rejected
-rejectionReason string/null Reason an administrator rejected the request
-createdAt string Date and time the request was submitted
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the request |
+| `type` | `string` | Type of request being made |
+| `requesterId` | `string` | ID of the user who created the request |
+| `targetGroupId` | `string \| null` | ID of the related group where applicable |
+| `targetUserId` | `string \| null` | ID of the related user where applicable |
+| `details` | `object` | Additional information required for the request |
+| `reason` | `string \| null` | Reason supplied with the request where required |
+| `status` | `'pending' \| 'approved' \| 'rejected'` | Current status of the request |
+| `rejectionReason` | `string \| null` | Reason an administrator rejected the request |
+| `createdAt` | `string` | Date and time the request was submitted |
 
 Request types may include:
 
-Group creation request
-Group join request
-Room creation request
-Group user ban request
-System-wide user ban request
-Group deletion request
+- Group creation request.
+- Group join request.
+- Room creation request.
+- Group user-ban request.
+- System-wide user-ban request.
+- Group deletion request.
 
 Once submitted, a request cannot be cancelled by the requester.
 
+---
+
 ### 4.5 Audit Log
 
-The Audit Log data structure records important administrative and system actions for review by the Super Administrator.
+The `AuditLog` data structure records important administrative and system actions for review by the Super Administrator.
 
-Field Type Description
-id string Unique identifier for the audit record
-type string Type of event or administrative action
-actorId string ID of the user who performed the action
-targetId string/null ID of the user, group or room affected by the action
-details object Additional information associated with the audit event
-createdAt string Date and time the action occurred
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the audit record |
+| `type` | `string` | Type of event or administrative action |
+| `actorId` | `string` | ID of the user who performed the action |
+| `targetId` | `string \| null` | ID of the user, group or room affected by the action |
+| `details` | `object` | Additional information associated with the audit event |
+| `createdAt` | `string` | Date and time the action occurred |
 
 Audit records can later be filtered by event type and displayed in date order.
 
+---
+
 ### 4.6 Message
 
-The Message data structure represents messages sent within chat rooms.
+The `Message` data structure represents messages sent within chat rooms.
 
-Field Type Description
-id string Unique identifier for the message
-roomId string ID of the room containing the message
-senderId string ID of the user who sent the message
-type string Message type: text, image or gif
-content string Text content or reference to the uploaded media
-createdAt string Date and time the message was sent
-deleted boolean Indicates whether the sender has deleted the message
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the message |
+| `roomId` | `string` | ID of the room containing the message |
+| `senderId` | `string` | ID of the user who sent the message |
+| `type` | `'text' \| 'image' \| 'gif'` | Type of message |
+| `content` | `string` | Text content or reference to uploaded media |
+| `createdAt` | `string` | Date and time the message was sent |
+| `deleted` | `boolean` | Indicates whether the sender has deleted the message |
 
-Messages cannot be edited after being sent. A user may only delete a message that they created.
+Messages cannot be edited after being sent.
 
-Full real-time messaging will be implemented in Phase 2. Mock message data may be used for the Phase 1 user interface prototype.
+A user may only delete a message that they created.
+
+Full real-time messaging will be implemented in Phase 2. Mock message data may be used for the Phase 1 user-interface prototype.
+
+---
 
 ### 4.7 Banned User
 
-The Banned User data structure retains information required after a user has been permanently removed from the system.
+The `BannedUser` data structure retains information required after a user has been permanently removed from the system.
 
-Field Type Description
-id string Unique identifier for the banned-user record
-originalUserId string ID of the user account that was permanently banned
-firstName string First name of the banned user
-lastName string Last name of the banned user
-email string Email address that must not be allowed to register again
-reason string Reason for the system-wide ban
-bannedBy string ID of the Super Administrator who actioned the ban
-bannedAt string Date and time the permanent ban occurred
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the banned-user record |
+| `originalUserId` | `string` | ID of the user account that was permanently banned |
+| `firstName` | `string` | First name of the banned user |
+| `lastName` | `string` | Last name of the banned user |
+| `email` | `string` | Email address that must not be allowed to register again |
+| `reason` | `string` | Reason for the system-wide ban |
+| `bannedBy` | `string` | ID of the Super Administrator who actioned the ban |
+| `bannedAt` | `string` | Date and time the permanent ban occurred |
 
 The banned-user record allows the Super Administrator to view previously banned accounts and ensures that a permanently banned email address cannot be reused.
 

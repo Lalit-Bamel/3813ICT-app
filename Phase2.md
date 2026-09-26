@@ -1401,29 +1401,42 @@ Important fields include:
 
 ### Request
 
-Important fields include:
-
-- `id`
-- `type`
-- `requesterId`
-- `targetGroupId`
-- `targetUserId`
-- `details`
-- `reason`
-- `status`
-- `rejectionReason`
-- `createdAt`
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `type` | `'groupCreation' \| 'joinGroup' \| 'roomCreation' \| 'groupBan' \| 'systemBan' \| 'groupDeletion'` |
+| `requesterId` | `string` |
+| `targetGroupId` | optional `string` |
+| `targetUserId` | optional `string` |
+| `details` | optional `object` |
+| `reason` | optional `string` |
+| `status` | `'pending' \| 'approved' \| 'rejected'` |
+| `rejectionReason` | optional `string` |
+| `createdAt` | `string` |
 
 ### AuditLog
 
-Important fields include:
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `type` | `string` |
+| `actorId` | `string` |
+| `targetId` | optional `string` |
+| `details` | optional `object` |
+| `createdAt` | `string` |
 
-- `id`
-- `type`
-- `actorId`
-- `targetId`
-- `details`
-- `createdAt`
+### BannedUser
+
+| Field | Type |
+|---|---|
+| `id` | `string` |
+| `originalUserId` | `string` |
+| `firstName` | `string` |
+| `lastName` | `string` |
+| `email` | `string` |
+| `reason` | `string` |
+| `bannedBy` | `string` |
+| `bannedAt` | `string` |
 
 ---
 
