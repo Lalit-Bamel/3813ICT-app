@@ -8,6 +8,22 @@
  
 ---
 
+## Repository Layout
+
+The GitHub repository is organised into the following main areas:
+
+```text
+3813ICT-app/
+├── client/          Angular 22 frontend application
+├── design/          Phase 1 and Phase 2 storyboard/design files
+├── server/          Node.js, Express, MongoDB and Socket.IO backend
+├── .gitignore       Files excluded from version control
+├── README.md        Project information
+├── phase1.md        Phase 1 documentation
+└── phase2.md        Final Phase 2 documentation
+
+```
+
 # 1. Specifications and Requirements
 
 ## 1.1 Project Overview
@@ -925,28 +941,34 @@ Angular connects from:
 
 `http://localhost:4200`
 
-### Main Client-to-Server Operations
+### Main Client-to-Server Socket Operations
 
-| Operation | Purpose |
-|---|---|
-| Join room | Validate user and join chat room |
-| Leave room | Leave current Socket.IO room |
-| Send message | Validate, persist and broadcast text/GIF message |
-| Subscribe to group updates | Receive live membership/request changes |
-| Unsubscribe from group updates | Stop group-level updates |
+These Socket.IO operations are sent from the Angular client to the Node.js
+server.
 
-### Main Server-to-Client Events
+| Direction | Operation | Main Data Sent | Purpose |
+|---|---|---|---|
+| Client → Server | Join room | `roomId`, `userId` | Requests access to a chat room. The server validates the user, room and group membership before allowing the socket to join. |
+| Client → Server | Leave room | Current room information | Removes the socket from the current chat room and updates room presence. |
+| Client → Server | Send message | `roomId`, `senderId`, `type`, `content` | Sends a text or GIF message. The server validates it, stores it in MongoDB and broadcasts the saved message to users in the room. |
+| Client → Server | Subscribe to group updates | Group/user information | Allows an open group page to receive real-time membership and request changes. |
+| Client → Server | Unsubscribe from group updates | Group/user information | Stops receiving real-time updates for a group when the user leaves that page. |
 
-Fabulari uses real-time events for:
+### Main Server-to-Client Socket Events
 
-- New messages.
-- Message deletion.
-- User joined.
-- User left.
-- Current room-presence list.
-- Group member changes.
-- Group request changes.
-- Group access revocation.
+The Node.js server sends Socket.IO events back to connected Angular clients
+when real-time application state changes.
+
+| Direction | Event / Update | Data Received | Purpose |
+|---|---|---|---|
+| Server → Client | New message | Stored `Message` data | Displays a newly created text, image or GIF message without refreshing the page. |
+| Server → Client | Message deleted | Deleted message information | Removes a soft-deleted message from connected clients immediately. |
+| Server → Client | User joined | User / room-presence information | Displays a notification when another user enters the room. |
+| Server → Client | User left | User / room-presence information | Displays a notification when another user leaves or disconnects. |
+| Server → Client | Room presence updated | Current connected users | Refreshes the persistent `Online in this room` list. |
+| Server → Client | Group members changed | Updated group/member information | Refreshes group membership after joins, leaves, bans or other membership changes. |
+| Server → Client | Group request changed | Request/group information | Allows administrative request pages to update without a manual browser refresh. |
+| Server → Client | Group access revoked | User/group information | Redirects a user when they lose permission to access a group. |
 
 ### Message Flow
 
@@ -2372,6 +2394,199 @@ administrative, age-validation, accessibility and real-time behaviours that
 are difficult to fully represent using isolated automated tests.
 
 ---
+
+## 5.10 Running the Automated Tests
+
+The automated tests can be run independently. MongoDB must be running before
+the backend integration tests or Cypress end-to-end tests are executed.
+
+### Backend Unit and Integration Tests
+
+Open a terminal and move to the server directory:
+
+```powershell
+cd server
+```
+
+Run:
+
+```powershell
+npm test
+```
+
+This command runs both:
+
+- Backend unit tests.
+- Backend API integration tests.
+
+The final expected result is:
+
+```text
+16 passing
+0 failing
+```
+
+The backend integration tests use the separate MongoDB database:
+
+`fabulari_test`
+
+This prevents the tests from modifying the normal development database.
+
+---
+
+### Angular Unit Tests
+
+Open a terminal and move to the client directory:
+
+```powershell
+cd client
+```
+
+Run:
+
+```powershell
+npm test -- --watch=false
+```
+
+The `--watch=false` option causes the tests to run once and then exit instead of
+remaining active in watch mode.
+
+The final expected result is:
+
+```text
+10 passing
+0 failing
+```
+
+These tests use Vitest and Angular TestBed to test frontend services and
+application behaviour without requiring the real Node.js backend.
+
+---
+
+### Cypress End-to-End Tests
+
+Cypress tests the complete application flow and therefore requires:
+
+- MongoDB to be running.
+- The Node.js backend to be running.
+- The Angular frontend to be running.
+- The Cypress test database to be prepared.
+
+The Cypress tests use the separate database:
+
+`fabulari_e2e`
+
+#### Step 1 — Seed the E2E Test Database
+
+From the project root run:
+
+```powershell
+node ./server/test/e2e/seedChatData.js
+```
+
+A successful setup displays:
+
+```text
+E2E chat data seeded successfully.
+```
+
+#### Step 2 — Start the Backend Using the E2E Database
+
+Open a new terminal and move to the server directory:
+
+```powershell
+cd server
+```
+
+Set the database used by the server:
+
+```powershell
+$env:MONGO_DB_NAME="fabulari_e2e"
+```
+
+Start the server:
+
+```powershell
+node server.js
+```
+
+The terminal should confirm that the server connected to:
+
+```text
+fabulari_e2e
+```
+
+and is running on:
+
+```text
+http://localhost:3000
+```
+
+Leave this terminal running.
+
+#### Step 3 — Start the Angular Application
+
+Open another terminal and move to the client directory:
+
+```powershell
+cd client
+```
+
+Run:
+
+```powershell
+npm start
+```
+
+Angular should run on:
+
+```text
+http://localhost:4200
+```
+
+Leave this terminal running.
+
+#### Step 4 — Run Cypress
+
+Open another terminal inside the client directory:
+
+```powershell
+cd client
+```
+
+Run:
+
+```powershell
+npx cypress run
+```
+
+Cypress runs the authentication/navigation tests and the real-time chat test.
+
+The final expected result is:
+
+```text
+6 passing
+0 failing
+```
+
+---
+
+### Final Automated Test Result
+
+The final automated testing results are:
+
+| Testing Layer | Tests | Result |
+|---|---:|---|
+| Backend Unit Tests | 10 | 10 passed |
+| Backend Integration Tests | 6 | 6 passed |
+| Angular Unit Tests | 10 | 10 passed |
+| Cypress End-to-End Tests | 6 | 6 passed |
+| **Total** | **32** | **32 passed** |
+
+Final result:
+
+**32 / 32 automated tests passing**
+
 
 # Conclusion
 
