@@ -37,47 +37,52 @@ function escapeRegex(value) {
 // REGISTER
 // ==================================================
 
+/**
+ * Registers a new user after validating input, checking duplicate/banned account data,
+ * hashing the password and storing the safe account details in MongoDB.
+ */
 router.post("/register", async function (req, res) {
 
     try {
 
-const validation =
-    validateRegistrationInput(
-        req.body
-    );
+        const validation =
+            validateRegistrationInput(
+                req.body
+            );
 
 
-if (!validation.valid) {
+        if (!validation.valid) {
 
-    return res
-        .status(
-            validation.status
-        )
-        .json({
-            message:
-                validation.message
-        });
-}
+            return res
+                .status(
+                    validation.status
+                )
+                .json({
+                    message:
+                        validation.message
+                });
+        }
 
 
-const {
-    firstName:
-        cleanFirstName,
+        const {
+            firstName:
+                cleanFirstName,
 
-    lastName:
-        cleanLastName,
+            lastName:
+                cleanLastName,
 
-    username:
-        cleanUsername,
+            username:
+                cleanUsername,
 
-    email:
-        cleanEmail,
+            email:
+                cleanEmail,
 
-    age:
-        numericAge,
+            age:
+                numericAge,
 
-    password
-} = validation.value;
+            password
+        } = validation.value;
+
         const db =
             getDb();
 
@@ -160,36 +165,36 @@ const {
 
     } catch (error) {
         if (
-    error.code === 11000
-) {
+            error.code === 11000
+        ) {
 
-    if (
-        error.keyPattern?.email
-    ) {
+            if (
+                error.keyPattern?.email
+            ) {
 
-        return res.status(409).json({
-            message:
-                "Email address is already registered."
-        });
-    }
-
-
-    if (
-        error.keyPattern?.username
-    ) {
-
-        return res.status(409).json({
-            message:
-                "Username is already in use."
-        });
-    }
+                return res.status(409).json({
+                    message:
+                        "Email address is already registered."
+                });
+            }
 
 
-    return res.status(409).json({
-        message:
-            "Account information is already in use."
-    });
-}
+            if (
+                error.keyPattern?.username
+            ) {
+
+                return res.status(409).json({
+                    message:
+                        "Username is already in use."
+                });
+            }
+
+
+            return res.status(409).json({
+                message:
+                    "Account information is already in use."
+            });
+        }
 
         console.error(
             "Registration error:",
@@ -208,6 +213,10 @@ const {
 // LOGIN
 // ==================================================
 
+/**
+ * Authenticates a user with a case-insensitive username lookup and bcrypt password check,
+ * then returns a safe user object without the password hash or MongoDB _id.
+ */
 router.post("/login", async function (req, res) {
 
     try {

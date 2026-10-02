@@ -28,6 +28,10 @@ import {
 } from '../models/user';
 
 
+/**
+ * Unit tests for AuthService HTTP requests, authentication state,
+ * localStorage persistence, logout and Super Administrator detection.
+ */
 describe(
     'AuthService',
     () => {
@@ -70,6 +74,9 @@ describe(
         };
 
 
+        /**
+         * Creates a fresh AuthService and HTTP testing controller for each test.
+         */
         beforeEach(
             () => {
 
@@ -105,6 +112,9 @@ describe(
         );
 
 
+        /**
+         * Verifies that no unexpected HTTP requests remain and clears stored login state.
+         */
         afterEach(
             () => {
 

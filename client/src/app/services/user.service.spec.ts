@@ -28,6 +28,10 @@ import {
 } from '../models/user';
 
 
+/**
+ * Unit tests for UserService profile retrieval, profile updates
+ * and multipart profile-picture uploads.
+ */
 describe(
     'UserService',
     () => {
@@ -70,6 +74,9 @@ describe(
         };
 
 
+        /**
+         * Creates a fresh UserService and HTTP testing controller for each test.
+         */
         beforeEach(
             () => {
 
@@ -98,6 +105,9 @@ describe(
         );
 
 
+        /**
+         * Verifies that each test handled all expected HTTP requests.
+         */
         afterEach(
             () => {
 

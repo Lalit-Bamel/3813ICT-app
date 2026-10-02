@@ -24,6 +24,9 @@ interface ProfileResponse {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles profile retrieval, profile updates and profile-picture uploads.
+ */
 export class UserService {
 
     private http = inject(HttpClient);
@@ -31,6 +34,9 @@ export class UserService {
     private apiUrl = 'http://localhost:3000/api/users';
 
 
+    /**
+     * Retrieves a user's current profile from the backend.
+     */
     getProfile(userId: string) {
         return this.http.get<User>(
             `${this.apiUrl}/${userId}`
@@ -38,6 +44,9 @@ export class UserService {
     }
 
 
+    /**
+     * Sends editable profile fields to the backend for validation and persistence.
+     */
     updateProfile(
         userId: string,
         profile: ProfileUpdate
@@ -47,6 +56,9 @@ export class UserService {
             profile
         );
     }
+    /**
+     * Uploads a profile picture using multipart FormData.
+     */
     uploadProfilePicture(
     userId: string,
     file: File

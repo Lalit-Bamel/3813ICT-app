@@ -45,6 +45,9 @@ import {
     styleUrl:
         './profile.component.css'
 })
+/**
+ * Loads and updates the current user's profile, date of birth, calculated age, password and profile picture.
+ */
 export class ProfileComponent
 implements OnInit {
 
@@ -101,6 +104,9 @@ implements OnInit {
     // INITIALISE PROFILE
     // ==========================================
 
+    /**
+     * Loads the authenticated user's latest profile data when the component starts.
+     */
     ngOnInit() {
 
         if (!this.currentUser) {
@@ -156,6 +162,9 @@ implements OnInit {
     // LOAD PROFILE FIELDS
     // ==========================================
 
+    /**
+     * Copies profile data into the editable form fields and prepares date/age values.
+     */
     private loadFields(
         user: User
     ) {
@@ -195,6 +204,9 @@ implements OnInit {
     // PROFILE IMAGE URL
     // ==========================================
 
+    /**
+     * Builds a usable browser URL for the stored profile-picture value.
+     */
     getProfilePictureUrl(
         content: string
     ): string {
@@ -230,6 +242,9 @@ implements OnInit {
     // SELECT PROFILE IMAGE
     // ==========================================
 
+    /**
+     * Validates a selected profile image and prepares a local preview before upload.
+     */
     onProfilePictureSelected(
         event: Event
     ) {
@@ -341,6 +356,9 @@ implements OnInit {
     // SAVE PROFILE
     // ==========================================
 
+    /**
+     * Recalculates the displayed age whenever the date of birth changes.
+     */
     onDateOfBirthChanged() {
 
         this.dateOfBirthIsEstimated =
@@ -353,6 +371,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Calculates age from a YYYY-MM-DD date while rejecting invalid or future dates.
+     */
     private calculateAge(
         dateOfBirth: string
     ): number | null {
@@ -402,6 +423,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Builds an approximate date-of-birth value for older records that only contain age.
+     */
     private inferDateOfBirth(
         age: number
     ): string {
@@ -418,6 +442,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Formats a stored date value into YYYY-MM-DD for an HTML date input.
+     */
     private toDateInputValue(
         date: Date
     ): string {
@@ -437,6 +464,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Returns today's date in YYYY-MM-DD format to prevent future date selection.
+     */
     private getLatestDateOfBirth(): string {
 
         const latestDate = new Date();
@@ -450,6 +480,9 @@ implements OnInit {
         );
     }
 
+    /**
+     * Validates and saves profile changes, then uploads a new profile picture when one was selected.
+     */
     onSubmit() {
 
         this.errorMessage = '';
@@ -564,6 +597,9 @@ implements OnInit {
     // UPLOAD PROFILE PICTURE
     // ==========================================
 
+    /**
+     * Uploads the selected profile image and updates the authenticated user with the returned path.
+     */
     private uploadProfilePicture() {
 
         if (

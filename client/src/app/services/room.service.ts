@@ -19,6 +19,9 @@ import {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles room management, message history, chat-image uploads and message deletion.
+ */
 export class RoomService {
 
     private http =
@@ -39,6 +42,9 @@ export class RoomService {
     // GET GROUP ROOMS
     // ==========================================
 
+    /**
+     * Retrieves all rooms belonging to a selected group.
+     */
     getRooms(
         groupId: string
     ) {
@@ -53,6 +59,9 @@ export class RoomService {
     // GET ONE ROOM
     // ==========================================
 
+    /**
+     * Retrieves a single room by its application ID.
+     */
     getRoom(
         roomId: string
     ) {
@@ -67,6 +76,9 @@ export class RoomService {
     // CREATE ROOM
     // ==========================================
 
+    /**
+     * Creates a room directly when the acting user has Group Administrator permission.
+     */
     createRoom(
         groupId: string,
         actorId: string,
@@ -87,6 +99,9 @@ export class RoomService {
     // RENAME ROOM
     // ==========================================
 
+    /**
+     * Renames an existing room on behalf of an authorised Group Administrator.
+     */
     renameRoom(
         roomId: string,
         actorId: string,
@@ -107,6 +122,9 @@ export class RoomService {
     // DELETE ROOM
     // ==========================================
 
+    /**
+     * Deletes a room using the acting administrator ID for backend authorisation.
+     */
     deleteRoom(
         roomId: string,
         actorId: string
@@ -127,6 +145,9 @@ export class RoomService {
     // GET LAST 5 MESSAGES
     // ==========================================
 
+    /**
+     * Retrieves the five most recent non-deleted messages for a room.
+     */
     getMessages(
         roomId: string,
         userId: string
@@ -148,6 +169,9 @@ export class RoomService {
     // LEGACY REST SEND MESSAGE
     // ==========================================
 
+    /**
+     * Sends a message through the legacy REST endpoint; live chat normally uses Socket.IO.
+     */
     sendMessage(
         roomId: string,
         senderId: string,
@@ -176,6 +200,9 @@ export class RoomService {
     // UPLOAD CHAT IMAGE
     // ==========================================
 
+    /**
+     * Uploads a chat image using multipart FormData and returns the created chat message.
+     */
     uploadChatImage(
         roomId: string,
         senderId: string,
@@ -216,6 +243,9 @@ export class RoomService {
     // DELETE OWN MESSAGE
     // ==========================================
 
+    /**
+     * Soft-deletes a message when the acting user owns that message.
+     */
     deleteMessage(
         roomId: string,
         messageId: string,

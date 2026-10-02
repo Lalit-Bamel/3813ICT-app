@@ -21,6 +21,10 @@ interface RegisterData {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles registration, login and the current authenticated user state.
+ * The current user is persisted in localStorage and exposed through an Angular signal.
+ */
 export class AuthService {
 
     private http = inject(HttpClient);
@@ -32,6 +36,9 @@ export class AuthService {
 );
 
     readonly currentUser = this.currentUserSignal.asReadonly();
+    /**
+     * Sends new account details to the backend registration endpoint.
+     */
     register(data: RegisterData) {
         return this.http.post<AuthResponse>(
             `${this.apiUrl}/register`,
@@ -39,6 +46,9 @@ export class AuthService {
         );
     }
 
+    /**
+     * Authenticates a user and stores the returned user when login succeeds.
+     */
     login(username: string, password: string) {
         return this.http.post<AuthResponse>(
             `${this.apiUrl}/login`,
@@ -52,6 +62,9 @@ export class AuthService {
                 })
                 );
                 }
+    /**
+     * Restores the previously authenticated user from browser localStorage.
+     */
     private loadStoredUser(): User | null {
 
     const storedUser =
@@ -64,6 +77,9 @@ export class AuthService {
     return JSON.parse(storedUser) as User;
 }
 
+/**
+ * Stores the authenticated user in localStorage and updates the reactive signal.
+ */
 setCurrentUser(user: User) {
 
     localStorage.setItem(
@@ -75,11 +91,17 @@ setCurrentUser(user: User) {
 }
 
 
+/**
+ * Returns the current authenticated user, or null when no user is logged in.
+ */
 getCurrentUser(): User | null {
     return this.currentUserSignal();
 }
 
 
+/**
+ * Clears the persisted and in-memory authenticated user state.
+ */
 logout() {
 
     localStorage.removeItem(this.storageKey);
@@ -88,11 +110,17 @@ logout() {
 }
 
 
+/**
+ * Returns whether a user is currently authenticated.
+ */
 isLoggedIn(): boolean {
     return this.currentUserSignal() !== null;
 }
 
 
+/**
+ * Returns whether the current user has the Super Administrator system role.
+ */
 isSuperAdmin(): boolean {
 
     return this.currentUserSignal()?.systemRole

@@ -74,6 +74,9 @@ import {
     styleUrl:
         './chat-room.component.css'
 })
+/**
+ * Controls the real-time chat-room screen, including message history, Socket.IO events, presence, image/GIF sending and message deletion.
+ */
 export class ChatRoomComponent
 implements OnInit, OnDestroy {
 
@@ -140,6 +143,9 @@ implements OnInit, OnDestroy {
     // INITIALISE
     // ==========================================
 
+    /**
+     * Initialises the selected group/room, current user, existing messages and real-time Socket.IO listeners.
+     */
     ngOnInit() {
 
         const groupId =
@@ -209,6 +215,9 @@ implements OnInit, OnDestroy {
     // CLEAN UP
     // ==========================================
 
+    /**
+     * Unsubscribes from observables and leaves the Socket.IO room when the component is destroyed.
+     */
     ngOnDestroy() {
 
         /*
@@ -256,6 +265,9 @@ implements OnInit, OnDestroy {
     // SOCKET LISTENERS
     // ==========================================
 
+    /**
+     * Registers listeners for new messages, message deletion, presence updates and join/leave notifications.
+     */
     private listenForSocketEvents() {
 
         // ------------------------------------------
@@ -445,6 +457,9 @@ implements OnInit, OnDestroy {
     // LOAD GROUP
     // ==========================================
 
+    /**
+     * Loads the parent group and verifies that the current user still has access.
+     */
     loadGroup(
         groupId: string
     ) {
@@ -481,6 +496,9 @@ implements OnInit, OnDestroy {
     // LOAD ROOM + JOIN SOCKET ROOM
     // ==========================================
 
+    /**
+     * Loads the selected room and verifies that it belongs to the current group.
+     */
     loadRoom(
         roomId: string,
         groupId: string
@@ -572,6 +590,9 @@ implements OnInit, OnDestroy {
     // LOAD LAST 5 MESSAGES
     // ==========================================
 
+    /**
+     * Loads the most recent non-deleted messages for the current room.
+     */
     loadMessages(
         roomId?: string
     ) {
@@ -626,6 +647,9 @@ implements OnInit, OnDestroy {
     // SEND TEXT MESSAGE USING SOCKET.IO
     // ==========================================
 
+    /**
+     * Validates and sends a text message through Socket.IO for persistence and real-time broadcast.
+     */
     async sendTextMessage() {
 
         const user =
@@ -695,6 +719,9 @@ implements OnInit, OnDestroy {
     // IMAGE SELECTION
     // ==========================================
 
+    /**
+     * Validates a selected image and creates a local preview before upload.
+     */
     onImageSelected(
         event: Event
     ) {
@@ -826,6 +853,9 @@ implements OnInit, OnDestroy {
     // SEND IMAGE
     // ==========================================
 
+    /**
+     * Uploads the selected chat image and adds the server-created message to the room in real time.
+     */
     sendImage() {
 
         const user =
@@ -904,6 +934,9 @@ implements OnInit, OnDestroy {
     // CANCEL IMAGE
     // ==========================================
 
+    /**
+     * Clears the selected image and preview without sending it.
+     */
     cancelImage() {
 
         this.selectedImageFile =
@@ -926,6 +959,9 @@ implements OnInit, OnDestroy {
     // SEND GIF USING SOCKET.IO
     // ==========================================
 
+    /**
+     * Validates a GIF URL and sends it through the same Socket.IO message flow as text.
+     */
     async sendGif() {
 
         const user =
@@ -984,6 +1020,9 @@ implements OnInit, OnDestroy {
     // CHECK MESSAGE OWNERSHIP
     // ==========================================
 
+    /**
+     * Returns whether the supplied message belongs to the currently logged-in user.
+     */
     isOwnMessage(
         message: Message
     ): boolean {
@@ -1008,6 +1047,9 @@ implements OnInit, OnDestroy {
     // BUILD IMAGE URL
     // ==========================================
 
+    /**
+     * Builds the display URL for uploaded images while preserving local/Base64 previews when needed.
+     */
     getImageUrl(
         content: string
     ): string {
@@ -1051,6 +1093,9 @@ implements OnInit, OnDestroy {
     // DELETE OWN MESSAGE
     // ==========================================
 
+    /**
+     * Soft-deletes one of the current user's own messages and relies on Socket.IO to update connected clients.
+     */
     deleteMessage(
         message: Message
     ) {

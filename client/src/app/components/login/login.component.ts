@@ -14,6 +14,9 @@ import { AuthService } from '../../services/auth.service';
     templateUrl: './login.component.html',
     styleUrl: './login.component.css'
 })
+/**
+ * Handles username/password login and redirects authenticated users according to their system role.
+ */
 export class LoginComponent {
 
     private authService = inject(AuthService);
@@ -25,6 +28,9 @@ export class LoginComponent {
 
     errorMessage = '';
 
+    /**
+     * Submits the login credentials and redirects the authenticated user to the appropriate area.
+     */
     onSubmit() {
         this.errorMessage = '';
 

@@ -15,6 +15,9 @@ import {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles creation, retrieval and approval/rejection of application requests.
+ */
 export class RequestService {
 
     private http =
@@ -24,6 +27,9 @@ export class RequestService {
         'http://localhost:3000/api/requests';
 
 
+    /**
+     * Creates a request for the Super Administrator to create a new group.
+     */
     createGroupRequest(
         requesterId: string,
         data: {
@@ -44,6 +50,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Creates a request for a user to join an existing group.
+     */
     requestJoin(
         requesterId: string,
         groupId: string
@@ -59,6 +68,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Creates a request for a Group Administrator to create a room.
+     */
     createRoomRequest(
         requesterId: string,
         groupId: string,
@@ -76,6 +88,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Creates a request to ban a selected user from a specific group.
+     */
     createGroupBanRequest(
         requesterId: string,
         groupId: string,
@@ -95,6 +110,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Creates a request for a permanent system-wide user ban.
+     */
     createSystemBanRequest(
         requesterId: string,
         groupId: string,
@@ -114,6 +132,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Creates a request for the Super Administrator to delete a group.
+     */
     createGroupDeletionRequest(
         requesterId: string,
         groupId: string,
@@ -131,6 +152,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Retrieves pending requests that require Super Administrator action.
+     */
     getSuperAdminRequests(
         userId: string
     ) {
@@ -141,6 +165,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Retrieves pending requests for a specific Group Administrator and group.
+     */
     getGroupJoinRequests(
         userId: string,
         groupId: string
@@ -152,6 +179,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Retrieves the request history belonging to a user.
+     */
     getUserRequestHistory(
         userId: string
     ) {
@@ -162,6 +192,9 @@ export class RequestService {
     }
 
 
+    /**
+     * Approves or rejects an existing request and optionally includes a rejection reason.
+     */
     actionRequest(
         requestId: string,
         actorId: string,

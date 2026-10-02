@@ -14,6 +14,9 @@ import {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles group retrieval, membership and Group Administrator operations.
+ */
 export class GroupService {
 
     private http =
@@ -23,6 +26,9 @@ export class GroupService {
         'http://localhost:3000/api/groups';
 
 
+    /**
+     * Retrieves all groups available to the application.
+     */
     getGroups() {
 
         return this.http.get<Group[]>(
@@ -31,6 +37,9 @@ export class GroupService {
     }
 
 
+    /**
+     * Retrieves one group by its application ID.
+     */
     getGroup(groupId: string) {
 
         return this.http.get<Group>(
@@ -38,6 +47,9 @@ export class GroupService {
         );
     }
 
+    /**
+     * Retrieves the members belonging to a selected group.
+     */
     getGroupMembers(groupId: string) {
 
     return this.http.get<GroupMember[]>(
@@ -46,6 +58,9 @@ export class GroupService {
 }
 
 
+/**
+ * Updates editable group details on behalf of a Group Administrator.
+ */
 updateGroup(
     groupId: string,
     actorId: string,
@@ -67,6 +82,9 @@ updateGroup(
 }
 
 
+/**
+ * Promotes an existing group member to Group Administrator.
+ */
 promoteAdmin(
     groupId: string,
     actorId: string,
@@ -82,6 +100,9 @@ promoteAdmin(
 }
 
 
+/**
+ * Removes Group Administrator privileges from a selected administrator.
+ */
 demoteAdmin(
     groupId: string,
     actorId: string,
@@ -99,6 +120,9 @@ demoteAdmin(
 }
 
 
+/**
+ * Allows the acting administrator to resign when another administrator remains.
+ */
 resignAdmin(
     groupId: string,
     actorId: string
@@ -112,6 +136,9 @@ resignAdmin(
     );
 }
 
+/**
+ * Removes the current user from the selected group.
+ */
 leaveGroup(
     groupId: string,
     userId: string

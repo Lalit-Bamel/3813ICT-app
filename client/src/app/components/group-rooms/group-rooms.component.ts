@@ -72,6 +72,9 @@ import {
     styleUrl:
         './group-rooms.component.css'
 })
+/**
+ * Displays a group's rooms and members and handles room management, room proposals, group-ban requests and leaving a group.
+ */
 export class GroupRoomsComponent
 implements OnInit, OnDestroy {
 
@@ -148,6 +151,9 @@ implements OnInit, OnDestroy {
 
     successMessage = '';
 
+    /**
+     * Loads the selected group, rooms and members and starts real-time group subscriptions.
+     */
     ngOnInit() {
 
         const groupId =
@@ -178,6 +184,9 @@ implements OnInit, OnDestroy {
         );
     }
 
+    /**
+     * Unsubscribes from live updates and leaves the current group subscription.
+     */
     ngOnDestroy() {
 
         for (
@@ -195,6 +204,9 @@ implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Listens for live membership changes and immediate access revocation for the selected group.
+     */
     private subscribeToGroupUpdates(
         groupId: string
     ) {
@@ -243,6 +255,9 @@ implements OnInit, OnDestroy {
     // LOAD GROUP
     // ==========================================
 
+    /**
+     * Loads the selected group and verifies that the current user is still a member.
+     */
     loadGroup(
         groupId: string
     ) {
@@ -277,6 +292,9 @@ implements OnInit, OnDestroy {
     // LOAD ROOMS
     // ==========================================
 
+    /**
+     * Loads all rooms that belong to the selected group.
+     */
     loadRooms(
         groupId: string
     ) {
@@ -311,6 +329,9 @@ implements OnInit, OnDestroy {
     // LOAD MEMBERS
     // ==========================================
 
+    /**
+     * Loads the members of the selected group.
+     */
     loadMembers(
         groupId: string
     ) {
@@ -345,6 +366,9 @@ implements OnInit, OnDestroy {
     // CHECK GROUP ADMIN
     // ==========================================
 
+    /**
+     * Returns whether the current user is an administrator of the selected group.
+     */
     isGroupAdmin(): boolean {
 
         const user =
@@ -367,6 +391,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Returns whether a supplied member has Group Administrator privileges.
+     */
     isMemberAdmin(
         member: GroupMember
     ): boolean {
@@ -385,6 +412,9 @@ implements OnInit, OnDestroy {
     // ADMIN DIRECT CREATE ROOM
     // ==========================================
 
+    /**
+     * Creates a room directly when the current user is a Group Administrator.
+     */
     createRoom() {
 
         const user =
@@ -450,6 +480,9 @@ implements OnInit, OnDestroy {
     // MEMBER PROPOSE ROOM
     // ==========================================
 
+    /**
+     * Submits a room-creation request when a normal group member proposes a new room.
+     */
     proposeRoom() {
 
         const user =
@@ -511,6 +544,9 @@ implements OnInit, OnDestroy {
     // START ROOM RENAME
     // ==========================================
 
+    /**
+     * Opens the room-renaming controls for the selected room.
+     */
     startRename(
         room: Room
     ) {
@@ -531,6 +567,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Cancels the current room rename and clears its temporary state.
+     */
     cancelRename() {
 
         this.renamingRoomId =
@@ -547,6 +586,9 @@ implements OnInit, OnDestroy {
     // CONFIRM ROOM RENAME
     // ==========================================
 
+    /**
+     * Validates and saves the new room name.
+     */
     confirmRename(
         room: Room
     ) {
@@ -626,6 +668,9 @@ implements OnInit, OnDestroy {
     // DELETE ROOM
     // ==========================================
 
+    /**
+     * Deletes a selected room after confirmation and refreshes the room list.
+     */
     deleteRoom(
         room: Room
     ) {
@@ -697,6 +742,9 @@ implements OnInit, OnDestroy {
     // START GROUP BAN REQUEST
     // ==========================================
 
+    /**
+     * Opens the group-ban request workflow for a selected member.
+     */
     startGroupBan(
         member: GroupMember
     ) {
@@ -720,6 +768,9 @@ implements OnInit, OnDestroy {
     // CANCEL GROUP BAN REQUEST
     // ==========================================
 
+    /**
+     * Cancels and clears the pending group-ban request.
+     */
     cancelGroupBan() {
 
         this.groupBanTargetId =
@@ -738,6 +789,9 @@ implements OnInit, OnDestroy {
     // SUBMIT GROUP BAN REQUEST
     // ==========================================
 
+    /**
+     * Submits a request to ban the selected member from the current group.
+     */
     confirmGroupBan(
         member: GroupMember
     ) {
@@ -813,6 +867,9 @@ implements OnInit, OnDestroy {
     // LEAVE GROUP
     // ==========================================
 
+    /**
+     * Removes the current user from the group while respecting sole-administrator protection.
+     */
     leaveGroup() {
 
         const user = this.currentUser();

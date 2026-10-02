@@ -23,6 +23,10 @@ async function getSuperAdmin(
 // PERMANENTLY BANNED USERS
 // ==================================================
 
+/**
+ * Returns all permanently banned-user records.
+ * Only the Super Administrator is authorised to use this endpoint.
+ */
 router.get(
     "/banned-users/:userId",
     async function (req, res) {
@@ -38,6 +42,7 @@ router.get(
             const bannedUsersCollection =
                 db.collection("bannedUsers");
 
+            // Confirm that the requesting user has Super Administrator access.
             const superAdmin =
                 await getSuperAdmin(
                     usersCollection,
@@ -51,6 +56,7 @@ router.get(
                 });
             }
 
+            // MongoDB's internal _id is not required by the Angular client.
             const bannedUsers =
                 await bannedUsersCollection
                     .find(
@@ -87,6 +93,10 @@ router.get(
 // AUDIT LOGS
 // ==================================================
 
+/**
+ * Returns audit logs for Super Administrator review.
+ * The response is enriched with readable actor and target names where possible.
+ */
 router.get(
     "/audit-logs/:userId",
     async function (req, res) {
@@ -105,6 +115,7 @@ router.get(
             const auditLogsCollection =
                 db.collection("auditLogs");
 
+            // Confirm that the requesting user has Super Administrator access.
             const superAdmin =
                 await getSuperAdmin(
                     usersCollection,
@@ -118,6 +129,7 @@ router.get(
                 });
             }
 
+            // Retrieve the newest audit events first.
             const logs =
                 await auditLogsCollection
                     .find(
@@ -133,6 +145,7 @@ router.get(
                     })
                     .toArray();
 
+            // Load active users so stored IDs can be shown as readable usernames.
             const users =
                 await usersCollection
                     .find(
@@ -147,6 +160,8 @@ router.get(
                     )
                     .toArray();
 
+            // Banned users may no longer exist in the active users collection,
+            // so their stored details are also loaded for audit-log display.
             const bannedUsers =
                 await bannedUsersCollection
                     .find(
@@ -162,6 +177,7 @@ router.get(
                     )
                     .toArray();
 
+            // Maps provide fast ID-based lookups while enriching each log.
             const userMap =
                 new Map(
                     users.map(user => [

@@ -37,6 +37,9 @@ import {
     styleUrl:
         './register.component.css'
 })
+/**
+ * Handles account registration, date-of-birth validation and client-side age calculation before submission.
+ */
 export class RegisterComponent {
 
     private authService =
@@ -115,6 +118,9 @@ export class RegisterComponent {
     // DATE OF BIRTH CHANGED
     // ==========================================
 
+    /**
+     * Recalculates age and updates validation feedback when the date of birth changes.
+     */
     onDateOfBirthChange() {
 
         this.errorMessage = '';
@@ -138,6 +144,9 @@ export class RegisterComponent {
     // CALCULATE AGE
     // ==========================================
 
+    /**
+     * Calculates age from the selected date of birth and rejects invalid or future dates.
+     */
     private calculateAge(
         dateOfBirth: string
     ): number | null {
@@ -209,6 +218,9 @@ export class RegisterComponent {
     // REGISTER
     // ==========================================
 
+    /**
+     * Validates the registration form and sends the new account details to AuthService.
+     */
     onSubmit() {
 
         this.errorMessage = '';

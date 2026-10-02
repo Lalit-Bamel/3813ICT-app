@@ -76,6 +76,10 @@ extends SocketGroupEvent {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Provides the Angular client-side Socket.IO interface for real-time chat,
+ * room presence and live group/user membership updates.
+ */
 export class SocketService {
 
     private socket: Socket;
@@ -84,6 +88,9 @@ export class SocketService {
         'http://localhost:3000';
 
 
+    /**
+     * Creates the Socket.IO client but leaves it disconnected until it is needed.
+     */
     constructor() {
 
         this.socket = io(
@@ -99,6 +106,9 @@ export class SocketService {
     // CONNECTION
     // ==================================================
 
+    /**
+     * Connects the Socket.IO client when it is not already connected.
+     */
     connect(): void {
 
         if (!this.socket.connected) {
@@ -107,6 +117,9 @@ export class SocketService {
     }
 
 
+    /**
+     * Disconnects the Socket.IO client when an active connection exists.
+     */
     disconnect(): void {
 
         if (this.socket.connected) {
@@ -114,6 +127,9 @@ export class SocketService {
         }
     }
 
+    /**
+     * Subscribes the current socket to user-specific membership updates.
+     */
     subscribeToUser(
         userId: string
     ): Promise<SocketActionResult> {
@@ -135,6 +151,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Stops user-specific real-time updates for the supplied user.
+     */
     unsubscribeFromUser(
         userId: string
     ): void {
@@ -145,6 +164,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Returns an Observable that emits when the user's group membership changes.
+     */
     onGroupMembershipChanged():
         Observable<SocketGroupMembershipEvent> {
 
@@ -173,6 +195,9 @@ export class SocketService {
     // GROUP PAGE UPDATES
     // ==================================================
 
+    /**
+     * Subscribes the socket to real-time updates for a specific group.
+     */
     subscribeToGroup(
         groupId: string,
         userId: string
@@ -198,6 +223,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Stops receiving real-time updates for a specific group.
+     */
     unsubscribeFromGroup(
         groupId: string
     ): void {
@@ -208,6 +236,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Returns an Observable for live group-member changes.
+     */
     onGroupMembersChanged():
         Observable<SocketGroupEvent> {
 
@@ -216,6 +247,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Returns an Observable for live group-request changes.
+     */
     onGroupRequestsChanged():
         Observable<SocketGroupEvent> {
 
@@ -224,6 +258,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Returns an Observable when the current user's access to a group is revoked.
+     */
     onGroupAccessRevoked():
         Observable<SocketGroupAccessRevokedEvent> {
 
@@ -248,6 +285,9 @@ export class SocketService {
         );
     }
 
+    /**
+     * Creates a reusable Observable listener for simple group-level Socket.IO events.
+     */
     private onGroupEvent(
         eventName: string
     ): Observable<SocketGroupEvent> {
@@ -277,6 +317,9 @@ export class SocketService {
     // JOIN ROOM
     // ==================================================
 
+    /**
+     * Requests to join a Socket.IO chat room after backend validation.
+     */
     joinRoom(
         roomId: string,
         userId: string
@@ -308,6 +351,9 @@ export class SocketService {
     // LEAVE ROOM
     // ==================================================
 
+    /**
+     * Requests to leave the current Socket.IO chat room.
+     */
     leaveRoom(
         roomId: string
     ): Promise<SocketActionResult> {
@@ -337,6 +383,9 @@ export class SocketService {
     // SEND MESSAGE
     // ==================================================
 
+    /**
+     * Sends a text or GIF message to the server for validation, persistence and broadcast.
+     */
     sendMessage(
         roomId: string,
         senderId: string,
@@ -372,6 +421,9 @@ export class SocketService {
     // RECEIVE MESSAGE
     // ==================================================
 
+    /**
+     * Returns an Observable that emits newly broadcast chat messages.
+     */
     onNewMessage():
         Observable<SocketChatMessage> {
 
@@ -412,6 +464,9 @@ export class SocketService {
     // USER JOINED
     // ==================================================
 
+    /**
+     * Returns an Observable for room join notifications.
+     */
     onUserJoined():
         Observable<SocketUserEvent> {
 
@@ -452,6 +507,9 @@ export class SocketService {
     // USER LEFT
     // ==================================================
 
+    /**
+     * Returns an Observable for room leave/disconnect notifications.
+     */
     onUserLeft():
         Observable<SocketUserEvent> {
 
@@ -492,6 +550,9 @@ export class SocketService {
     // CURRENT USERS IN ROOM
     // ==================================================
 
+    /**
+     * Returns an Observable containing the current deduplicated users in a room.
+     */
     onRoomUsersUpdated():
         Observable<SocketRoomUsersEvent> {
 
@@ -528,6 +589,9 @@ export class SocketService {
     }
 
 
+    /**
+     * Returns an Observable when a chat message is deleted in real time.
+     */
     onMessageDeleted() {
 
     return new Observable<

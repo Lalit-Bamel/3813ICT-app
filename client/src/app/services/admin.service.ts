@@ -19,6 +19,9 @@ import {
 @Injectable({
     providedIn: 'root'
 })
+/**
+ * Handles Super Administrator HTTP requests for banned users and audit logs.
+ */
 export class AdminService {
 
     private http =
@@ -28,6 +31,9 @@ export class AdminService {
         'http://localhost:3000/api/admin';
 
 
+    /**
+     * Retrieves all permanently banned users for an authorised Super Administrator.
+     */
     getBannedUsers(
         userId: string
     ) {
@@ -38,6 +44,9 @@ export class AdminService {
     }
 
 
+    /**
+     * Retrieves administrative audit logs for an authorised Super Administrator.
+     */
     getAuditLogs(
         userId: string
     ) {

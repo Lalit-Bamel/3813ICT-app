@@ -57,6 +57,9 @@ import {
     styleUrl:
         './super-admin.component.css'
 })
+/**
+ * Provides Super Administrator controls for pending requests, permanent bans and audit-log review.
+ */
 export class SuperAdminComponent
 implements OnInit {
 
@@ -102,6 +105,9 @@ implements OnInit {
     successMessage = '';
 
 
+    /**
+     * Loads pending requests, permanently banned users and audit logs for the Super Administrator dashboard.
+     */
     ngOnInit() {
 
         this.loadRequests();
@@ -112,6 +118,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Retrieves requests that require Super Administrator approval or rejection.
+     */
     loadRequests() {
 
         const user =
@@ -170,6 +179,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Retrieves permanently banned-user records.
+     */
     loadBannedUsers() {
 
         const user =
@@ -207,6 +219,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Retrieves administrative audit logs for review.
+     */
     loadAuditLogs() {
 
         const user =
@@ -244,6 +259,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Returns audit logs matching the selected filter/search criteria.
+     */
     get filteredAuditLogs():
         AuditLog[] {
 
@@ -263,6 +281,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Approves a selected Super Administrator request and refreshes dashboard data.
+     */
     approveRequest(
         request: Request
     ) {
@@ -314,6 +335,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Opens the rejection workflow for a selected request.
+     */
     startReject(
         request: Request
     ) {
@@ -330,6 +354,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Cancels and clears the current request-rejection form.
+     */
     cancelReject() {
 
         this.rejectingRequestId =
@@ -341,6 +368,9 @@ implements OnInit {
     }
 
 
+    /**
+     * Rejects the selected request with the supplied reason and refreshes dashboard data.
+     */
     confirmReject(
         request: Request
     ) {

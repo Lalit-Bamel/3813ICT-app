@@ -65,6 +65,9 @@ import {
     styleUrl:
         './groups.component.css'
 })
+/**
+ * Displays searchable groups, membership state and request history and allows users to request group creation or membership.
+ */
 export class GroupsComponent
 implements OnInit, OnDestroy {
 
@@ -126,6 +129,9 @@ implements OnInit, OnDestroy {
     > = {};
 
 
+    /**
+     * Loads groups/request history and subscribes to user-specific membership changes.
+     */
     ngOnInit() {
 
         this.loadGroups();
@@ -152,6 +158,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Cleans up real-time subscriptions for the current user.
+     */
     ngOnDestroy() {
 
         this.membershipSubscription
@@ -168,6 +177,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Retrieves all groups and updates the displayed group state.
+     */
     loadGroups() {
 
         this.groupService
@@ -194,6 +206,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Retrieves the current user's previous group-related requests.
+     */
     loadRequestHistory() {
 
         const user =
@@ -231,6 +246,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Returns groups whose title or description matches the current search text.
+     */
     get filteredGroups():
         Group[] {
 
@@ -258,6 +276,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Returns whether the current user belongs to the supplied group.
+     */
     isMember(
         group: Group
     ): boolean {
@@ -276,6 +297,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Returns whether the current user is an administrator of the supplied group.
+     */
     isAdmin(
         group: Group
     ): boolean {
@@ -294,6 +318,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Creates a membership request for the selected group.
+     */
     requestJoin(
         group: Group
     ) {
@@ -351,6 +378,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Validates and submits a request to create a new group.
+     */
     submitGroupRequest() {
 
         const user =
@@ -423,6 +453,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Converts an internal request type into a readable label for the UI.
+     */
     getRequestTypeLabel(
         request: Request
     ): string {
@@ -453,6 +486,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Builds a readable subject/description for a request-history entry.
+     */
     getRequestSubject(
         request: Request
     ): string {

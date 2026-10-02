@@ -68,6 +68,9 @@ import {
     styleUrl:
         './group-admin.component.css'
 })
+/**
+ * Provides Group Administrator controls for group settings, members, requests, bans and group-deletion requests.
+ */
 export class GroupAdminComponent
 implements OnInit, OnDestroy {
 
@@ -148,6 +151,9 @@ implements OnInit, OnDestroy {
         Record<string, string> = {};
 
 
+    /**
+     * Loads the selected group and starts the real-time subscriptions required by the administration screen.
+     */
     ngOnInit() {
 
         const groupId =
@@ -172,6 +178,9 @@ implements OnInit, OnDestroy {
         );
     }
 
+    /**
+     * Cleans up subscriptions and stops receiving group-specific Socket.IO updates.
+     */
     ngOnDestroy() {
 
         for (
@@ -189,6 +198,9 @@ implements OnInit, OnDestroy {
         }
     }
 
+    /**
+     * Subscribes to live request, membership and access-revocation events for the selected group.
+     */
     private subscribeToGroupUpdates(
         groupId: string
     ) {
@@ -242,6 +254,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Loads the selected group and confirms that the current user is one of its administrators.
+     */
     loadGroup(groupId: string) {
 
         this.groupService
@@ -297,6 +312,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Loads the current group-member list for administration actions.
+     */
     loadMembers(groupId: string) {
 
         this.groupService
@@ -322,6 +340,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Loads pending requests that can be actioned by this Group Administrator.
+     */
     loadRequests(groupId: string) {
 
         const user =
@@ -360,6 +381,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Validates and saves editable group settings such as title, description, minimum age and theme.
+     */
     saveGroupChanges() {
 
         const user =
@@ -427,6 +451,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Returns whether a supplied member is currently a Group Administrator.
+     */
     isAdmin(
         member: GroupMember
     ): boolean {
@@ -439,6 +466,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Promotes an existing group member to Group Administrator after confirmation.
+     */
     promote(member: GroupMember) {
 
         const user =
@@ -488,6 +518,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Removes administrator privileges from a selected administrator while preserving group integrity.
+     */
     demote(member: GroupMember) {
 
         const user =
@@ -548,6 +581,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Allows the current Group Administrator to resign when another administrator remains.
+     */
     resign() {
 
         const user =
@@ -599,6 +635,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Opens the system-ban request workflow for a selected group member.
+     */
     startSystemBan(
         member: GroupMember
     ) {
@@ -615,6 +654,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Closes and clears the pending system-ban request form.
+     */
     cancelSystemBan() {
 
         this.systemBanTargetId =
@@ -628,6 +670,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Submits a system-wide ban request with the supplied reason.
+     */
     confirmSystemBan(
         member: GroupMember
     ) {
@@ -686,6 +731,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Opens the group-deletion request confirmation workflow.
+     */
     startGroupDeletionRequest() {
 
         this.showGroupDeletionForm =
@@ -700,6 +748,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Cancels and clears the pending group-deletion request.
+     */
     cancelGroupDeletionRequest() {
 
         this.showGroupDeletionForm =
@@ -713,6 +764,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Submits a group-deletion request for Super Administrator approval.
+     */
     confirmGroupDeletionRequest() {
 
         const user =
@@ -772,6 +826,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Checks whether the current administrator is allowed to approve or reject the supplied request.
+     */
     canActionRequest(
         request: Request
     ): boolean {
@@ -800,6 +857,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Approves a pending group-level request and refreshes the relevant administration data.
+     */
     approve(request: Request) {
 
         const user =
@@ -859,6 +919,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Opens the rejection form for a selected pending request.
+     */
     startReject(
         request: Request
     ) {
@@ -877,6 +940,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Cancels the current request-rejection workflow.
+     */
     cancelReject() {
 
         this.rejectingRequestId =
@@ -888,6 +954,9 @@ implements OnInit, OnDestroy {
     }
 
 
+    /**
+     * Rejects the selected request using the supplied rejection reason.
+     */
     confirmReject(
         request: Request
     ) {
